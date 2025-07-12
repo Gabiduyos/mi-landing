@@ -1,0 +1,135 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(180deg, #0b0b15 0%, #0d0d20 100%);
+  color: white;
+  overflow-x: hidden;
+}
+
+.loader {
+  position: fixed;
+  inset: 0;
+  background: #0b0b15;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2rem;
+  z-index: 9999;
+  animation: hideLoader 1s ease 2s forwards;
+}
+@keyframes hideLoader {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+.navbar {
+  position: fixed;
+  width: 100%;
+  top: 0;
+  padding: 20px 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: transparent;
+  z-index: 100;
+}
+.logo img {
+  height: 40px;
+  filter: brightness(0) invert(1);
+}
+.navbar ul {
+  list-style: none;
+  display: flex;
+  gap: 30px;
+}
+.navbar a {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 160px 60px 100px;
+  min-height: 100vh;
+}
+.content {
+  max-width: 600px;
+}
+.eyebrow {
+  color: #ff2d75;
+  font-weight: 500;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+}
+h1 {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 20px;
+}
+.sub {
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+  color: #ccc;
+}
+.btn.primary {
+  background: #ff2d75;
+  color: white;
+  padding: 14px 28px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background 0.3s ease;
+}
+.btn.primary:hover {
+  background: #e41a63;
+}
+
+.sphere-container {
+  max-width: 400px;
+}
+.sphere-img {
+  width: 100%;
+  animation: float 5s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+.trusted {
+  text-align: center;
+  padding: 40px 20px;
+}
+.trusted span {
+  display: block;
+  font-size: 0.9rem;
+  color: #888;
+  margin-bottom: 20px;
+}
+.trusted ul {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 40px;
+  list-style: none;
+}
+.trusted li {
+  color: #aaa;
+  font-size: 1rem;
+}
