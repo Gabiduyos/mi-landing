@@ -1,15 +1,15 @@
 :root {
-  --bg-color: #0b0b15;
-  --text-color: #ffffff;
-  --card-color: #1c1c2a;
-  --primary-color: #ff2d75;
-  --button-color: #e41a63;
+  --bg-color: var(--bg-color);
+  --text-color: var(--text-color);
+  --card-color: var(--card-color);
+  --primary-color: var(--primary-color);
+  --button-color: var(--button-color);
 }
 
 body.light-mode {
-  --bg-color: #f2f2f7;
-  --text-color: #1a1a1a;
-  --card-color: #ffffff;
+  --bg-color: var(--bg-color);
+  --text-color: var(--text-color);
+  --card-color: var(--text-color);
   --primary-color: #0070f3;
   --button-color: #005bd1;
 }
@@ -28,15 +28,15 @@ body {
 
 body {
   font-family: 'Inter', sans-serif;
-  background: linear-gradient(180deg, #0b0b15 0%, #0d0d20 100%);
-  color: white;
+  background: linear-gradient(180deg, var(--bg-color) 0%, var(--bg-color) 100%);
+  color: var(--text-color);
   overflow-x: hidden;
 }
 
 .loader {
   position: fixed;
   inset: 0;
-  background: #0b0b15;
+  background: var(--bg-color);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -72,7 +72,7 @@ body {
   gap: 30px;
 }
 .navbar a {
-  color: white;
+  color: var(--text-color);
   text-decoration: none;
   font-weight: 500;
   font-size: 1rem;
@@ -89,7 +89,7 @@ body {
   max-width: 600px;
 }
 .eyebrow {
-  color: #ff2d75;
+  color: var(--primary-color);
   font-weight: 500;
   margin-bottom: 10px;
   text-transform: uppercase;
@@ -105,11 +105,11 @@ h1 {
 .sub {
   font-size: 1.1rem;
   margin-bottom: 30px;
-  color: #ccc;
+  color: var(--text-color);
 }
 .btn.primary {
-  background: #ff2d75;
-  color: white;
+  background: var(--primary-color);
+  color: var(--text-color);
   padding: 14px 28px;
   border-radius: 8px;
   text-decoration: none;
@@ -118,7 +118,7 @@ h1 {
   transition: background 0.3s ease;
 }
 .btn.primary:hover {
-  background: #e41a63;
+  background: var(--button-color);
 }
 
 .sphere-container {
@@ -140,7 +140,7 @@ h1 {
 .trusted span {
   display: block;
   font-size: 0.9rem;
-  color: #888;
+  color: var(--text-color);
   margin-bottom: 20px;
 }
 .trusted ul {
@@ -151,7 +151,7 @@ h1 {
   list-style: none;
 }
 .trusted li {
-  color: #aaa;
+  color: var(--text-color);
   font-size: 1rem;
 }
 .contacto {
@@ -167,7 +167,7 @@ h1 {
 
 .contacto p {
   margin-bottom: 40px;
-  color: #ccc;
+  color: var(--text-color);
 }
 
 .contacto form {
@@ -184,18 +184,18 @@ h1 {
   font-size: 1rem;
   border: none;
   border-radius: 8px;
-  background: #1c1c2a;
-  color: white;
+  background: var(--card-color);
+  color: var(--text-color);
 }
 
 .contacto input::placeholder,
 .contacto textarea::placeholder {
-  color: #aaa;
+  color: var(--text-color);
 }
 
 .contacto button {
-  background: #ff2d75;
-  color: white;
+  background: var(--primary-color);
+  color: var(--text-color);
   border: none;
   padding: 14px;
   border-radius: 8px;
@@ -205,5 +205,5 @@ h1 {
 }
 
 .contacto button:hover {
-  background: #e41a63;
+  background: var(--button-color);
 }
