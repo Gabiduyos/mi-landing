@@ -2,66 +2,134 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GD | Automatización con IA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GD - Inteligencia Artificial</title>
   <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+
+  </style>
 </head>
 <body>
-  <!-- Loader inicial -->
-  <div class="loader"><span>GD</span></div>
-
-  <!-- Navbar -->
+  <div class="navbar-progress"></div>
+  <div id="tsparticles"></div>
   <header class="navbar">
-    <div class="logo">
-      <img src="logo.png" alt="Logo GD" />
+    <div class="navbar-content">
+      <img src="img/logo.png" alt="Logo GD" class="logo" />
+      <nav>
+        <a href="#servicios">Servicios</a>
+        <a href="#faq">FAQ</a>
+        <a href="#contacto">Contacto</a>
+
+      </nav>
     </div>
-    <nav>
-      <ul>
-        <li><a href="#inicio">Inicio</a></li>
-        <li><a href="#servicios">Servicios</a></li>
-        <li><a href="#contacto">Contacto</a></li>
-      </ul>
-    </nav>
-    <button id="toggle-mode" class="mode-toggle">🌙</button>
   </header>
+  <div class="navbar-reflection"></div>
+  <main>
+    <section class="hero">
 
-  <!-- Hero principal -->
-  <main class="hero" id="inicio">
-    <div class="content">
-      <p class="eyebrow">Impulsa tu presencia digital</p>
-      <h1>Automatiza tu negocio<br>con inteligencia artificial</h1>
-      <p class="sub">Asistentes virtuales, chatbots y sistemas que venden por ti</p>
-      <a href="#contacto" class="btn primary">Solicitar información</a>
-    </div>
-    <div class="sphere-container">
-      <img src="esfera.png" alt="Esfera Glow" class="sphere-img" />
-    </div>
+      <div class="hero-content">
+        <h1>Automatiza tu negocio con inteligencia artificial</h1>
+        <p class="hero-sub">Impulsa la eficiencia y el crecimiento con soluciones inteligentes y automatizadas.</p>
+        <a href="#contacto" class="cta-button">Solicitar información</a>
+      </div>
+    </section>
+
+
+    <section class="servicios-flex" id="servicios">
+      <div class="servicios">
+        <div class="servicio">
+          <div class="servicio-icon servicio-icon-1"><span>⚡️</span></div>
+          <h3>Automatización de procesos</h3>
+          <p>Optimiza tareas repetitivas y reduce errores humanos con flujos inteligentes.</p>
+        </div>
+        <div class="servicio">
+          <div class="servicio-icon servicio-icon-2"><span>🤖</span></div>
+          <h3>Chatbots inteligentes</h3>
+          <p>Atiende a tus clientes 24/7 con asistentes virtuales personalizados y eficaces.</p>
+        </div>
+        <div class="servicio">
+          <div class="servicio-icon servicio-icon-3"><span>🔗</span></div>
+          <h3>Integraciones IA</h3>
+          <p>Conecta tus sistemas y saca el máximo partido de tus datos con IA avanzada.</p>
+        </div>
+      </div>
+      <img src="img/movil-robot-4k.png" alt="Robot IA" class="logo-hero" />
+    </section>
+
+    <section class="stats">
+      <div class="stat">
+        <h2>3x</h2>
+        <p>Más rápido</p>
+      </div>
+      <div class="stat">
+        <h2>99%</h2>
+        <p>Precisión IA</p>
+      </div>
+      <div class="stat">
+        <h2>24/7</h2>
+        <p>Soporte continuo</p>
+      </div>
+    </section>
+
+
+    <section id="sobre-mi" class="sobre-mi">
+      <h2>Sobre mí</h2>
+      <div class="sobre-mi-content">
+        <p>¡Hola! Soy un joven emprendedor de 26 años apasionado por la tecnología y la inteligencia artificial. Hace apenas unos meses comencé mi aventura en el mundo de la IA, y esta web es el primer proyecto que desarrollo combinando mi creatividad con el poder de la inteligencia artificial.<br><br>
+        Mi objetivo es seguir aprendiendo y crear soluciones innovadoras que ayuden a las empresas y personas a crecer. Este es solo el comienzo de muchos proyectos que están por venir. <strong>¡Gracias por visitar mi primera web hecha con IA!</strong></p>
+      </div>
+    </section>
+
+    <section id="faq" class="faq">
+      <h2>Preguntas Frecuentes</h2>
+      <div class="faq-list">
+        <div class="faq-item">
+          <button class="faq-question">¿Qué es la inteligencia artificial?</button>
+          <div class="faq-answer">
+            <p>La inteligencia artificial es una rama de la informática que busca crear sistemas capaces de realizar tareas que normalmente requieren inteligencia humana.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">¿Cómo puede ayudar la IA a mi negocio?</button>
+          <div class="faq-answer">
+            <p>La IA puede automatizar procesos, mejorar la toma de decisiones y optimizar recursos, aumentando la eficiencia y competitividad de tu empresa.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">¿Es seguro implementar IA?</button>
+          <div class="faq-answer">
+            <p>Sí, siempre que se sigan buenas prácticas de desarrollo y privacidad. Me aseguro de que cada solución sea segura y confiable.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">¿Ofreces soporte después de la implementación?</button>
+          <div class="faq-answer">
+            <p>Sí, ofrezco soporte y seguimiento continuo para asegurar el éxito de cada proyecto.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contacto" class="contacto">
+      <form id="contactForm">
+        <label for="nombre">Nombre</label>
+        <input type="text" id="nombre" name="nombre" required autocomplete="name" />
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required autocomplete="email" />
+        <label for="mensaje">Mensaje</label>
+        <textarea id="mensaje" name="mensaje" rows="4" required></textarea>
+        <button type="submit" class="cta-button">Enviar mensaje</button>
+        <p id="formMsg" class="form-msg"></p>
+      </form>
+    </section>
   </main>
-
-  <!-- Logos de confianza -->
-  <div class="trusted">
-    <span>Validado por:</span>
-    <ul>
-      <li>Airbnb</li>
-      <li>Spotify</li>
-      <li>Ptino</li>
-      <li>Siemens</li>
-      <li>CFTI Bank</li>
-    </ul>
-  </div>
-
+  <footer>
+    <p>&copy; 2025 GD. Todos los derechos reservados.</p>
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
   <script src="script.js"></script>
-
-<section id="contacto" class="contacto">
-  <h2>Contáctanos</h2>
-  <p>Envíanos tu consulta y te responderemos pronto.</p>
-  <form action="mailto:tucorreo@ejemplo.com" method="POST" enctype="text/plain">
-    <input type="text" name="nombre" placeholder="Tu nombre" required />
-    <input type="email" name="email" placeholder="Tu correo electrónico" required />
-    <textarea name="mensaje" placeholder="Tu mensaje" required></textarea>
-    <button type="submit" class="btn primary">Enviar mensaje</button>
-  </form>
-</section>
+  <script src="halo.js"></script>
 
 </body>
 </html>
