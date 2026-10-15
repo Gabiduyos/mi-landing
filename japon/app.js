@@ -1027,6 +1027,321 @@
     if (typeof dlg.showModal === 'function') { if (!dlg.open) dlg.showModal(); } else dlg.setAttribute('open', '');
   }
 
+
+  // ── Asistente: divisas e IA ────────────────────────────────────────────
+  // La IA usa la capacidad «sample» de Claude cuando la app se abre dentro de Claude
+  // (cuenta del propio usuario, sin claves). Fuera de Claude se ofrece el enlace.
+  var AI_URL = 'https://claude.ai/artifact/MgKyiPLLVFXSeuEqHWw1PH';
+  var JP_RE = /[぀-ヿ㐀-鿿ｦ-ﾟ][　-〿぀-ヿ㐀-鿿！-ﾟ0-9 ]*/;
+  var fx = { rate: parseFloat(store.get('fx-rate', 180)) || 180 };
+  var nf0 = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 0 });
+  var nf2 = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  var ai = { status: 'loading', sample: null, limits: null, busy: false, ctl: null, img: null, imgUrl: '', chat: store.get('chat', []) };
+  if (!Array.isArray(ai.chat)) ai.chat = [];
+
+  function parseNum(v) {
+    v = String(v == null ? '' : v).replace(/[\s¥€]/g, '');
+    if (!v) return null;
+    if (/,\d{1,2}$/.test(v)) v = v.replace(/\./g, '').replace(',', '.');
+    else v = v.replace(/[.,](?=\d{3}(\D|$))/g, '');
+    var n = parseFloat(v);
+    return isFinite(n) ? n : null;
+  }
+  function fxFromYen(yen) {
+    var tax = $('#fx-tax');
+    if (yen == null) { $('#fx-eur').value = ''; tax.textContent = 'Si la etiqueta pone 税抜 (sin IVA), aquí verás el precio final con el 10 %.'; return; }
+    $('#fx-eur').value = nf2.format(yen / fx.rate);
+    var withTax = Math.round(yen * 1.1);
+    tax.innerHTML = 'Si pone <span lang="ja">税抜</span> (sin IVA): <b>' + nf0.format(withTax) + ' ¥ ≈ ' + nf2.format(withTax / fx.rate) + ' €</b> con el 10 %.';
+  }
+  function fxFromEur(eur) {
+    if (eur == null) { $('#fx-yen').value = ''; fxFromYen(null); return; }
+    var yen = Math.round(eur * fx.rate);
+    $('#fx-yen').value = nf0.format(yen);
+    var withTax = Math.round(yen * 1.1);
+    $('#fx-tax').innerHTML = 'Con el 10 % de IVA serían <b>' + nf0.format(withTax) + ' ¥</b>.';
+  }
+  function renderFx() {
+    $('#fx-rate').value = String(fx.rate).replace('.', ',');
+    $('#fx-chips').innerHTML = [1000, 3000, 5000, 10000, 50000].map(function (y) {
+      return '<button class="chip chip--link" type="button" data-fx="' + y + '">' + nf0.format(y) + ' ¥ <span>≈ ' + nf2.format(y / fx.rate) + ' €</span></button>';
+    }).join('');
+  }
+
+  function initAI() {
+    if (!window.claude || typeof window.claude.use !== 'function') { ai.status = 'off'; renderAIState(); return; }
+    window.claude.use('sample').then(function (smp) {
+      if (!smp) { ai.status = 'unavailable'; return null; }
+      ai.sample = smp;
+      return smp.limits().then(function (l) { ai.limits = l; }, function () { ai.limits = null; }).then(function () { ai.status = 'ok'; });
+    }).then(function () { renderAIState(); }, function () { ai.status = 'unavailable'; renderAIState(); });
+  }
+
+  function renderAIState() {
+    var on = ai.status === 'ok';
+    $('#ai-loading').hidden = ai.status !== 'loading';
+    $('#ai-on').hidden = !on;
+    $('#ai-off').hidden = on || ai.status === 'loading';
+    if (ai.status === 'off') {
+      $('#ai-off').innerHTML = '<p>La IA funciona cuando abres esta app dentro de Claude: usa tu propia cuenta, sin claves ni pagos aparte. Aquí tienes el mapa de calles y el GPS; allí, el asistente.</p>' +
+        '<a class="btn btn--primary" target="_blank" rel="noopener" href="' + AI_URL + '">Abrir el asistente en Claude</a>' +
+        '<p class="ai__hint">Para que la IA vea tus cambios del plan: Info → Copiar mi plan aquí, y Pegar un plan allí.</p>';
+    } else if (ai.status === 'denied') {
+      $('#ai-off').innerHTML = '<p>Esta página no tiene permiso para usar Claude. Puedes activarlo en los permisos de la página.</p>' +
+        '<button class="btn btn--primary" type="button" id="ai-perms">Revisar permisos</button>';
+    } else if (ai.status === 'unavailable') {
+      $('#ai-off').innerHTML = '<p>La IA no está disponible en esta vista o en esta cuenta. El conversor de arriba sigue funcionando.</p>';
+    }
+    var canImg = !!(ai.limits && ai.limits.images);
+    $('#ai-photo-btn').hidden = !canImg;
+    if (canImg && ai.limits.images.mediaTypes) $('#ai-photo').accept = ai.limits.images.mediaTypes.join(',');
+    if (on) { renderAIChips(); renderChat(); }
+  }
+
+  function renderAIChips() {
+    var n = state.day + 1;
+    var chips = [
+      { n: 'Traducir una foto', t: '¿Qué pone en esta foto? Tradúcelo y dime lo importante.', photo: true },
+      { n: '¿Cómo se dice…?', t: '¿Cómo se dice en japonés: «' },
+      { n: '¿Es buen precio?', t: '¿Es buen precio? Te paso la foto de la etiqueta.', photo: true },
+      { n: 'Ayúdame a pedir', t: 'Estoy en un restaurante y no entiendo la carta. Ayúdame a pedir.', photo: true },
+      { n: '¿Qué hago hoy?', t: 'Según mi plan, ¿qué me recomiendas hacer hoy y en qué orden? Anochece pronto.' },
+      { n: 'Ideas para el día ' + n, t: '¿Qué 3 ideas del catálogo me recomiendas añadir al día ' + n + ' y por qué?' }
+    ];
+    if (!(ai.limits && ai.limits.images)) chips = chips.filter(function (c) { return !c.photo; });
+    $('#ai-chips').innerHTML = chips.map(function (c, i) {
+      return '<button class="chip chip--link" type="button" data-aichip="' + i + '" data-text="' + esc(c.t) + '"' + (c.photo ? ' data-photo="1"' : '') + '>' + esc(c.n) + '</button>';
+    }).join('');
+  }
+
+  function inlineMd(t) { return t.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`([^`]+)`/g, '<code>$1</code>'); }
+  function bigBtn(t) {
+    var m = JP_RE.exec(t);
+    var seg = m ? m[0].trim() : '';
+    return seg.length >= 2 ? ' <button class="big" type="button" data-big="' + seg + '" aria-label="Ampliar ' + seg + '">Ampliar</button>' : '';
+  }
+  function md(text) {
+    var out = [], list = null;
+    esc(text).split('\n').forEach(function (line) {
+      var t = line.trim(), m;
+      if (!t) { if (list) { out.push('</' + list + '>'); list = null; } return; }
+      m = /^(?:[-*•]|\d+[.)])\s+(.*)$/.exec(t);
+      if (m) {
+        var tag = /^\d/.test(t) ? 'ol' : 'ul';
+        if (list !== tag) { if (list) out.push('</' + list + '>'); out.push('<' + tag + '>'); list = tag; }
+        out.push('<li>' + inlineMd(m[1]) + bigBtn(m[1]) + '</li>');
+        return;
+      }
+      if (list) { out.push('</' + list + '>'); list = null; }
+      m = /^#{1,4}\s+(.*)$/.exec(t);
+      if (m) { out.push('<p class="msg__h">' + inlineMd(m[1]) + '</p>'); return; }
+      out.push('<p>' + inlineMd(t) + bigBtn(t) + '</p>');
+    });
+    if (list) out.push('</' + list + '>');
+    return out.join('');
+  }
+
+  function bubble(m) {
+    if (m.role === 'user') {
+      return '<li class="msg msg--me">' + (m.img ? '<span class="msg__img">Foto adjunta</span>' : '') + '<p>' + esc(m.content) + '</p></li>';
+    }
+    return '<li class="msg msg--ai' + (m.content ? '' : ' msg--err') + '">' + (m.content ? md(m.content) : '') +
+      (m.note ? '<p class="msg__note">' + esc(m.note) + '</p>' : '') + '</li>';
+  }
+  function renderChat() {
+    var el = $('#chat');
+    if (!ai.chat.length) {
+      el.innerHTML = '<li class="chat__empty"><p>Ejemplos de lo que puedes preguntar:</p><ul>' +
+        '<li>Foto de un cartel en una estación: «¿qué pone y por dónde voy?»</li>' +
+        '<li>Foto de una cámara usada con su etiqueta: «¿es buen precio? ¿qué miro?»</li>' +
+        '<li>«¿Cómo pido que me guarden la maleta?»</li>' +
+        '<li>«Añade el Museo Ghibli al día 8» (lo mete en tu plan).</li></ul></li>';
+      return;
+    }
+    el.innerHTML = ai.chat.map(bubble).join('');
+  }
+  function saveChat() { store.set('chat', ai.chat.slice(-40)); }
+  function scrollChat() {
+    var c = $('#composer');
+    if (c && c.getBoundingClientRect().bottom > window.innerHeight - 80) c.scrollIntoView({ block: 'end', behavior: 'smooth' });
+  }
+  function setAIBusy(on) {
+    ai.busy = on;
+    $('#ai-send').disabled = on;
+    $('#ai-stop').hidden = !on;
+    $('#ai-clear').hidden = on;
+  }
+  function setAIImage(file) {
+    if (ai.imgUrl) { try { URL.revokeObjectURL(ai.imgUrl); } catch (e) { /* nada */ } }
+    ai.img = file || null;
+    ai.imgUrl = file ? URL.createObjectURL(file) : '';
+    $('#composer-img').hidden = !file;
+    $('#composer-img-prev').src = ai.imgUrl || '';
+    if (!file) $('#ai-photo').value = '';
+  }
+
+  function aiRules() {
+    var i = tripIndex(), toStart = daysBetween(today, T.start);
+    var when = i >= 0 ? 'El viaje está en curso: hoy es el día ' + (i + 1) + '.' : (toStart > 0 ? 'Faltan ' + toStart + ' días para el viaje.' : 'El viaje ya terminó.');
+    var planTxt = DAYS.map(function (d) {
+      var p = parts(d.date);
+      return 'Día ' + d.n + ' (' + WD[p.wd] + ' ' + p.d + ' nov, ' + T.phases[d.phase].name + (d.mode === 'car' ? ', en coche' : '') + '): ' +
+        stopsOf(d).map(function (st) {
+          var t = timeForDisplay(st.t);
+          return (t ? t + ' ' : '') + st.name + (st.opt ? ' (opcional)' : '') + (st.mine ? ' [nota: ' + st.mine + ']' : '');
+        }).join('; ');
+    }).join('\n');
+    var ideas = PLACES.map(function (p) {
+      return p.id + ' · ' + p.name + ' · ' + p.area + ' · ' + CATS[p.cat].name + (p.car ? ' · coche' : '') + (p.fit && p.fit.length ? ' · días ' + p.fit.join(',') : '');
+    }).join('\n');
+    var canAdd = !!(ai.limits && ai.limits.tools);
+    var lodg = Object.keys(T.lodging).map(function (k) { var l = lodging(k); return l.label + ': ' + l.name + ' (' + l.addr + ')'; }).join('; ');
+    return [
+      'Eres el asistente de viaje integrado en la app «Ruta Japón 2026». El usuario es un viajero español que está en Japón del 15 al 29 de noviembre de 2026. Le interesan la fotografía (cámaras nuevas y usadas), la ropa de segunda mano, las figuras, el anime, lo retro y la cultura japonesa. Alquila coche los días 11 a 14.',
+      'Responde en español de España, breve y práctico (unas 120 palabras salvo que pida más), con listas cortas si ayudan y sin preámbulos.',
+      'Lo que haces:',
+      '- Traducir entre japonés y español. Cuando des una frase en japonés para usarla, ponla sola en su línea y debajo la lectura en rōmaji y el significado.',
+      '- Leer fotos (carteles, menús, etiquetas, tickets, máquinas, pantallas) y explicar qué pone y qué hay que hacer.',
+      '- Convertir precios con este tipo de cambio: 1 € = ' + fx.rate + ' ¥. 税抜 significa sin IVA (hay que sumar el 10 %); 税込, con IVA incluido.',
+      '- Valorar precios de segunda mano (cámaras, objetivos, figuras, ropa, videojuegos) con prudencia: estado, qué revisar y si parece razonable.',
+      '- Explicar costumbres, normas, comida, transporte y cómo funcionan las tiendas.',
+      '- Recomendar según su plan y el catálogo de ideas investigadas que tienes abajo.',
+      'Sé honesto: si no lees bien una foto o no sabes un dato actual (horarios, precios, si algo sigue abierto), dilo y sugiere comprobarlo. No inventes horarios, direcciones ni precios.',
+      canAdd ? 'Si el usuario te pide añadir algo a su plan, usa la herramienta anadir_parada (con idea_id cuando esté en el catálogo) y confirma qué has añadido. No añadas nada que no te haya pedido.'
+        : 'No puedes cambiar el plan. Si te lo pide, dile que use «Añadir parada» en ese día.',
+      'Las fotos de mensajes anteriores ya no las ves: si hace falta, pide que la vuelva a enviar.',
+      '',
+      'Fecha de hoy: ' + today + '. ' + when + ' Ahora está mirando el día ' + (state.day + 1) + ' en la app.',
+      'Alojamientos: ' + lodg + '.',
+      '',
+      'Su plan actual:',
+      planTxt,
+      '',
+      'Catálogo de ideas (id · nombre · zona · categoría · días en que encaja):',
+      ideas
+    ].join('\n');
+  }
+
+  function aiInput() {
+    var hist = ai.chat.filter(function (m) { return m.content && m.content.trim(); }).slice(-16).map(function (m) {
+      return { role: m.role, content: (m.img ? '[Con una foto adjunta] ' : '') + m.content };
+    });
+    return [{ role: 'user', content: aiRules() }].concat(hist);
+  }
+
+  function aiTools() {
+    return [{
+      name: 'anadir_parada',
+      description: 'Añade una parada al plan del viaje del usuario y devuelve una confirmación en texto. Úsala solo cuando el usuario pida añadir algo. Para una idea del catálogo pasa idea_id; para otro sitio pasa nombre y busqueda (texto que Google Maps encuentre: nombre y ciudad, o el nombre en japonés).',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          dia: { type: 'integer', minimum: 1, maximum: 15, description: 'Día del viaje, de 1 a 15.' },
+          idea_id: { type: 'string', description: 'id de una idea del catálogo.' },
+          nombre: { type: 'string', description: 'Nombre del sitio si no está en el catálogo.' },
+          busqueda: { type: 'string', description: 'Texto para encontrarlo en Google Maps.' },
+          hora: { type: 'string', description: 'Hora prevista HH:MM (opcional).' },
+          nota: { type: 'string', description: 'Nota breve (opcional).' }
+        },
+        required: ['dia']
+      },
+      execute: function (input) {
+        var n = Math.round(Number(input.dia));
+        if (!(n >= 1 && n <= DAYS.length)) throw new Error('El día tiene que estar entre 1 y ' + DAYS.length + '.');
+        var id, name, note = String(input.nota || '').trim();
+        if (input.idea_id) {
+          var p = PLACE[String(input.idea_id)];
+          if (!p) throw new Error('No hay ninguna idea con ese id en el catálogo.');
+          id = 'c:' + p.id;
+          name = p.name;
+          if (note) plan.notes[id] = note;
+        } else {
+          name = String(input.nombre || '').trim();
+          if (!name) throw new Error('Falta el nombre del sitio.');
+          var q = String(input.busqueda || name).trim();
+          var ll = parseLL(q);
+          id = 'u' + Date.now().toString(36);
+          plan.custom[id] = { id: id, custom: true, kind: 'sight', name: name, q: ll ? ll.join(',') : q, ll: ll, url: '', note: note, t: '' };
+        }
+        var arr = ensureOrder(n);
+        if (arr.indexOf(id) >= 0) return '«' + name + '» ya estaba en el día ' + n + '.';
+        arr.push(id);
+        var hora = String(input.hora || '');
+        if (timeToMin(hora) != null) plan.times[id] = timeForInput(hora);
+        savePlan();
+        renderStrip();
+        refreshTripMap();
+        toast('IA: «' + name + '» añadido al día ' + n + '.', { label: 'Deshacer', fn: function () {
+          var a = ensureOrder(n), k = a.indexOf(id);
+          if (k >= 0) a.splice(k, 1);
+          savePlan(); renderStrip(); refreshTripMap();
+        } });
+        return 'Añadido «' + name + '» al día ' + n + (plan.times[id] ? ' a las ' + timeForDisplay(plan.times[id]) : '') + '.';
+      }
+    }];
+  }
+
+  var AI_ERR = {
+    not_granted: 'Esta página no tiene permiso para usar Claude.',
+    sampling_disabled: 'La IA no está disponible para esta cuenta.',
+    not_declared: 'La IA no está disponible en esta versión de la página.',
+    capability_disabled: 'La IA no está disponible en esta vista.',
+    capability_removed: 'La IA no está disponible en esta vista.',
+    images_unavailable: 'Aquí no se pueden enviar fotos. Escribe la pregunta.',
+    image_rejected: 'No he podido usar esa foto (formato o tamaño). Prueba con otra.',
+    rate_limited: 'Demasiadas preguntas seguidas o has llegado al límite de uso. Espera un poco y vuelve a intentarlo.',
+    session_expired: 'Tu sesión de Claude ha caducado: vuelve a iniciar sesión.',
+    refused: 'Claude no responde a eso. Prueba a preguntarlo de otra forma.',
+    empty_completion: 'No ha llegado respuesta. Prueba a preguntarlo de otra forma.',
+    prompt_too_large: 'La conversación es demasiado larga: bórrala y vuelve a empezar.'
+  };
+
+  function aiSend() {
+    if (ai.busy || ai.status !== 'ok') return;
+    var box = $('#ai-input');
+    var text = box.value.trim();
+    var file = ai.img;
+    if (!text && !file) { box.focus(); return; }
+    if (!text) text = 'Mira la foto: dime qué pone, tradúcelo y explícame lo importante.';
+    ai.chat.push({ role: 'user', content: text, img: !!file });
+    var turn = { role: 'assistant', content: '' };
+    ai.chat.push(turn);
+    box.value = '';
+    setAIImage(null);
+    renderChat();
+    var live = $('#chat').lastElementChild;
+    live.innerHTML = '<p class="msg__thinking">Pensando</p>';
+    setAIBusy(true);
+    scrollChat();
+    var ctl = ai.ctl = new AbortController();
+    var opts = {
+      signal: ctl.signal,
+      cache: false,
+      modelTier: file ? 'default' : 'quick',
+      onText: function (u) { turn.content = u.text; live.innerHTML = md(u.text); scrollChat(); }
+    };
+    if (file) opts.images = [file];
+    if (ai.limits && ai.limits.tools) opts.tools = aiTools();
+    ai.sample(aiInput(), opts).then(function (r) {
+      turn.content = r.text;
+      if (r.truncated) turn.note = 'Respuesta cortada: pide algo más concreto.';
+    }, function (e) {
+      var code = (e && e.code) || 'upstream_error';
+      turn.content = code === 'refused' ? '' : ((e && e.text) || '');
+      if (code === 'cancelled') turn.note = 'Parado.';
+      else turn.note = AI_ERR[code] || 'Se ha cortado la conexión. Vuelve a intentarlo.';
+      if (/^(not_granted|sampling_disabled|not_declared|capability_disabled|capability_removed)$/.test(code)) {
+        ai.status = code === 'not_granted' ? 'denied' : 'unavailable';
+      }
+      if (code === 'images_unavailable' && ai.limits) { ai.limits = Object.assign({}, ai.limits, { images: undefined }); }
+    }).then(function () {
+      setAIBusy(false);
+      saveChat();
+      renderAIState();
+      scrollChat();
+    });
+  }
+
   // ── Navegación ─────────────────────────────────────────────────────────
   function defaultDay() {
     var i = tripIndex();
@@ -1042,7 +1357,7 @@
     if (m) {
       state.tab = 'dias';
       state.day = Math.min(DAYS.length - 1, Math.max(0, +m[1] - 1));
-    } else if (h === 'mapa' || h === 'reservas' || h === 'info') {
+    } else if (h === 'mapa' || h === 'reservas' || h === 'info' || h === 'ia') {
       state.tab = h;
     } else {
       state.tab = 'dias';
@@ -1055,7 +1370,7 @@
 
   var firstShow = true;
   function show(changed) {
-    ['dias', 'mapa', 'reservas', 'info'].forEach(function (t) { $('#view-' + t).hidden = state.tab !== t; });
+    ['dias', 'mapa', 'ia', 'reservas', 'info'].forEach(function (t) { $('#view-' + t).hidden = state.tab !== t; });
     document.querySelectorAll('.tab').forEach(function (a) {
       var t = a.getAttribute('data-tab');
       if (t === 'dias') a.setAttribute('href', '#dia-' + (state.day + 1));
@@ -1071,6 +1386,9 @@
     } else if (state.tab === 'mapa') {
       ensureTripMap();
       if (tripMap) setTimeout(function () { tripMap.invalidateSize(); }, 0);
+    } else if (state.tab === 'ia') {
+      renderFx();
+      renderAIState();
     } else if (state.tab === 'reservas') {
       renderBookings();
     } else if (state.tab === 'info') {
@@ -1248,6 +1566,32 @@
       }
       return;
     }
+    // Asistente
+    if ((b = t.closest('[data-fx]'))) { var y = +b.getAttribute('data-fx'); $('#fx-yen').value = nf0.format(y); fxFromYen(y); return; }
+    if ((b = t.closest('[data-big]'))) { openSheet({ eyebrow: 'Enseñar al personal', ja: b.getAttribute('data-big'), phrase: false, es: '' }); return; }
+    if ((b = t.closest('[data-aichip]'))) {
+      var box = $('#ai-input');
+      box.value = b.getAttribute('data-text');
+      box.focus();
+      if (b.getAttribute('data-photo') && !ai.img) $('#ai-photo').click();
+      return;
+    }
+    if (t.closest('#ai-stop')) { if (ai.ctl) ai.ctl.abort(); return; }
+    if (t.closest('#composer-img-x')) { setAIImage(null); return; }
+    if (t.closest('#ai-clear')) {
+      if (!ai.chat.length) return;
+      var old = ai.chat;
+      ai.chat = [];
+      saveChat();
+      renderChat();
+      toast('Chat borrado.', { label: 'Deshacer', fn: function () { ai.chat = old; saveChat(); renderChat(); } });
+      return;
+    }
+    if (t.closest('#ai-perms')) {
+      window.claude.use('permissions').then(function (pm) { return pm ? pm.manage() : Promise.reject(); })
+        .then(function () { ai.status = 'ok'; renderAIState(); }, function () { toast('Abre el menú de permisos de la página para permitir Claude.'); });
+      return;
+    }
     if (t.closest('#btn-locate') || t.closest('#btn-locate-2')) { toggleLocate(); return; }
     if (t.closest('#btn-fit')) { fitDay(true); return; }
   });
@@ -1272,6 +1616,11 @@
       if (c.value) moveToDay(c.getAttribute('data-moveday'), +c.value);
       return;
     }
+    if (e.target.id === 'ai-photo') {
+      var f = e.target.files && e.target.files[0];
+      if (f) setAIImage(f);
+      return;
+    }
     if ((c = e.target.closest('[data-note]'))) {
       var nid = c.getAttribute('data-note');
       if (c.value.trim()) plan.notes[nid] = c.value.trim(); else delete plan.notes[nid];
@@ -1281,7 +1630,27 @@
   });
 
   document.addEventListener('input', function (e) {
-    if (e.target.id === 'add-search') { state.addQuery = e.target.value; renderAddList(); }
+    var id = e.target.id;
+    if (id === 'add-search') { state.addQuery = e.target.value; renderAddList(); }
+    else if (id === 'fx-yen') fxFromYen(parseNum(e.target.value));
+    else if (id === 'fx-eur') fxFromEur(parseNum(e.target.value));
+    else if (id === 'fx-rate') {
+      var r = parseNum(e.target.value);
+      if (r && r > 10 && r < 1000) {
+        fx.rate = r;
+        store.set('fx-rate', r);
+        renderFx();
+        e.target.focus();
+        fxFromYen(parseNum($('#fx-yen').value));
+      }
+    }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.target.id === 'ai-input' && e.key === 'Enter' && !e.shiftKey && !e.isComposing && window.matchMedia('(min-width: 960px)').matches) {
+      e.preventDefault();
+      aiSend();
+    }
   });
 
   document.addEventListener('toggle', function (e) {
@@ -1292,6 +1661,7 @@
   document.addEventListener('submit', function (e) {
     var f = e.target;
     if (f.id === 'add-mine') { e.preventDefault(); addCustomFromForm(f); return; }
+    if (f.id === 'composer') { e.preventDefault(); aiSend(); return; }
     f = f.closest('form[data-lodge]');
     if (!f) return;
     e.preventDefault();
@@ -1321,6 +1691,7 @@
 
   // ── Arranque ───────────────────────────────────────────────────────────
   applyTheme();
+  initAI();
   renderStatus();
   renderLegend();
   renderBookings();

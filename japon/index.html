@@ -76,6 +76,57 @@
       </div>
     </section>
 
+    <section class="view view--list" id="view-ia" hidden aria-labelledby="ia-title">
+      <div class="page page--ai">
+        <h1 class="page__title" id="ia-title">Asistente</h1>
+        <p class="page__lead">Cambio de moneda al momento y una IA para traducir carteles, menús y etiquetas, valorar precios o resolver dudas del viaje.</p>
+
+        <section class="fx" aria-labelledby="fx-title">
+          <h2 class="fx__title" id="fx-title">Yenes y euros</h2>
+          <div class="fx__row">
+            <label class="fx__field" for="fx-yen"><span>Yenes</span>
+              <span class="fx__box"><input id="fx-yen" inputmode="decimal" autocomplete="off" placeholder="1.000" /><b aria-hidden="true">¥</b></span>
+            </label>
+            <span class="fx__eq" aria-hidden="true">=</span>
+            <label class="fx__field" for="fx-eur"><span>Euros</span>
+              <span class="fx__box"><input id="fx-eur" inputmode="decimal" autocomplete="off" placeholder="5,56" /><b aria-hidden="true">€</b></span>
+            </label>
+          </div>
+          <p class="fx__tax" id="fx-tax">Si la etiqueta pone 税抜 (sin IVA), aquí verás el precio final con el 10 %.</p>
+          <div class="fx__chips" id="fx-chips"></div>
+          <p class="fx__rate"><label for="fx-rate">Tipo: 1 € =</label> <input id="fx-rate" inputmode="decimal" autocomplete="off" /> ¥ <span>· orientativo (sept. 2026); pon el de tu banco o tarjeta.</span></p>
+        </section>
+
+        <section class="ai" aria-labelledby="ai-title">
+          <h2 id="ai-title">Pregunta a la IA</h2>
+          <p class="ai__loading" id="ai-loading">Conectando con Claude…</p>
+          <div class="ai__off" id="ai-off" hidden></div>
+          <div id="ai-on" hidden>
+            <div class="ai__chips" id="ai-chips"></div>
+            <ol class="chat" id="chat" aria-live="polite"></ol>
+            <form class="composer" id="composer" novalidate>
+              <div class="composer__img" id="composer-img" hidden>
+                <img id="composer-img-prev" alt="Foto adjunta" />
+                <span>Foto lista para enviar</span>
+                <button class="btn btn--sm" type="button" id="composer-img-x">Quitar</button>
+              </div>
+              <label class="sr" for="ai-input">Tu pregunta</label>
+              <textarea id="ai-input" rows="2" placeholder="Escribe tu pregunta o adjunta una foto…"></textarea>
+              <div class="composer__row">
+                <label class="btn btn--sm composer__photo" id="ai-photo-btn" hidden>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="7" width="17" height="12" rx="2"/><circle cx="12" cy="13" r="3.5"/><path d="M8.5 7l1.5-2.5h4L15.5 7"/></svg>Foto
+                  <input type="file" id="ai-photo" accept="image/*" class="sr" />
+                </label>
+                <button class="btn btn--sm" type="button" id="ai-clear">Borrar chat</button>
+                <button class="btn" type="button" id="ai-stop" hidden>Parar</button>
+                <button class="btn btn--primary composer__send" type="submit" id="ai-send">Enviar</button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </div>
+    </section>
+
     <section class="view view--list" id="view-info" hidden aria-labelledby="info-title">
       <div class="page" id="info"></div>
     </section>
@@ -89,6 +140,10 @@
     <a class="tab" href="#mapa" data-tab="mapa">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6z"/><path d="M9 4v14M15 6v14"/></svg>
       <span>Mapa</span>
+    </a>
+    <a class="tab" href="#ia" data-tab="ia">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v10.5H10l-4 3.5v-3.5H4z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01" stroke-width="2.4"/></svg>
+      <span>Asistente</span>
     </a>
     <a class="tab" href="#reservas" data-tab="reservas">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v17l-7-4-7 4z"/></svg>

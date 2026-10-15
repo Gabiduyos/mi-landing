@@ -16,6 +16,7 @@ App web (móvil primero) con el itinerario revisado del viaje a Japón del 15 al
 - **Ideas en el mapa**: la bombilla del mapa de cada día muestra las ideas cercanas; en la pestaña Mapa se filtran por categoría y se añaden al día que elijas.
 - **Buscar cerca de ti**: atajos a Google Maps para Hard Off, Off House, Book Off, 2nd Street, Mandarake, cámaras usadas, gasolineras, parkings…
 - **Copiar y pegar el plan** (Info → Tu plan): para pasarlo a otro móvil o hacer copia de seguridad.
+- **Asistente**: conversor yenes ⇄ euros (con el 10 % de IVA para etiquetas 税抜) y un chat con IA que traduce, lee fotos de carteles, menús y etiquetas, valora precios de segunda mano y puede añadir paradas al plan. La IA funciona al abrir la app dentro de Claude (usa la cuenta de Claude de quien la abre, sin claves); fuera de Claude, el botón lleva a esa versión.
 - **Mapa**: todo el viaje, filtrable por etapa, con tu ubicación.
 - **Reservas**: lista ordenada por urgencia según la fecha de hoy (entradas, Shinkansen, coche, permiso de conducir…).
 - **Info**: qué se ha corregido del PDF, direcciones exactas de los alojamientos (se pueden pegar coordenadas), tax-free, conducir en Japón, frases útiles y teléfonos de emergencia.
