@@ -991,8 +991,9 @@
     var st = planStats();
     h += '<h2>Tu plan</h2><p class="page__lead">' +
       (st.edited ? 'Has cambiado ' + st.edited + (st.edited === 1 ? ' día' : ' días') + (st.added ? ' y añadido ' + st.added + (st.added === 1 ? ' sitio' : ' sitios') : '') + '. ' : 'Aún no has cambiado nada. ') +
-      'Se guarda en este dispositivo. Para pasarlo a otro móvil, o para enseñármelo y seguir ajustándolo, cópialo y pégalo.</p>' +
-      '<div class="lodge__row"><button class="btn btn--primary" type="button" id="plan-copy">Copiar mi plan</button>' +
+      'Se guarda en este dispositivo. Para pasárselo a otra persona o a otro móvil, compártelo por enlace; también puedes copiarlo como texto.</p>' +
+      '<div class="lodge__row"><button class="btn btn--primary" type="button" data-open-share>Compartir por enlace</button>' +
+      '<button class="btn" type="button" id="plan-copy">Copiar mi plan</button>' +
       '<button class="btn" type="button" id="plan-import-open">Pegar un plan</button>' +
       '<button class="btn btn--ghost" type="button" id="plan-reset">Volver al plan original</button></div>' +
       '<div class="plan-io" id="plan-io" hidden><label for="plan-text">Plan en texto</label><textarea id="plan-text" rows="5" spellcheck="false"></textarea>' +
@@ -1053,20 +1054,144 @@
   function exportPlan() {
     return JSON.stringify({ app: 'ruta-japon-2026', v: 1, plan: plan, lodging: state.edits, done: Array.from(state.done), booked: Array.from(state.booked) });
   }
-  function importPlan(text) {
-    var data;
-    try { data = JSON.parse(text); } catch (e) { toast('Ese texto no es un plan válido.'); return; }
-    if (!data || data.app !== 'ruta-japon-2026' || !data.plan) { toast('Ese texto no es un plan de esta app.'); return; }
+  // Sustituye el plan (y, si vienen, direcciones y marcas) y devuelve una copia para deshacer.
+  function applyPlanData(data) {
+    var backup = { plan: plan, edits: state.edits };
     plan = normalizePlan(data.plan);
     savePlan();
     if (data.lodging && typeof data.lodging === 'object') { state.edits = data.lodging; store.set('lodging', state.edits); }
     if (Array.isArray(data.done)) { state.done = new Set(data.done); store.set('done', data.done); }
     if (Array.isArray(data.booked)) { state.booked = new Set(data.booked); store.set('booked', data.booked); }
+    afterPlanSwap();
+    return backup;
+  }
+  function restorePlan(b) {
+    plan = b.plan;
+    savePlan();
+    state.edits = b.edits;
+    store.set('lodging', state.edits);
+    afterPlanSwap();
+  }
+  function afterPlanSwap() {
     refreshTripMap();
-    renderInfo();
     renderStrip();
     renderBookings();
-    toast('Plan cargado.');
+    if (state.tab === 'info') renderInfo();
+    if (state.tab === 'dias') renderDay();
+  }
+  function importPlan(text) {
+    var data;
+    try { data = JSON.parse(text); } catch (e) { toast('Ese texto no es un plan válido.'); return; }
+    if (!data || data.app !== 'ruta-japon-2026' || !data.plan) { toast('Ese texto no es un plan de esta app.'); return; }
+    var b = applyPlanData(data);
+    toast('Plan cargado.', { label: 'Deshacer', fn: function () { restorePlan(b); } });
+  }
+
+  // ── Compartir ──────────────────────────────────────────────────────────
+  // La app pública vive en Vercel; el plan viaja comprimido dentro del enlace (#plan=…).
+  var APP_URL = 'https://mi-landing-five.vercel.app/japon/';
+  var shareLinks = { app: APP_URL, plan: '' };
+  var incoming = null;
+
+  function b64urlFromBytes(bytes) {
+    var bin = '';
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function bytesFromB64url(t) {
+    t = t.replace(/-/g, '+').replace(/_/g, '/');
+    while (t.length % 4) t += '=';
+    var bin = atob(t), out = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+  function pipeBytes(bytes, transform) {
+    return new Response(new Blob([bytes]).stream().pipeThrough(transform)).arrayBuffer().then(function (b) { return new Uint8Array(b); });
+  }
+  function packPlan(obj) {
+    var bytes = new TextEncoder().encode(JSON.stringify(obj));
+    if (typeof CompressionStream !== 'function') return Promise.resolve('j' + b64urlFromBytes(bytes));
+    return pipeBytes(bytes, new CompressionStream('deflate-raw')).then(
+      function (z) { return 'z' + b64urlFromBytes(z); },
+      function () { return 'j' + b64urlFromBytes(bytes); });
+  }
+  function unpackPlan(code) {
+    return new Promise(function (resolve) { resolve(bytesFromB64url(code.slice(1))); }).then(function (bytes) {
+      if (code.charAt(0) !== 'z') return bytes;
+      if (typeof DecompressionStream !== 'function') throw new Error('Este navegador no puede leer el enlace.');
+      return pipeBytes(bytes, new DecompressionStream('deflate-raw'));
+    }).then(function (b) { return JSON.parse(new TextDecoder().decode(b)); });
+  }
+
+  function planSummary(p, lodg) {
+    var order = p.order || {}, days = Object.keys(order).length, added = 0;
+    Object.keys(order).forEach(function (n) { (order[n] || []).forEach(function (id) { if (!BASE[id]) added++; }); });
+    var bits = [days ? days + (days === 1 ? ' día cambiado' : ' días cambiados') : 'ajustes del plan'];
+    if (added) bits.push(added + (added === 1 ? ' sitio añadido' : ' sitios añadidos'));
+    var l = Object.keys(lodg || {}).length;
+    if (l) bits.push(l + (l === 1 ? ' dirección de alojamiento' : ' direcciones de alojamiento'));
+    return bits.join(', ');
+  }
+  function hasPlanChanges() {
+    return Object.keys(plan.order).length || Object.keys(plan.times).length || Object.keys(plan.notes).length || Object.keys(state.edits).length;
+  }
+
+  function showDialog(id) {
+    var dlg = document.getElementById(id);
+    if (typeof dlg.showModal === 'function') { if (!dlg.open) dlg.showModal(); } else dlg.setAttribute('open', '');
+  }
+  function closeDialog(id) {
+    var dlg = document.getElementById(id);
+    if (dlg.open && typeof dlg.close === 'function') dlg.close(); else dlg.removeAttribute('open');
+  }
+
+  function openShare() {
+    $('#share-url-app').value = APP_URL;
+    var withPlan = !!hasPlanChanges();
+    $('#share-opt-plan').hidden = !withPlan;
+    shareLinks.plan = '';
+    if (withPlan) {
+      $('#share-plan-desc').textContent = 'Incluye ' + planSummary(plan, state.edits) + '. No incluye tus marcas de «hecho» ni el estado de las reservas.';
+      $('#share-url-plan').value = 'Preparando el enlace…';
+      packPlan({ app: 'ruta-japon-2026', v: 1, plan: plan, lodging: state.edits }).then(function (code) {
+        shareLinks.plan = APP_URL + '#plan=' + code;
+        $('#share-url-plan').value = shareLinks.plan;
+      });
+    }
+    showDialog('share-sheet');
+  }
+  function copyLink(kind) {
+    var url = shareLinks[kind];
+    var input = $(kind === 'plan' ? '#share-url-plan' : '#share-url-app');
+    var fallback = function () { input.focus(); input.select(); toast('Selecciona el enlace y cópialo.'); };
+    if (!url) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(function () { toast('Enlace copiado.'); }, fallback);
+    else fallback();
+  }
+  function shareLink(kind) {
+    var url = shareLinks[kind];
+    if (!url) return;
+    if (!navigator.share) { copyLink(kind); return; }
+    navigator.share({
+      title: 'Ruta Japón 2026',
+      text: kind === 'plan' ? 'Nuestro plan para Japón (15–29 nov):' : 'Itinerario del viaje a Japón (15–29 nov):',
+      url: url
+    }).then(function () { /* compartido */ }, function (e) { if (!e || e.name !== 'AbortError') copyLink(kind); });
+  }
+
+  // Al abrir un enlace con plan, se ofrece cargarlo (sin tocar el plan propio hasta confirmar).
+  function checkIncoming() {
+    var m = /^#plan=([A-Za-z0-9_-]+)$/.exec(location.hash);
+    if (!m) return false;
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; }
+    unpackPlan(m[1]).then(function (data) {
+      if (!data || data.app !== 'ruta-japon-2026' || !data.plan) throw new Error('no es un plan');
+      incoming = data;
+      $('#incoming-desc').textContent = 'Trae ' + planSummary(normalizePlan(data.plan), data.lodging) +
+        '. Si lo cargas, sustituye el plan guardado en este dispositivo; podrás deshacerlo justo después.';
+      showDialog('incoming-sheet');
+    }).catch(function () { toast('El enlace del plan está incompleto o dañado. Pide que te lo vuelvan a enviar.'); });
+    return true;
   }
 
   // ── Hoja en japonés ────────────────────────────────────────────────────
@@ -1405,6 +1530,7 @@
   }
 
   function route() {
+    if (checkIncoming()) return;
     var h = location.hash.replace(/^#/, '');
     var m = /^dia-(\d{1,2})$/.exec(h);
     var prevTab = state.tab, prevDay = state.day;
@@ -1618,6 +1744,19 @@
         btn.dataset.armed = '1';
         btn.textContent = '¿Seguro? Pulsa otra vez';
       }
+      return;
+    }
+    // Compartir
+    if (t.closest('#btn-share') || t.closest('[data-open-share]')) { openShare(); return; }
+    if ((b = t.closest('[data-share]'))) { shareLink(b.getAttribute('data-share')); return; }
+    if ((b = t.closest('[data-copy]'))) { copyLink(b.getAttribute('data-copy')); return; }
+    if ((b = t.closest('[data-close-dialog]'))) { closeDialog(b.getAttribute('data-close-dialog')); return; }
+    if (t.closest('#incoming-load')) {
+      closeDialog('incoming-sheet');
+      if (!incoming) return;
+      var bk = applyPlanData(incoming);
+      incoming = null;
+      toast('Plan compartido cargado.', { label: 'Deshacer', fn: function () { restorePlan(bk); } });
       return;
     }
     // Asistente

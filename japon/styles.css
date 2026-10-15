@@ -127,6 +127,8 @@ svg { stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-lin
   text-align: right;
 }
 .status b { color: var(--ink); font-weight: 500; }
+.topbar__end { display: flex; align-items: center; gap: 10px; min-width: 0; }
+#btn-share { flex: 0 0 auto; }
 
 .daystrip {
   display: flex;
@@ -1251,6 +1253,33 @@ svg { stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-lin
 .composer__img { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
 .composer__img img { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
 .composer__img .btn { margin-left: auto; }
+
+/* ── Compartir ────────────────────────────────────────────── */
+.share__lead { margin: 0; color: var(--muted); font-size: 14px; }
+.share-opt {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.share-opt h3 { margin: 0; font: 700 15.5px/1.3 var(--f-body); }
+.share-opt p { margin: 0; font-size: 13.5px; color: var(--muted); }
+.share-url {
+  width: 100%;
+  min-width: 0;
+  height: 38px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+  font: 400 12.5px/1 var(--f-mono);
+  text-overflow: ellipsis;
+}
+.sheet__inner--left { text-align: left; justify-items: start; }
+.incoming__desc { margin: 0; max-width: 52ch; }
 
 /* ── Escritorio ───────────────────────────────────────────── */
 @media (min-width: 960px) {

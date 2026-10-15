@@ -15,7 +15,8 @@ App web (móvil primero) con el itinerario revisado del viaje a Japón del 15 al
 - **Añadir paradas**: desde un catálogo de 66 ideas investigadas (fotografía, ropa de segunda mano, figuras y anime, retro, cultura, mercadillos y miradores, con las que solo son prácticas en coche marcadas), o un sitio propio pegando un enlace de Google Maps o coordenadas, o tocando el mapa.
 - **Ideas en el mapa**: la bombilla del mapa de cada día muestra las ideas cercanas; en la pestaña Mapa se filtran por categoría y se añaden al día que elijas.
 - **Buscar cerca de ti**: atajos a Google Maps para Hard Off, Off House, Book Off, 2nd Street, Mandarake, cámaras usadas, gasolineras, parkings…
-- **Copiar y pegar el plan** (Info → Tu plan): para pasarlo a otro móvil o hacer copia de seguridad.
+- **Compartir** (botón de la cabecera): envía el enlace de la app por WhatsApp, Mensajes, etc. Si has cambiado el plan, también puedes compartir un enlace que lo lleva dentro (`#plan=…`, comprimido); quien lo abre decide si lo carga y puede deshacerlo.
+- **Copiar y pegar el plan** (Info → Tu plan): para pasarlo como texto o hacer copia de seguridad.
 - **Asistente**: conversor yenes ⇄ euros (con el 10 % de IVA para etiquetas 税抜) y un chat con IA que traduce, lee fotos de carteles, menús y etiquetas, valora precios de segunda mano y puede añadir paradas al plan. La IA funciona al abrir la app dentro de Claude (usa la cuenta de Claude de quien la abre, sin claves); fuera de Claude, el botón lleva a esa versión.
 - **Mapa**: todo el viaje, filtrable por etapa, con tu ubicación.
 - **Reservas**: lista ordenada por urgencia según la fecha de hoy (entradas, Shinkansen, coche, permiso de conducir…).
@@ -25,7 +26,7 @@ App web (móvil primero) con el itinerario revisado del viaje a Japón del 15 al
 
 Es una página estática: no necesita compilación.
 
-- **GitHub Pages**: en el repositorio, *Settings → Pages → Deploy from a branch*, rama `main` y carpeta `/ (root)`. Tras fusionar esta rama, la app queda en `https://<usuario>.github.io/mi-landing/japon/`.
+- **Publicada en Vercel**: https://mi-landing-five.vercel.app/japon/ (se despliega sola con cada cambio en `main`).
 - **En local**: `python3 -m http.server` dentro de `japon/` y abrir `http://localhost:8000`.
 - En el móvil, «Añadir a pantalla de inicio» la instala como app.
 
