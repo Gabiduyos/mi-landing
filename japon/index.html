@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Ruta Japón 2026</title>
+  <meta name="description" content="Itinerario revisado del viaje a Japón (15–29 nov 2026) con mapas, rutas y reservas." />
+  <meta name="theme-color" content="#1b2233" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" />
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar__row">
+      <a class="brand" href="#dia-1" aria-label="Ruta Japón 2026, ir al primer día">
+        <span class="brand__kanji" aria-hidden="true">旅</span>
+        <span class="brand__text">Japón <span class="brand__year">2026</span></span>
+      </a>
+      <p class="status" id="status" aria-live="polite"></p>
+    </div>
+    <nav class="daystrip" id="daystrip" aria-label="Días del viaje"></nav>
+  </header>
+
+  <main id="main">
+    <section class="view view--day" id="view-dias" aria-labelledby="day-title">
+      <div class="day-layout">
+        <div class="day-map-wrap">
+          <div class="map" id="daymap" role="region" aria-label="Mapa del día"></div>
+          <div class="map-tools">
+            <button class="tool" type="button" id="btn-locate" aria-label="Mostrar mi ubicación">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7.5" fill="none"/></svg>
+            </button>
+            <button class="tool" type="button" id="btn-fit" aria-label="Encuadrar todas las paradas del día">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+            </button>
+          </div>
+          <p class="map-offline" id="daymap-offline" hidden>Sin mapa de calles: no hay conexión</p>
+        </div>
+        <div class="day-body" id="day-body"></div>
+      </div>
+    </section>
+
+    <section class="view view--map" id="view-mapa" hidden aria-label="Mapa de todo el viaje">
+      <div class="overview">
+        <div class="map map--full" id="tripmap" role="region" aria-label="Mapa del viaje completo"></div>
+        <div class="legend" id="legend"></div>
+        <div class="map-tools map-tools--overview">
+          <button class="tool" type="button" id="btn-locate-2" aria-label="Mostrar mi ubicación">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7.5" fill="none"/></svg>
+          </button>
+        </div>
+        <p class="map-offline" id="tripmap-offline" hidden>Sin mapa de calles: no hay conexión</p>
+      </div>
+    </section>
+
+    <section class="view view--list" id="view-reservas" hidden aria-labelledby="bk-title">
+      <div class="page">
+        <h1 class="page__title" id="bk-title">Reservas y trámites</h1>
+        <p class="page__lead" id="bk-lead"></p>
+        <ol class="bookings" id="bookings"></ol>
+      </div>
+    </section>
+
+    <section class="view view--list" id="view-info" hidden aria-labelledby="info-title">
+      <div class="page" id="info"></div>
+    </section>
+  </main>
+
+  <nav class="tabbar" aria-label="Secciones">
+    <a class="tab" href="#dia-1" data-tab="dias">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+      <span>Días</span>
+    </a>
+    <a class="tab" href="#mapa" data-tab="mapa">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6z"/><path d="M9 4v14M15 6v14"/></svg>
+      <span>Mapa</span>
+    </a>
+    <a class="tab" href="#reservas" data-tab="reservas">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v17l-7-4-7 4z"/></svg>
+      <span>Reservas</span><b class="tab__badge" id="bk-badge" hidden></b>
+    </a>
+    <a class="tab" href="#info" data-tab="info">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v6M12 7.5v.5"/></svg>
+      <span>Info</span>
+    </a>
+  </nav>
+
+  <dialog class="sheet" id="jp-sheet" aria-labelledby="jp-sheet-name">
+    <form method="dialog" class="sheet__inner">
+      <p class="sheet__eyebrow">Enseñar al taxista o al personal</p>
+      <p class="sheet__ja" id="jp-sheet-name" lang="ja"></p>
+      <p class="sheet__addr" id="jp-sheet-addr" lang="ja"></p>
+      <p class="sheet__phrase" lang="ja">ここまでお願いします。</p>
+      <p class="sheet__es" id="jp-sheet-es"></p>
+      <button class="btn btn--primary sheet__close" value="close">Cerrar</button>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script src="coast.js"></script>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
