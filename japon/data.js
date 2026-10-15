@@ -101,7 +101,8 @@ window.TRIP = {
         'El Pokémon Center Osaka DX está en la planta 9 de Daimaru Shinsaibashi (no en PARCO), a 20 min a pie de Den Den Town.',
         'Animate Umeda pasa al día 3: está en Umeda, al lado del Umeda Sky Building.',
         'Añadidos Super Potato (retro) y Mandarake Grand Chaos, que encajan con el plan.',
-        '«OS Camera Service» no aparece en ninguna búsqueda. Si tienes la dirección, apúntala; si no, el día 3 tienes Yodobashi, Kamera no Naniwa y Yaotomi en Umeda.'
+        '«OS Camera Service» está cerca de la estación de Umeda: pasa al día 3, con el resto de tiendas de cámaras de Umeda.',
+        'Añadida Camera no Naniwa (tienda principal), a 3 min del Pokémon Center.'
       ],
       rain: 'Casi todo es interior o bajo galería cubierta.',
       stops: [
@@ -123,13 +124,13 @@ window.TRIP = {
           tips: ['Llevar el pasaporte: hace falta para el tax-free (ojo, sistema nuevo: ver Info).']
         },
         {
-          id: 'osakacam', t: '—', kind: 'shop', opt: true, name: 'OS Camera Service (por localizar)',
-          q: 'OS Camera Service Osaka', ll: null,
-          note: 'No he podido verificar esta tienda. El botón busca el nombre en Google Maps por si aparece.'
+          id: 'naniwa-shinsai', t: '14:30', kind: 'shop', name: 'Camera no Naniwa (tienda principal)', ja: 'カメラのナニワ 心斎橋本店',
+          q: 'カメラのナニワ 心斎橋本店', ll: [34.6745, 135.5005], approx: true, how: 'A pie · ≈15 min',
+          note: 'Cámaras y objetivos nuevos y usados, junto a la salida 5–6 del metro Shinsaibashi.'
         },
         {
           id: 'pkdx-osaka', t: '15:00', kind: 'shop', name: 'Pokémon Center Osaka DX', ja: 'ポケモンセンターオーサカDX（大丸心斎橋店 本館9F）',
-          q: 'Pokémon Center Osaka DX Daimaru Shinsaibashi', ll: [34.6727, 135.5011], how: 'A pie por Shinsaibashi-suji · ≈20 min',
+          q: 'Pokémon Center Osaka DX Daimaru Shinsaibashi', ll: [34.6727, 135.5011], how: 'A pie · 3 min',
           note: 'Planta 9 de Daimaru Shinsaibashi. Al lado está el Pokémon Café, solo con reserva.',
           tips: ['Las reservas del café abren 31 días antes a las 18:00 de Japón (11:00 en España peninsular) y vuelan en minutos.']
         },
@@ -152,7 +153,8 @@ window.TRIP = {
       sub: 'Bahía por la mañana; tiendas de Umeda y puesta de sol a 173 m de altura.',
       temp: [16, 9],
       changes: [
-        'Tiendas de Umeda (Animate, Pokémon Center Osaka, cámaras) agrupadas aquí, a 10 min del Sky Building.'
+        'Tiendas de Umeda (Animate, Pokémon Center Osaka, cámaras) agrupadas aquí, a 10 min del Sky Building.',
+        'Aquí está OS Camera Service, la tienda de tu PDF (la información publicada es antigua: comprobar horario).'
       ],
       rain: 'Todo el día funciona con lluvia, salvo la terraza al aire libre del Sky Building.',
       stops: [
@@ -176,7 +178,8 @@ window.TRIP = {
             { n: 'Pokémon Center Osaka (Daimaru Umeda 13F)', ja: 'ポケモンセンターオーサカ', q: 'Pokémon Center Osaka Daimaru Umeda' },
             { n: 'Yodobashi Camera Umeda', ja: 'ヨドバシカメラ梅田', q: 'Yodobashi Camera Multimedia Umeda' },
             { n: 'Kamera no Naniwa (usadas)', ja: 'カメラのナニワ', q: 'カメラのナニワ 梅田' },
-            { n: 'Yaotomi (carrete y usadas)', ja: '八百富写真機店', q: '八百富写真機店 大阪駅前' }
+            { n: 'Yaotomi (carrete y usadas)', ja: '八百富写真機店', q: '八百富写真機店 大阪駅前' },
+            { n: 'OS Camera Service (la de tu PDF)', ja: 'OSカメラサービス', q: 'OSカメラサービス 梅田' }
           ]
         },
         {
@@ -353,7 +356,8 @@ window.TRIP = {
       changes: [
         'El PDF tenía dos «Día 7»: ahora es un único día Kioto → Tokio.',
         'Caben Arashiyama y Kinkaku-ji si se madruga y se usa taxi entre los dos (≈20 min).',
-        'Sábado en pleno otoño: reservar el Shinkansen en cuanto se abra la venta, un mes antes.'
+        'Sábado en pleno otoño: reservar el Shinkansen en cuanto se abra la venta, un mes antes.',
+        'El 21 de cada mes hay mercadillo de antigüedades en Tō-ji, a 15 min a pie de la estación: cabe antes del Shinkansen.'
       ],
       rain: 'Con lluvia, quedarse solo con Kinkaku-ji y salir antes hacia Tokio.',
       stops: [
@@ -378,17 +382,23 @@ window.TRIP = {
           note: 'Abre a las 9:00. La visita es un recorrido de sentido único de unos 45 min.'
         },
         {
-          id: 'd7-home', t: '11:30', kind: 'home', lodge: 'kyoto', name: 'Recoger mochilas',
+          id: 'd7-home', t: '11:15', kind: 'home', lodge: 'kyoto', name: 'Recoger mochilas',
           how: 'Taxi o bus · ≈15 min'
         },
         {
-          id: 'shinkansen', t: '12:30', kind: 'move', name: 'Shinkansen Kioto → Tokio', ja: '京都駅 新幹線',
+          id: 'toji', t: '11:45', kind: 'shop', opt: true, name: 'Mercadillo Kōbō-san en Tō-ji', ja: '東寺 弘法市',
+          q: 'Toji Temple Kyoto', ll: [34.9806, 135.7477], how: 'Metro + a pie · ≈25 min',
+          note: 'Solo los días 21: antigüedades, kimonos usados, cerámica y cacharros alrededor de la pagoda de cinco pisos. Efectivo.',
+          tips: ['A 15 min a pie de la estación de Kioto. Con mochila, mejor dejarla antes en las taquillas de la estación.']
+        },
+        {
+          id: 'shinkansen', t: '13:00', kind: 'move', name: 'Shinkansen Kioto → Tokio', ja: '京都駅 新幹線',
           q: 'Kyoto Station Shinkansen', ll: [34.9858, 135.7588], how: 'Metro Karasuma · ≈15 min',
           note: 'Nozomi ≈2 h 15. Asiento E: ventanilla del lado del Fuji. Comprar ekiben (bentō de tren) en la estación.',
           tips: ['Maletas de más de 160 cm (alto + ancho + fondo) obligan a reservar asiento con espacio para equipaje.']
         },
         {
-          id: 'd7-tokyo', t: '15:30', kind: 'home', lodge: 'tokyo', name: 'Check-in en Taitō',
+          id: 'd7-tokyo', t: '15:45', kind: 'home', lodge: 'tokyo', name: 'Check-in en Taitō',
           how: 'JR Yamanote desde Tokio · ≈10 min',
           note: 'Las maletas enviadas desde Osaka deberían estar esperando.'
         },
@@ -401,7 +411,10 @@ window.TRIP = {
             { n: 'AmiAmi (Radio Kaikan)', ja: 'あみあみ', q: 'あみあみ 秋葉原ラジオ会館店' },
             { n: 'Hard Off', ja: 'ハードオフ', q: 'ハードオフ 秋葉原' },
             { n: 'Super Potato', ja: 'スーパーポテト', q: 'スーパーポテト 秋葉原店' },
-            { n: 'Mandarake Complex', ja: 'まんだらけコンプレックス', q: 'Mandarake Complex Akihabara' }
+            { n: 'Mandarake Complex', ja: 'まんだらけコンプレックス', q: 'Mandarake Complex Akihabara' },
+            { n: 'Surugaya (suele ser más barato)', ja: '駿河屋', q: '駿河屋 秋葉原' },
+            { n: 'BEEP (ordenadores retro)', ja: 'BEEP', q: 'BEEP Akihabara' },
+            { n: 'Retro Game Camp', ja: 'レトロゲームキャンプ', q: 'レトロゲームキャンプ 秋葉原' }
           ]
         }
       ]
@@ -415,7 +428,8 @@ window.TRIP = {
       changes: [
         'La Tokyu Kabukichō Tower está en Shinjuku, no en Shibuya. Reordenado para no cruzar la ciudad dos veces.',
         'Shibuya a primera hora de un domingo, con menos gente; Shinjuku vuelve por la noche, cuando luce el neón.',
-        'Desde Ueno, la línea Ginza llega directa a Shibuya.'
+        'Desde Ueno, la línea Ginza llega directa a Shibuya.',
+        'Domingo: hay mercadillo de antigüedades en el santuario Hanazono (Shinjuku) y Kōenji queda a una parada de Nakano. Ambos opcionales.'
       ],
       rain: 'Todo funciona con lluvia; cambiar el cruce de Shibuya por la vista desde una cafetería.',
       stops: [
@@ -427,7 +441,7 @@ window.TRIP = {
         {
           id: 'parco', t: '11:00', kind: 'shop', name: 'Shibuya PARCO', ja: '渋谷PARCO',
           q: 'Shibuya PARCO', ll: [35.6620, 139.6987], how: 'A pie · ≈7 min',
-          note: 'Planta 6: Pokémon Center Shibuya, Nintendo TOKYO, Capcom Store y Jump Shop.',
+          note: 'Planta 6: Pokémon Center Shibuya, Nintendo TOKYO, Capcom Store y Jump Shop. En la 5.ª abre en noviembre la Gundam Base Shibuya (fecha por confirmar).',
           shops: [
             { n: 'Mandarake Shibuya', ja: 'まんだらけ渋谷店', q: 'Mandarake Shibuya' }
           ]
@@ -443,17 +457,30 @@ window.TRIP = {
           ]
         },
         {
-          id: 'nakano', t: '15:00', kind: 'shop', name: 'Nakano Broadway', ja: '中野ブロードウェイ',
-          q: 'Nakano Broadway', ll: [35.7090, 139.6656], how: 'JR Chūō rápido · ≈5 min',
-          note: 'Mandarake (una veintena de locales), Lashinbang, relojes y juguetes retro. Muchas tiendas abren a las 12:00 y cierran a las 20:00.'
+          id: 'hanazono', t: '14:15', kind: 'shop', opt: true, name: 'Antigüedades del santuario Hanazono', ja: '花園神社 青空骨董市',
+          q: 'Hanazono Shrine', ll: [35.6935, 139.7048], how: 'A pie · ≈15 min (lado este)',
+          note: 'Mercadillo de casi todos los domingos, 6:30–16:00 (muchos puestos recogen hacia las 15:00). Se suspende con lluvia o festivales.'
         },
         {
-          id: 'kabukicho', t: '18:30', kind: 'sight', name: 'Kabukichō y Tokyu Kabukichō Tower', ja: '東急歌舞伎町タワー',
+          id: 'nakano', t: '15:15', kind: 'shop', name: 'Nakano Broadway', ja: '中野ブロードウェイ',
+          q: 'Nakano Broadway', ll: [35.7090, 139.6656], how: 'JR Chūō rápido · ≈5 min',
+          note: 'Mandarake (una veintena de locales), Lashinbang, relojes y juguetes retro. Muchas tiendas abren a las 12:00 y cierran a las 20:00.',
+          shops: [
+            { n: 'Fujiya Camera (usadas y «junk»)', ja: 'フジヤカメラ', q: 'フジヤカメラ 中野' }
+          ]
+        },
+        {
+          id: 'koenji', t: '17:15', kind: 'shop', opt: true, name: 'Kōenji (ropa vintage)', ja: '高円寺',
+          q: 'Koenji Station', ll: [35.7053, 139.6497], how: 'JR Chūō · 1 parada',
+          note: 'Galerías cubiertas y callejones con tiendas de ropa usada baratas. Abren hasta las 20:00 aprox.'
+        },
+        {
+          id: 'kabukicho', t: '19:00', kind: 'sight', name: 'Kabukichō y Tokyu Kabukichō Tower', ja: '東急歌舞伎町タワー',
           q: 'Tokyu Kabukicho Tower', ll: [35.6958, 139.7005], how: 'JR Chūō · ≈5 min',
           note: 'Neones, la cabeza de Godzilla del Hotel Gracery y la torre nueva de Kabukichō.'
         },
         {
-          id: 'omoide', t: '19:30', kind: 'food', name: 'Omoide Yokochō', ja: '思い出横丁',
+          id: 'omoide', t: '20:00', kind: 'food', name: 'Omoide Yokochō', ja: '思い出横丁',
           q: 'Omoide Yokocho', ll: [35.6930, 139.6997], how: 'A pie · ≈8 min',
           note: 'Yakitori en el «callejón del humo». Después, copa en Golden Gai.'
         }
@@ -488,7 +515,7 @@ window.TRIP = {
           id: 'odaiba', t: '16:00', kind: 'sight', name: 'Atardecer en Odaiba', ja: 'お台場海浜公園',
           q: 'Odaiba Seaside Park', ll: [35.6298, 139.7745], how: 'Yurikamome desde Shin-Toyosu · ≈20 min',
           note: 'Puesta de sol ≈16:30 con el Rainbow Bridge y la réplica de la Estatua de la Libertad.',
-          tips: ['En la Yurikamome, primer vagón: la vista frontal del recorrido por la bahía merece la pena.']
+          tips: ['En la Yurikamome, primer vagón: la vista frontal del recorrido por la bahía merece la pena.', 'The Gundam Base Tokyo sigue abierta en la 7.ª planta de DiverCity, a 5 min del parque.']
         },
         {
           id: 'doraemon', t: '17:45', kind: 'shop', name: 'Doraemon: tienda temporal', ja: 'ドラえもん未来デパート（東京ドームシティ期間限定店）',
@@ -639,7 +666,7 @@ window.TRIP = {
           id: 'gotokuji', t: '14:15', kind: 'sight', name: 'Templo Gōtokuji', ja: '豪徳寺',
           q: 'Gotokuji Temple', ll: [35.6486, 139.6475], how: 'Shuto · ≈1 h 15',
           note: 'Cientos de maneki-neko blancos con la pata levantada. Recinto 6:00–17:00, entrada libre.',
-          tips: ['No tiene aparcamiento para visitantes: parking de monedas cerca.', 'Zona residencial y templo en uso: silencio y nada de drones.']
+          tips: ['No tiene aparcamiento para visitantes: parking de monedas cerca.', 'Zona residencial y templo en uso: silencio y nada de drones.', 'Shimokitazawa, el barrio vintage, queda a 10 min: buen final de día.']
         },
         {
           id: 'd13-home', t: '16:30', kind: 'home', lodge: 'tokyo', name: 'Vuelta a Taitō',
@@ -741,7 +768,9 @@ window.TRIP = {
     { d: 9, t: 'La estatua del Gundam Unicorn de Odaiba se retiró en agosto de 2026.' },
     { d: 2, t: 'El Pokémon Center Osaka DX está en Daimaru Shinsaibashi (9F), a 20 min a pie de Den Den Town.' },
     { d: 3, t: 'Animate Umeda y las tiendas de cámaras de Umeda, juntas con el Umeda Sky Building.' },
-    { d: 2, t: '«OS Camera Service» no aparece en ninguna búsqueda: confirmar la dirección.' },
+    { d: 3, t: '«OS Camera Service» está cerca de la estación de Umeda: va al día 3 con las demás tiendas de cámaras.' },
+    { d: 7, t: 'El 21 nov hay mercadillo de antigüedades en Tō-ji (Kioto), a 15 min de la estación: añadido como opcional antes del Shinkansen.' },
+    { d: 8, t: 'Domingo en Shinjuku: mercadillo de antigüedades en el santuario Hanazono, y Kōenji (vintage) a una parada de Nakano.' },
     { d: 7, t: 'El PDF tenía dos «Día 7». Ahora es un único día Kioto → Tokio, con Arashiyama y Kinkaku-ji.' },
     { d: 4, t: 'Envío de maletas Osaka → Tokio para hacer Kioto solo con mochila.' },
     { d: 11, t: 'Fuji por la mañana, que es cuando suele estar despejado, y noche propuesta en Kawaguchiko.' },
@@ -766,6 +795,10 @@ window.TRIP = {
       body: 'Recomendado: con onsen y vistas al Fuji. Ver amanecer y ahorrar 2 h de coche nocturno.' },
     { id: 'pokecafe', due: '2026-10-16', opens: true, title: 'Pokémon Café Osaka · 16 nov (opcional)', who: 'Web oficial del Pokémon Café',
       body: 'Abre 31 días antes a las 18:00 de Japón (11:00 en España peninsular). Se llena en minutos.' },
+    { id: 'ghibli', due: '2026-10-20', title: 'Museo Ghibli (opcional)', who: 'Lawson Ticket (web internacional)',
+      body: 'Las entradas de noviembre salieron el 10 oct. Si interesa, mirar si quedan huecos sueltos.' },
+    { id: 'nintendo-museum', due: '2026-11-05', title: 'Nintendo Museum, Uji (opcional)', who: 'Web oficial · cuenta Nintendo',
+      body: 'El sorteo ya pasó; a veces ponen a la venta anulaciones por orden de llegada. Encaja en el día 6.' },
     { id: 'insurance', due: '2026-10-31', title: 'Seguro de viaje', who: 'Con cobertura médica alta',
       body: 'La sanidad en Japón es cara para turistas. Incluir cobertura de coche de alquiler si es posible.' },
     { id: 'capyba', due: '2026-11-14', opens: true, title: 'Cafe Capyba · 28 nov', who: 'Web de cafe capyba (TableCheck)',

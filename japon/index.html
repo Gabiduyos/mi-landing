@@ -34,7 +34,14 @@
       <div class="day-layout">
         <div class="day-map-wrap">
           <div class="map" id="daymap" role="region" aria-label="Mapa del día"></div>
+          <div class="pick-banner" id="pick-banner" hidden>
+            <span>Toca el mapa donde está el sitio</span>
+            <button class="btn btn--sm" type="button" id="pick-cancel">Cancelar</button>
+          </div>
           <div class="map-tools">
+            <button class="tool" type="button" id="btn-ideas" aria-label="Mostrar ideas cerca de este día" aria-pressed="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>
+            </button>
             <button class="tool" type="button" id="btn-locate" aria-label="Mostrar mi ubicación">
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7.5" fill="none"/></svg>
             </button>
@@ -104,11 +111,64 @@
     </form>
   </dialog>
 
+  <dialog class="sheet sheet--add" id="add-sheet" aria-labelledby="add-title">
+    <div class="add">
+      <div class="add__head">
+        <h2 class="add__title" id="add-title">Añadir parada</h2>
+        <button class="tool tool--sm" type="button" data-close-add aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <div class="seg" role="tablist" aria-label="Cómo añadir">
+        <button class="seg__btn" type="button" role="tab" data-addtab="ideas" aria-selected="true">Ideas investigadas</button>
+        <button class="seg__btn" type="button" role="tab" data-addtab="mine" aria-selected="false">Mi propio sitio</button>
+      </div>
+      <div class="add__panel" id="add-ideas">
+        <label class="search" for="add-search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>
+          <span class="sr">Buscar ideas</span>
+          <input id="add-search" type="search" placeholder="Buscar: cámaras, kimono, Gundam, templo…" autocomplete="off" />
+        </label>
+        <div class="add__cats" id="add-cats"></div>
+        <ul class="ideas" id="add-list"></ul>
+        <div class="add__nearby">
+          <p class="nearby__title">¿No está aquí? Busca cerca de ti</p>
+          <div id="add-nearby"></div>
+        </div>
+      </div>
+      <form class="add__panel add-form" id="add-mine" hidden novalidate>
+        <label for="mine-name">Nombre</label>
+        <input id="mine-name" name="name" autocomplete="off" placeholder="Ej.: tienda de cámaras que vi en Instagram" />
+        <label for="mine-place">Enlace de Google Maps, dirección o coordenadas</label>
+        <input id="mine-place" name="place" autocomplete="off" placeholder="https://maps.app.goo.gl/… o 35.6895, 139.6917" />
+        <button class="btn btn--sm add-form__pick" type="button" id="pick-on-map">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Elegir el punto en el mapa
+        </button>
+        <div class="add-form__row">
+          <div><label for="mine-time">Hora</label><input id="mine-time" name="time" type="time" /></div>
+          <div><label for="mine-kind">Tipo</label>
+            <select id="mine-kind" name="kind">
+              <option value="sight">Visita</option>
+              <option value="shop">Tiendas</option>
+              <option value="food">Comida</option>
+              <option value="move">Trayecto</option>
+            </select>
+          </div>
+        </div>
+        <label for="mine-note">Nota</label>
+        <input id="mine-note" name="note" autocomplete="off" placeholder="Opcional" />
+        <p class="add-form__hint">Los enlaces cortos de Google Maps no traen coordenadas: el sitio se abrirá bien en Maps, pero para verlo en este mapa usa «Elegir el punto en el mapa».</p>
+        <button class="btn btn--primary" type="submit">Añadir al día</button>
+      </form>
+    </div>
+  </dialog>
+
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
   <script src="vendor/leaflet/leaflet.js"></script>
   <script src="coast.js"></script>
   <script src="data.js"></script>
+  <script src="places.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

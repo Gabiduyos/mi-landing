@@ -11,6 +11,11 @@ App web (móvil primero) con el itinerario revisado del viaje a Japón del 15 al
   - **Hecho**: pone un sello 済 y se recuerda en el móvil.
 - Salida y puesta de sol calculadas para cada día, temperatura orientativa y plan B si llueve.
 - **Volver a casa**: ruta al alojamiento de esa noche.
+- **Editar el plan** (botón «Editar plan» en cada día): subir y bajar paradas, cambiar la hora, moverlas a otro día, quitarlas (con «Deshacer»), añadir notas y ordenar por hora. «Restablecer día» vuelve al plan original.
+- **Añadir paradas**: desde un catálogo de 66 ideas investigadas (fotografía, ropa de segunda mano, figuras y anime, retro, cultura, mercadillos y miradores, con las que solo son prácticas en coche marcadas), o un sitio propio pegando un enlace de Google Maps o coordenadas, o tocando el mapa.
+- **Ideas en el mapa**: la bombilla del mapa de cada día muestra las ideas cercanas; en la pestaña Mapa se filtran por categoría y se añaden al día que elijas.
+- **Buscar cerca de ti**: atajos a Google Maps para Hard Off, Off House, Book Off, 2nd Street, Mandarake, cámaras usadas, gasolineras, parkings…
+- **Copiar y pegar el plan** (Info → Tu plan): para pasarlo a otro móvil o hacer copia de seguridad.
 - **Mapa**: todo el viaje, filtrable por etapa, con tu ubicación.
 - **Reservas**: lista ordenada por urgencia según la fecha de hoy (entradas, Shinkansen, coche, permiso de conducir…).
 - **Info**: qué se ha corregido del PDF, direcciones exactas de los alojamientos (se pueden pegar coordenadas), tax-free, conducir en Japón, frases útiles y teléfonos de emergencia.
@@ -25,7 +30,7 @@ Es una página estática: no necesita compilación.
 
 ## Editar el itinerario
 
-Todo el contenido está en `data.js` (días, paradas, reservas, frases). Cada parada lleva:
+El plan base está en `data.js` (días, paradas, reservas, frases) y el catálogo de ideas en `places.js`. Los cambios hechos desde la app se guardan en el propio dispositivo y no tocan estos archivos. Cada parada lleva:
 
 | Campo | Para qué sirve |
 | --- | --- |

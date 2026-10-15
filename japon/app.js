@@ -3,9 +3,12 @@
 
   var T = window.TRIP;
   var DAYS = T.days;
+  var PLACES = window.PLACES || [];
+  var CATS = window.PLACE_CATS || {};
+  var NEARBY = window.NEARBY || [];
   var hasLeaflet = typeof window.L !== 'undefined';
 
-  // ── Almacenamiento local (solo comodidades de este móvil) ──────────────
+  // ── Almacenamiento local (solo en este dispositivo) ────────────────────
   var store = {
     get: function (k, d) {
       try { var v = localStorage.getItem('jp26:' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; }
@@ -15,6 +18,19 @@
     }
   };
 
+  // El plan editable: orden de paradas por día, sitios propios, horas y notas.
+  function normalizePlan(p) {
+    p = (p && typeof p === 'object') ? p : {};
+    return {
+      order: (p.order && typeof p.order === 'object') ? p.order : {},
+      custom: (p.custom && typeof p.custom === 'object') ? p.custom : {},
+      times: (p.times && typeof p.times === 'object') ? p.times : {},
+      notes: (p.notes && typeof p.notes === 'object') ? p.notes : {}
+    };
+  }
+  var plan = normalizePlan(store.get('plan', null));
+  function savePlan() { store.set('plan', plan); }
+
   var state = {
     tab: 'dias',
     day: 0,
@@ -23,8 +39,22 @@
     edits: store.get('lodging', {}),
     me: null,
     watchId: null,
-    phasesOn: new Set(Object.keys(T.phases))
+    phasesOn: new Set(Object.keys(T.phases)),
+    catsOn: new Set(store.get('cats-on', Object.keys(CATS))),
+    ideasOnDay: store.get('ideas-day', false),
+    editing: false,
+    addTab: 'ideas',
+    addCat: 'all',
+    addQuery: '',
+    picking: null
   };
+
+  // Índices
+  var BASE = {}, BASE_DAY = {};
+  DAYS.forEach(function (d) { d.stops.forEach(function (s, i) { BASE[s.id] = s; BASE_DAY[s.id] = { n: d.n, i: i }; }); });
+  var PLACE = {};
+  PLACES.forEach(function (p) { PLACE[p.id] = p; });
+  function dayByN(n) { return DAYS[n - 1]; }
 
   // ── Utilidades ─────────────────────────────────────────────────────────
   function $(s, el) { return (el || document).querySelector(s); }
@@ -43,6 +73,9 @@
   function parts(iso) { var d = new Date(parseISO(iso)); return { wd: d.getUTCDay(), d: d.getUTCDate(), m: d.getUTCMonth() }; }
   function fmtShort(iso) { var p = parts(iso); return p.d + ' ' + MES[p.m]; }
   function fmtMin(m) { m = ((Math.round(m) % 1440) + 1440) % 1440; return Math.floor(m / 60) + ':' + pad(m % 60); }
+  function timeToMin(t) { var m = /^(\d{1,2}):(\d{2})$/.exec(t || ''); return m ? (+m[1]) * 60 + (+m[2]) : null; }
+  function timeForInput(t) { var m = timeToMin(t); return m == null ? '' : pad(Math.floor(m / 60)) + ':' + pad(m % 60); }
+  function timeForDisplay(t) { var m = timeToMin(t); return m == null ? '' : Math.floor(m / 60) + ':' + pad(m % 60); }
   var today = localISO();
 
   // Salida y puesta de sol (algoritmo NOAA), en hora de Japón.
@@ -66,20 +99,25 @@
   function fmtDist(m) { return m < 950 ? Math.round(m / 10) * 10 + ' m' : (m < 20000 ? (m / 1000).toFixed(1).replace('.', ',') : Math.round(m / 1000)) + ' km'; }
 
   var toastTimer;
-  function toast(msg) {
+  function toast(msg, action) {
     var el = $('#toast');
-    el.textContent = msg;
+    el.innerHTML = '<span>' + esc(msg) + '</span>' + (action ? '<button class="toast__btn" type="button">' + esc(action.label) + '</button>' : '');
+    if (action) el.querySelector('button').addEventListener('click', function () { el.hidden = true; action.fn(); });
     el.hidden = false;
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { el.hidden = true; }, 3800);
+    toastTimer = setTimeout(function () { el.hidden = true; }, action ? 6500 : 3800);
   }
 
-  // ── Alojamientos (con las direcciones que se editen en Info) ───────────
+  // ── Coordenadas y alojamientos ─────────────────────────────────────────
+  function inJapan(lat, lng) { return lat > 20 && lat < 50 && lng > 120 && lng < 150; }
   function parseLL(text) {
-    var m = /(-?\d{1,3}\.\d{3,})\s*,\s*(-?\d{1,3}\.\d{3,})/.exec(text || '');
-    if (!m) return null;
-    var lat = +m[1], lng = +m[2];
-    return (lat > 20 && lat < 50 && lng > 120 && lng < 150) ? [lat, lng] : null;
+    text = text || '';
+    var pats = [/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/, /@(-?\d+\.\d+),(-?\d+\.\d+)/, /[?&](?:q|ll|query|destination)=(-?\d+\.\d+)(?:,|%2C)\s*(-?\d+\.\d+)/i, /(-?\d{1,3}\.\d{3,})\s*,\s*(-?\d{1,3}\.\d{3,})/];
+    for (var i = 0; i < pats.length; i++) {
+      var m = pats[i].exec(text);
+      if (m && inJapan(+m[1], +m[2])) return [+m[1], +m[2]];
+    }
+    return null;
   }
   function lodging(key) {
     var base = T.lodging[key], e = state.edits[key] || {};
@@ -87,19 +125,57 @@
     return {
       key: key, label: base.label, name: base.name, note: base.note,
       addr: e.addr || base.addr,
-      q: e.addr || base.q,
+      q: e.addr ? (ll ? ll.join(',') : e.addr) : base.q,
       ll: ll || base.ll,
       approx: !ll && base.approx,
       edited: !!e.addr
     };
   }
 
+  // ── El plan efectivo ───────────────────────────────────────────────────
+  function placeStop(p) {
+    return {
+      id: 'c:' + p.id, kind: (CATS[p.cat] || {}).kind || 'sight', cat: p.cat, name: p.name, ja: p.ja, q: p.q,
+      ll: p.ll, approx: p.approx, note: p.note, shops: p.shops, t: '', car: p.car, fromCatalog: true
+    };
+  }
+  function stopById(id) {
+    if (BASE[id]) return BASE[id];
+    if (id.indexOf('c:') === 0) { var p = PLACE[id.slice(2)]; return p ? placeStop(p) : null; }
+    return plan.custom[id] || null;
+  }
+  function withEdits(s) {
+    var t = plan.times[s.id], n = plan.notes[s.id];
+    if (t == null && !n) return s;
+    var o = Object.assign({}, s);
+    if (t != null) o.t = t;
+    if (n) o.mine = n;
+    return o;
+  }
+  function stopsOf(day) {
+    var ids = plan.order[day.n];
+    var list = ids ? ids.map(stopById).filter(Boolean) : day.stops;
+    return list.map(withEdits);
+  }
+  function ensureOrder(n) {
+    if (!plan.order[n]) plan.order[n] = dayByN(n).stops.map(function (s) { return s.id; });
+    return plan.order[n];
+  }
+  function planIndex() {
+    var idx = {};
+    DAYS.forEach(function (d) {
+      (plan.order[d.n] || d.stops.map(function (s) { return s.id; })).forEach(function (id) { (idx[id] = idx[id] || []).push(d.n); });
+    });
+    return idx;
+  }
+  function isEdited(n) { return !!plan.order[n]; }
+
   function info(s) {
     if (s.lodge) {
       var l = lodging(s.lodge);
       return { name: s.name, place: l.name, ja: s.ja || '', q: l.q, ll: l.ll, approx: l.approx, addr: l.edited ? l.addr : '' };
     }
-    return { name: s.name, ja: s.ja || '', q: s.q, ll: s.ll, approx: !!s.approx, addr: '' };
+    return { name: s.name, ja: s.ja || '', q: s.q || s.name, ll: s.ll || null, approx: !!s.approx, addr: '', url: s.url || '' };
   }
 
   // ── Enlaces de Google Maps ─────────────────────────────────────────────
@@ -116,48 +192,73 @@
   }
   function carRouteUrl(day) {
     var pts = [];
-    day.stops.forEach(function (s) {
+    stopsOf(day).forEach(function (s) {
       if (s.opt || s.kind === 'task') return;
       var q = info(s).q;
       if (q && pts[pts.length - 1] !== q) pts.push(q);
     });
-    return 'https://www.google.com/maps/dir/' + pts.map(function (q) {
+    return 'https://www.google.com/maps/dir/' + pts.slice(0, 10).map(function (q) {
       return encodeURIComponent(q).replace(/%20/g, '+');
     }).join('/') + '/data=!4m2!4m1!3e0';
   }
 
   // ── Iconos ─────────────────────────────────────────────────────────────
+  function svg(d) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + d + '</svg>'; }
   var ICON = {
-    home: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5"/><path d="M6.5 10v9h11v-9"/></svg>',
-    box: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v8"/></svg>',
-    route: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="6" r="2.2"/><path d="M8 18h7a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h7"/></svg>',
-    pin: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>',
-    from: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h12M13 7l5 5-5 5"/></svg>',
-    ja: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h9M8.5 4v2M6 6c0 4 3 7 7 8M11 6c-1 4-3.5 7-7 8M13.5 20l3.5-9 3.5 9M14.7 17h4.6"/></svg>',
-    check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
-    walk: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4.5" r="1.8"/><path d="M10 21l2.5-6.5L15 17v4M9 12l2-4.5 3 2.5 3 1M12.5 14.5 11 8"/></svg>',
-    rain: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 16 0z"/><path d="M12 12v6.5a2 2 0 0 1-4 0"/></svg>',
-    sunrise: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18h16M7 18a5 5 0 0 1 10 0M12 4v4M9.5 6.5 12 4l2.5 2.5"/></svg>',
-    sunset: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18h16M7 18a5 5 0 0 1 10 0M12 4v4M9.5 5.5 12 8l2.5-2.5"/></svg>',
-    temp: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z"/></svg>',
-    train: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5.5" y="3.5" width="13" height="13" rx="3"/><path d="M5.5 10h13M8.5 20l2-3.5M15.5 20l-2-3.5"/></svg>',
-    car: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 16V12l2-5h10l2 5v4z"/><path d="M5 12h14"/><circle cx="8" cy="16.5" r="1.6"/><circle cx="16" cy="16.5" r="1.6"/></svg>'
+    home: svg('<path d="M4 11.5 12 5l8 6.5"/><path d="M6.5 10v9h11v-9"/>'),
+    box: svg('<path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v8"/>'),
+    route: svg('<circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="6" r="2.2"/><path d="M8 18h7a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h7"/>'),
+    pin: svg('<path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/>'),
+    from: svg('<path d="M5 12h12M13 7l5 5-5 5"/>'),
+    ja: svg('<path d="M4 6h9M8.5 4v2M6 6c0 4 3 7 7 8M11 6c-1 4-3.5 7-7 8M13.5 20l3.5-9 3.5 9M14.7 17h4.6"/>'),
+    check: svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
+    walk: svg('<circle cx="13" cy="4.5" r="1.8"/><path d="M10 21l2.5-6.5L15 17v4M9 12l2-4.5 3 2.5 3 1M12.5 14.5 11 8"/>'),
+    rain: svg('<path d="M4 12a8 8 0 0 1 16 0z"/><path d="M12 12v6.5a2 2 0 0 1-4 0"/>'),
+    sunrise: svg('<path d="M4 18h16M7 18a5 5 0 0 1 10 0M12 4v4M9.5 6.5 12 4l2.5 2.5"/>'),
+    sunset: svg('<path d="M4 18h16M7 18a5 5 0 0 1 10 0M12 4v4M9.5 5.5 12 8l2.5-2.5"/>'),
+    temp: svg('<path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z"/>'),
+    train: svg('<rect x="5.5" y="3.5" width="13" height="13" rx="3"/><path d="M5.5 10h13M8.5 20l2-3.5M15.5 20l-2-3.5"/>'),
+    car: svg('<path d="M5 16V12l2-5h10l2 5v4z"/><path d="M5 12h14"/><circle cx="8" cy="16.5" r="1.6"/><circle cx="16" cy="16.5" r="1.6"/>'),
+    plus: svg('<path d="M12 5v14M5 12h14"/>'),
+    edit: svg('<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>'),
+    up: svg('<path d="M12 19V5M6 11l6-6 6 6"/>'),
+    down: svg('<path d="M12 5v14M6 13l6 6 6-6"/>'),
+    trash: svg('<path d="M5 7h14M10 7V4.5h4V7M7 7l1 13h8l1-13"/>'),
+    clock: svg('<circle cx="12" cy="12" r="8"/><path d="M12 8v4.5l3 2"/>'),
+    bulb: svg('<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>'),
+    close: svg('<path d="M6 6l12 12M18 6 6 18"/>'),
+    search: svg('<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>'),
+    target: svg('<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>')
+  };
+  var CAT_ICON = {
+    foto: svg('<rect x="3.5" y="7" width="17" height="12" rx="2"/><circle cx="12" cy="13" r="3.5"/><path d="M8.5 7l1.5-2.5h4L15.5 7"/>'),
+    ropa: svg('<path d="M8 4 3.5 7l2 4L8 10v10h8V10l2.5 1 2-4L16 4c-.6 1.4-2 2.4-4 2.4S8.6 5.4 8 4z"/>'),
+    figuras: svg('<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>'),
+    retro: svg('<rect x="3" y="8" width="18" height="9" rx="4.5"/><path d="M7.5 12.5h3M9 11v3"/><path d="M15 12h.01M17.5 13.5h.01" stroke-width="2.6"/>'),
+    cultura: svg('<path d="M3.5 6.5c3 .9 14 .9 17 0M5 10.5h14M7 7v13M17 7v13M12 7.2v3.3"/>'),
+    mercado: svg('<path d="M4 9l2-4h12l2 4z"/><path d="M4 9c0 1.4 1.2 2.3 2.7 2.3S9.3 10.4 9.3 9c0 1.4 1.2 2.3 2.7 2.3s2.7-.9 2.7-2.3c0 1.4 1.2 2.3 2.7 2.3S20 10.4 20 9"/><path d="M5.5 11.5V19h13v-7.5"/>'),
+    vistas: svg('<path d="M3 19l6.5-11 4 6.5 2.5-3.5L21 19z"/>'),
+    mine: ICON.pin
   };
   var KIND = { sight: 'Visita', food: 'Comida', shop: 'Tiendas', move: 'Trayecto', home: 'Alojamiento', task: 'Tarea' };
+  function kindLabel(s) {
+    if (s.cat && CATS[s.cat]) return CATS[s.cat].name;
+    if (s.custom) return 'Tu sitio · ' + (KIND[s.kind] || 'Visita');
+    return KIND[s.kind] || 'Visita';
+  }
 
-  function phaseOf(day) { return day.phase; }
-  function numbering(day) {
+  function numbering(list) {
     var n = 0, out = {};
-    day.stops.forEach(function (s) { if (s.kind !== 'home' && s.kind !== 'task') out[s.id] = ++n; });
+    list.forEach(function (s) { if (s.kind !== 'home' && s.kind !== 'task') out[s.id] = ++n; });
     return out;
   }
-  function nodeHtml(day, s, nums) {
+  function nodeHtml(s, nums) {
     if (s.kind === 'home') return ICON.home;
     if (s.kind === 'task') return ICON.box;
     return String(nums[s.id]);
   }
 
-  // ── Estado del viaje (cabecera) ────────────────────────────────────────
+  // ── Cabecera ───────────────────────────────────────────────────────────
   function tripIndex() {
     var i = daysBetween(T.start, today);
     return (i >= 0 && i < DAYS.length) ? i : -1;
@@ -166,23 +267,18 @@
     var el = $('#status');
     var toStart = daysBetween(today, T.start);
     var i = tripIndex();
-    if (i >= 0) {
-      el.innerHTML = 'Día <b>' + (i + 1) + '</b> de ' + DAYS.length + ' · ' + esc(T.phases[DAYS[i].phase].name);
-    } else if (toStart > 0) {
-      el.innerHTML = toStart === 1 ? 'Sales <b>mañana</b>' : 'Faltan <b>' + toStart + '</b> días';
-    } else {
-      el.textContent = 'Viaje completado';
-    }
+    if (i >= 0) el.innerHTML = 'Día <b>' + (i + 1) + '</b> de ' + DAYS.length + ' · ' + esc(T.phases[DAYS[i].phase].name);
+    else if (toStart > 0) el.innerHTML = toStart === 1 ? 'Sales <b>mañana</b>' : 'Faltan <b>' + toStart + '</b> días';
+    else el.textContent = 'Viaje completado';
   }
 
   function renderStrip() {
-    var strip = $('#daystrip');
-    strip.innerHTML = DAYS.map(function (d, i) {
+    $('#daystrip').innerHTML = DAYS.map(function (d, i) {
       var p = parts(d.date);
-      var all = d.stops.filter(function (s) { return !s.opt; });
+      var all = stopsOf(d).filter(function (s) { return !s.opt; });
       var complete = all.length && all.every(function (s) { return state.done.has(s.id); });
-      return '<a class="ticket' + (d.date === today ? ' is-today' : '') + (complete ? ' is-complete' : '') +
-        '" href="#dia-' + d.n + '" data-phase="' + phaseOf(d) + '"' + (i === state.day && state.tab === 'dias' ? ' aria-current="page"' : '') +
+      return '<a class="ticket' + (d.date === today ? ' is-today' : '') + (complete ? ' is-complete' : '') + (isEdited(d.n) ? ' is-edited' : '') +
+        '" href="#dia-' + d.n + '" data-phase="' + d.phase + '"' + (i === state.day && state.tab === 'dias' ? ' aria-current="page"' : '') +
         ' aria-label="Día ' + d.n + ', ' + WD[p.wd] + ' ' + p.d + ' de noviembre: ' + esc(d.title) + '">' +
         '<span class="ticket__wd">' + WD3[p.wd] + '</span>' +
         '<span class="ticket__d">' + p.d + '</span>' +
@@ -195,27 +291,46 @@
   }
 
   // ── Vista de día ───────────────────────────────────────────────────────
+  function dayPoints(day) {
+    return stopsOf(day).filter(function (s) { return !s.far; }).map(function (s) { return info(s).ll; }).filter(Boolean);
+  }
   function dayCenter(day) {
-    var pts = day.stops.map(function (s) { return info(s).ll; }).filter(Boolean);
+    var pts = dayPoints(day);
     if (!pts.length) pts = [lodging(day.base).ll];
     var lat = 0, lng = 0;
     pts.forEach(function (p) { lat += p[0]; lng += p[1]; });
     return [lat / pts.length, lng / pts.length];
   }
 
+  function nearbyChips(day) {
+    var list = NEARBY.slice();
+    if (day && day.mode === 'car') list.sort(function (a, b) { return (b.car ? 1 : 0) - (a.car ? 1 : 0); });
+    return '<ul class="nearby">' + list.map(function (c) {
+      return '<li><a class="chip chip--link" target="_blank" rel="noopener" href="' + esc(gSearch(c.q)) + '">' + esc(c.n) + '</a></li>';
+    }).join('') + '</ul>';
+  }
+
+  function dayOptions(current) {
+    return DAYS.map(function (d) {
+      var p = parts(d.date);
+      return '<option value="' + d.n + '"' + (d.n === current ? ' disabled' : '') + '>Día ' + d.n + ' · ' + WD3[p.wd].toLowerCase() + ' ' + p.d + ' · ' + esc(T.phases[d.phase].name) + '</option>';
+    }).join('');
+  }
+
   function renderDay(newlyDone) {
     var day = DAYS[state.day];
+    var list = stopsOf(day);
     var p = parts(day.date);
     var c = dayCenter(day);
     var sun = sunTimes(day.date, c[0], c[1]);
-    var nums = numbering(day);
+    var nums = numbering(list);
     var home = lodging(day.base);
     var homeMode = day.mode === 'car' ? 'driving' : 'transit';
-    var phase = T.phases[day.phase];
+    var ed = state.editing;
 
     var html = '';
     html += '<p class="eyebrow" style="--c:var(--' + day.phase + ')"><span class="phase-dot"></span>Día ' + day.n + ' · ' +
-      WD[p.wd] + ' ' + p.d + ' ' + MES[p.m] + ' · ' + esc(phase.name) + '</p>';
+      WD[p.wd] + ' ' + p.d + ' ' + MES[p.m] + ' · ' + esc(T.phases[day.phase].name) + '</p>';
     html += '<h1 class="day-title" id="day-title">' + esc(day.title) + '</h1>';
     html += '<p class="day-sub">' + esc(day.sub) + '</p>';
     html += '<ul class="meta">' +
@@ -224,68 +339,172 @@
       '<li>' + ICON.sunset + '<span>Se pone <b>' + fmtMin(sun.set) + '</b></span></li>' +
       '<li>' + (day.mode === 'car' ? ICON.car + '<span>En coche</span>' : ICON.train + '<span>Transporte público</span>') + '</li>' +
       '</ul>';
+
     html += '<div class="day-actions">';
-    html += '<a class="btn btn--primary" target="_blank" rel="noopener" href="' + esc(gDir(home.q, '', homeMode)) + '">' + ICON.home + 'Volver a casa</a>';
-    if (day.mode === 'car') {
-      html += '<a class="btn" target="_blank" rel="noopener" href="' + esc(carRouteUrl(day)) + '">' + ICON.route + 'Ruta en coche completa</a>';
+    if (ed) {
+      html += '<button class="btn btn--primary" type="button" id="edit-toggle" aria-pressed="true">' + ICON.check + 'Listo</button>';
+      html += '<button class="btn" type="button" data-open-add="' + day.n + '">' + ICON.plus + 'Añadir parada</button>';
+      html += '<button class="btn" type="button" id="sort-time">' + ICON.clock + 'Ordenar por hora</button>';
+      if (isEdited(day.n)) html += '<button class="btn btn--ghost" type="button" id="reset-day">Restablecer día</button>';
+    } else {
+      html += '<a class="btn btn--primary" target="_blank" rel="noopener" href="' + esc(gDir(home.q, '', homeMode)) + '">' + ICON.home + 'Volver a casa</a>';
+      html += '<button class="btn" type="button" id="edit-toggle" aria-pressed="false">' + ICON.edit + 'Editar plan</button>';
+      if (day.mode === 'car') html += '<a class="btn" target="_blank" rel="noopener" href="' + esc(carRouteUrl(day)) + '">' + ICON.route + 'Ruta en coche</a>';
     }
     html += '</div>';
+    if (ed) html += '<p class="edit-hint">Sube, baja, cambia la hora, mueve a otro día o quita paradas. Los cambios se guardan en este dispositivo.</p>';
 
-    if (day.changes && day.changes.length) {
+    if (!ed && day.changes && day.changes.length) {
       html += '<details class="review"' + (store.get('review-' + day.n, true) ? ' open' : '') + ' data-review="' + day.n + '">' +
         '<summary><span class="seal" aria-hidden="true">改</span>Cambios respecto al PDF <span class="count">(' + day.changes.length + ')</span></summary><ul>' +
         day.changes.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul></details>';
     }
-    if (day.rain) html += '<p class="rain">' + ICON.rain + '<span><b>Si llueve:</b> ' + esc(day.rain) + '</span></p>';
+    if (!ed && day.rain) html += '<p class="rain">' + ICON.rain + '<span><b>Si llueve:</b> ' + esc(day.rain) + '</span></p>';
 
-    html += '<ol class="timeline">';
+    html += '<ol class="timeline' + (ed ? ' is-editing' : '') + '">';
     var prev = null;
-    day.stops.forEach(function (s) {
+    list.forEach(function (s, i) {
       var inf = info(s);
       var done = state.done.has(s.id);
       var mode = legMode(day, s);
       var dist = (state.me && inf.ll) ? fmtDist(haversine([state.me.lat, state.me.lng], inf.ll)) : '';
-      html += '<li class="stop' + (s.opt ? ' stop--opt' : '') + (done ? ' is-done' : '') + '" id="stop-' + s.id + '" data-phase="' + day.phase + '">';
-      html += '<button class="stop__num" type="button" data-focus="' + s.id + '" aria-label="Ver ' + esc(inf.name) + ' en el mapa"' + (inf.ll ? '' : ' disabled') + '>' + nodeHtml(day, s, nums) + '</button>';
+      var t = timeForDisplay(s.t);
+      html += '<li class="stop' + (s.opt ? ' stop--opt' : '') + (done ? ' is-done' : '') + '" id="stop-' + cssId(s.id) + '" data-phase="' + day.phase + '">';
+      html += '<button class="stop__num" type="button" data-focus="' + esc(s.id) + '" aria-label="Ver ' + esc(inf.name) + ' en el mapa"' + (inf.ll ? '' : ' disabled') + '>' + nodeHtml(s, nums) + '</button>';
       html += '<div class="stop__card">';
-      if (done) html += '<span class="hanko' + (newlyDone === s.id ? ' is-new' : '') + '" aria-hidden="true">済</span>';
-      html += '<p class="stop__kind">' + (s.t && s.t !== '—' ? '<span class="stop__time">' + esc(s.t) + '</span>' : '') + '<span>' + KIND[s.kind] + '</span>' +
+      if (done && !ed) html += '<span class="hanko' + (newlyDone === s.id ? ' is-new' : '') + '" aria-hidden="true">済</span>';
+      html += '<p class="stop__kind">' + (t ? '<span class="stop__time">' + esc(t) + '</span>' : '') + '<span>' + esc(kindLabel(s)) + '</span>' +
         (s.opt ? '<span class="tag">Opcional</span>' : '') +
+        (s.fromCatalog ? '<span class="tag">Añadida</span>' : '') +
         (inf.approx && inf.ll ? '<span class="tag">Ubicación aprox.</span>' : '') +
+        (!inf.ll && !s.lodge ? '<span class="tag">Sin pin</span>' : '') +
         (dist ? '<span class="dist">a ' + dist + '</span>' : '') + '</p>';
       html += '<h2 class="stop__name">' + esc(inf.name) + '</h2>';
       if (s.lodge) html += '<p class="stop__ja">' + esc(inf.place) + (inf.addr ? ' · ' + esc(inf.addr) : '') + '</p>';
       else if (inf.ja) html += '<p class="stop__ja" lang="ja">' + esc(inf.ja) + '</p>';
-      if (s.how) html += '<p class="stop__how">' + (mode === 'walking' ? ICON.walk : (day.mode === 'car' ? ICON.car : ICON.train)) + '<span>' + esc(s.how) + '</span></p>';
-      if (s.note) html += '<p class="stop__note">' + esc(s.note) + '</p>';
-      if (s.tips && s.tips.length) html += '<ul class="stop__tips">' + s.tips.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>';
-      if (s.shops && s.shops.length) {
-        html += '<ul class="shops" aria-label="Tiendas">' + s.shops.map(function (sh) {
-          return '<li><a target="_blank" rel="noopener" href="' + esc(gSearch(sh.q)) + '">' + ICON.pin + esc(sh.n) + '</a></li>';
-        }).join('') + '</ul>';
-      }
-      html += '<div class="stop__actions">';
-      if (inf.q) {
-        html += '<a class="btn btn--primary" target="_blank" rel="noopener" href="' + esc(gDir(inf.q, '', mode)) + '">' + ICON.route + 'Cómo llegar</a>';
-        if (prev && prev.q && prev.q !== inf.q) {
-          html += '<a class="btn" target="_blank" rel="noopener" href="' + esc(gDir(inf.q, prev.q, mode)) + '">' + ICON.from + 'Desde la anterior</a>';
+
+      if (ed) {
+        html += '<div class="stop__edit">' +
+          '<div class="edit-row">' +
+          '<button class="ibtn" type="button" data-move="-1" data-id="' + esc(s.id) + '" aria-label="Subir"' + (i === 0 ? ' disabled' : '') + '>' + ICON.up + '</button>' +
+          '<button class="ibtn" type="button" data-move="1" data-id="' + esc(s.id) + '" aria-label="Bajar"' + (i === list.length - 1 ? ' disabled' : '') + '>' + ICON.down + '</button>' +
+          '<label class="edit-time"><span class="sr">Hora de ' + esc(inf.name) + '</span><input type="time" id="time-' + cssId(s.id) + '" data-time="' + esc(s.id) + '" value="' + timeForInput(s.t) + '" /></label>' +
+          '<button class="ibtn ibtn--danger" type="button" data-remove="' + esc(s.id) + '" aria-label="Quitar ' + esc(inf.name) + '">' + ICON.trash + '</button>' +
+          '</div>' +
+          '<label class="edit-move"><span class="sr">Mover a otro día</span><select id="move-' + cssId(s.id) + '" data-moveday="' + esc(s.id) + '"><option value="">Mover a otro día…</option>' + dayOptions(day.n) + '</select></label>' +
+          '<label class="edit-note"><span class="sr">Tu nota</span><input type="text" id="note-' + cssId(s.id) + '" data-note="' + esc(s.id) + '" value="' + esc(plan.notes[s.id] || '') + '" placeholder="Tu nota (opcional)" /></label>' +
+          '</div>';
+      } else {
+        if (s.how) html += '<p class="stop__how">' + (mode === 'walking' ? ICON.walk : (day.mode === 'car' ? ICON.car : ICON.train)) + '<span>' + esc(s.how) + '</span></p>';
+        if (s.note) html += '<p class="stop__note">' + esc(s.note) + '</p>';
+        if (s.mine) html += '<p class="stop__mine"><b>Tu nota:</b> ' + esc(s.mine) + '</p>';
+        if (s.tips && s.tips.length) html += '<ul class="stop__tips">' + s.tips.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>';
+        if (s.shops && s.shops.length) {
+          html += '<ul class="shops" aria-label="Tiendas">' + s.shops.map(function (sh) {
+            return '<li><a target="_blank" rel="noopener" href="' + esc(gSearch(sh.q)) + '">' + ICON.pin + esc(sh.n) + '</a></li>';
+          }).join('') + '</ul>';
         }
+        html += '<div class="stop__actions">';
+        if (inf.q) {
+          html += '<a class="btn btn--primary" target="_blank" rel="noopener" href="' + esc(gDir(inf.q, '', mode)) + '">' + ICON.route + 'Cómo llegar</a>';
+          if (prev && prev.q && prev.q !== inf.q) html += '<a class="btn" target="_blank" rel="noopener" href="' + esc(gDir(inf.q, prev.q, mode)) + '">' + ICON.from + 'Desde la anterior</a>';
+        }
+        html += '</div><div class="stop__more">';
+        if (!s.lodge && (inf.url || inf.q)) html += '<a class="btn btn--sm" target="_blank" rel="noopener" href="' + esc(inf.url || gSearch(inf.q)) + '" aria-label="Ver ' + esc(inf.name) + ' en Google Maps">' + ICON.pin + 'Maps</a>';
+        if (inf.ja || inf.addr) html += '<button class="btn btn--sm" type="button" data-ja="' + esc(s.id) + '">' + ICON.ja + 'Japonés</button>';
+        html += '<button class="btn btn--sm btn-done" type="button" data-done="' + esc(s.id) + '" aria-pressed="' + done + '">' + ICON.check + 'Hecho</button>';
+        html += '</div>';
       }
-      html += '</div><div class="stop__more">';
-      if (inf.q && !s.lodge) html += '<a class="btn btn--sm" target="_blank" rel="noopener" href="' + esc(gSearch(inf.q)) + '" aria-label="Ver ' + esc(inf.name) + ' en Google Maps">' + ICON.pin + 'Maps</a>';
-      if (inf.ja || inf.addr) html += '<button class="btn btn--sm" type="button" data-ja="' + s.id + '">' + ICON.ja + 'Japonés</button>';
-      html += '<button class="btn btn--sm btn-done" type="button" data-done="' + s.id + '" aria-pressed="' + done + '">' + ICON.check + 'Hecho</button>';
-      html += '</div></div></li>';
+      html += '</div></li>';
       if (inf.q && s.kind !== 'task') prev = inf;
     });
     html += '</ol>';
+    html += '<button class="add-stop" type="button" data-open-add="' + day.n + '">' + ICON.plus + '<span>Añadir parada a este día</span></button>';
+
+    if (!ed) {
+      html += '<section class="nearby-wrap" aria-labelledby="nearby-title"><h2 class="nearby__title" id="nearby-title">' +
+        (day.mode === 'car' ? 'Con el coche: busca cerca de ti' : 'Buscar cerca de ti') + '</h2>' +
+        '<p class="nearby__sub">Abre Google Maps con resultados alrededor de donde estés.</p>' + nearbyChips(day) + '</section>';
+    }
 
     $('#day-body').innerHTML = html;
     renderDayMap();
   }
+  function cssId(id) { return String(id).replace(/[^a-zA-Z0-9_-]/g, '_'); }
+
+  // ── Edición del plan ───────────────────────────────────────────────────
+  function moveStop(id, delta) {
+    var n = DAYS[state.day].n, arr = ensureOrder(n), i = arr.indexOf(id), j = i + delta;
+    if (i < 0 || j < 0 || j >= arr.length) return;
+    arr.splice(j, 0, arr.splice(i, 1)[0]);
+    savePlan();
+    rerenderKeepingScroll();
+  }
+  function moveToDay(id, m) {
+    var n = DAYS[state.day].n;
+    if (!m || m === n) return;
+    var a = ensureOrder(n), i = a.indexOf(id);
+    if (i >= 0) a.splice(i, 1);
+    var b = ensureOrder(m);
+    if (b.indexOf(id) < 0) b.push(id);
+    savePlan();
+    rerenderKeepingScroll();
+    refreshTripMap();
+    toast('Movida al día ' + m + '.', { label: 'Ver día ' + m, fn: function () { location.hash = '#dia-' + m; } });
+  }
+  function removeStop(id) {
+    var n = DAYS[state.day].n, arr = ensureOrder(n), i = arr.indexOf(id);
+    if (i < 0) return;
+    arr.splice(i, 1);
+    savePlan();
+    rerenderKeepingScroll();
+    refreshTripMap();
+    var name = (stopById(id) || {}).name || 'Parada';
+    toast('«' + name + '» quitada.', { label: 'Deshacer', fn: function () { var a = ensureOrder(n); a.splice(Math.min(i, a.length), 0, id); savePlan(); rerenderKeepingScroll(); refreshTripMap(); } });
+  }
+  function addToDay(id, n) {
+    var arr = ensureOrder(n);
+    if (arr.indexOf(id) >= 0) { toast('Ya está en el día ' + n + '.'); return false; }
+    arr.push(id);
+    savePlan();
+    if (DAYS[state.day].n === n && state.tab === 'dias') rerenderKeepingScroll();
+    else renderStrip();
+    refreshTripMap();
+    return true;
+  }
+  function sortByTime() {
+    var n = DAYS[state.day].n, arr = ensureOrder(n);
+    var last = -1;
+    var keyed = arr.map(function (id, i) {
+      var s = withEdits(stopById(id) || { t: '' });
+      var m = timeToMin(s.t);
+      if (m == null) m = last; else last = m;
+      return { id: id, k: m, i: i };
+    });
+    keyed.sort(function (a, b) { return a.k - b.k || a.i - b.i; });
+    plan.order[n] = keyed.map(function (x) { return x.id; });
+    savePlan();
+    rerenderKeepingScroll();
+    toast('Ordenado por hora.');
+  }
+  function resetDay() {
+    var n = DAYS[state.day].n;
+    var prevOrder = plan.order[n];
+    delete plan.order[n];
+    savePlan();
+    rerenderKeepingScroll();
+    refreshTripMap();
+    toast('Día ' + n + ' como en el plan original.', { label: 'Deshacer', fn: function () { plan.order[n] = prevOrder; savePlan(); rerenderKeepingScroll(); refreshTripMap(); } });
+  }
+  function rerenderKeepingScroll() {
+    var y = window.scrollY;
+    renderDay();
+    renderStrip();
+    window.scrollTo(0, y);
+  }
 
   // ── Mapas ──────────────────────────────────────────────────────────────
-  var dayMap = null, dayLayer = null, dayMarkers = {}, tripMap = null, tripLayers = {}, meLayers = [];
+  var dayMap = null, dayLayer = null, ideaLayer = null, dayMarkers = {}, tripMap = null, tripLayers = {}, tripIdeas = {}, meLayers = [];
 
   function addBase(map, offlineEl) {
     map.createPane('coast');
@@ -312,33 +531,65 @@
     return L.divIcon({ className: '', html: '<div class="pin ' + cls + '">' + html + '</div>', iconSize: [size, size], iconAnchor: [size / 2, size / 2], popupAnchor: [0, -size / 2] });
   }
 
-  function popupHtml(day, s, extraDayLink) {
+  function popupHtml(day, s, inTripMap) {
     var inf = info(s);
     var mode = legMode(day, s);
-    var h = '<p class="pop__t">Día ' + day.n + (s.t && s.t !== '—' ? ' · ' + esc(s.t) : '') + '</p>' +
+    var t = timeForDisplay(s.t);
+    var h = '<p class="pop__t">Día ' + day.n + (t ? ' · ' + esc(t) : '') + '</p>' +
       '<p class="pop__n">' + esc(inf.name) + '</p>' +
       (s.lodge ? '<p class="pop__ja">' + esc(inf.place) + '</p>' : (inf.ja ? '<p class="pop__ja" lang="ja">' + esc(inf.ja) + '</p>' : '')) +
       (inf.approx ? '<p class="pop__approx">Ubicación aproximada: la ruta usa el nombre.</p>' : '') +
       '<div class="pop__a"><a class="btn btn--primary" target="_blank" rel="noopener" href="' + esc(gDir(inf.q, '', mode)) + '">Cómo llegar</a>';
-    h += extraDayLink
+    h += inTripMap
       ? '<a class="btn" href="#dia-' + day.n + '">Ver día ' + day.n + '</a>'
-      : '<button class="btn" type="button" data-goto="' + s.id + '">Ver en la lista</button>';
+      : '<button class="btn" type="button" data-goto="' + esc(s.id) + '">Ver en la lista</button>';
     return h + '</div>';
+  }
+
+  function nearestDay(p) {
+    if (p.fit && p.fit.length) return p.fit[0];
+    var best = 1, bd = Infinity;
+    DAYS.forEach(function (d) {
+      dayPoints(d).forEach(function (q) { var x = haversine(p.ll, q); if (x < bd) { bd = x; best = d.n; } });
+    });
+    return best;
+  }
+
+  function ideaPopup(p, fixedDay) {
+    var idx = planIndex();
+    var inPlan = idx['c:' + p.id];
+    var h = '<p class="pop__t">' + esc((CATS[p.cat] || {}).name || '') + (p.car ? ' · en coche' : '') + ' · ' + esc(p.area) + '</p>' +
+      '<p class="pop__n">' + esc(p.name) + '</p>' +
+      (p.ja ? '<p class="pop__ja" lang="ja">' + esc(p.ja) + '</p>' : '') +
+      '<p class="pop__note">' + esc(p.note) + '</p>' +
+      (inPlan ? '<p class="pop__in">En tu plan: día ' + inPlan.join(', ') + '</p>' : '') +
+      '<div class="pop__a">';
+    if (fixedDay) {
+      h += '<button class="btn btn--primary" type="button" data-addplace="' + esc(p.id) + '" data-day="' + fixedDay + '">Añadir a este día</button>';
+    } else {
+      var def = nearestDay(p);
+      h += '<label class="pop__sel"><span class="sr">Día</span><select id="pop-day-' + cssId(p.id) + '" data-pop-day="' + esc(p.id) + '">' +
+        DAYS.map(function (d) { return '<option value="' + d.n + '"' + (d.n === def ? ' selected' : '') + '>Día ' + d.n + '</option>'; }).join('') +
+        '</select></label><button class="btn btn--primary" type="button" data-addplace="' + esc(p.id) + '">Añadir</button>';
+    }
+    h += '<a class="btn" target="_blank" rel="noopener" href="' + esc(gSearch(p.q)) + '">Maps</a></div>';
+    return h;
   }
 
   function ensureDayMap() {
     if (dayMap || !hasLeaflet) return;
-    dayMap = L.map('daymap', { zoomControl: true, scrollWheelZoom: true, tap: true });
+    dayMap = L.map('daymap', { zoomControl: true, scrollWheelZoom: true });
     addBase(dayMap, $('#daymap-offline'));
+    ideaLayer = L.layerGroup().addTo(dayMap);
     dayLayer = L.layerGroup().addTo(dayMap);
-    dayMap.getContainer().addEventListener('click', function (e) {
-      var b = e.target.closest('[data-goto]');
-      if (!b) return;
-      var el = document.getElementById('stop-' + b.getAttribute('data-goto'));
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        highlight(el);
-      }
+    dayMap.on('click', function (e) {
+      if (!state.picking) return;
+      var pk = state.picking;
+      state.picking = null;
+      $('#pick-banner').hidden = true;
+      $('#daymap').classList.remove('is-picking');
+      pk.values.place = e.latlng.lat.toFixed(5) + ', ' + e.latlng.lng.toFixed(5);
+      openAdd(pk.n, 'mine', pk.values);
     });
   }
 
@@ -351,19 +602,21 @@
     if (!hasLeaflet) { $('#daymap').hidden = true; return; }
     ensureDayMap();
     var day = DAYS[state.day];
-    var nums = numbering(day);
+    var list = stopsOf(day);
+    var nums = numbering(list);
     dayLayer.clearLayers();
     dayMarkers = {};
     var pts = [], seen = {};
-    day.stops.forEach(function (s) {
+    list.forEach(function (s) {
       var inf = info(s);
       if (!inf.ll) return;
       var key = inf.ll.join(',');
-      var cls = 'pin--' + day.phase + (s.opt ? ' pin--opt' : '') + (state.done.has(s.id) ? ' is-done' : '');
+      var done = state.done.has(s.id);
+      var cls = 'pin--' + day.phase + (s.opt ? ' pin--opt' : '') + (done ? ' is-done' : '');
       var html = s.kind === 'home' ? ICON.home : (s.kind === 'task' ? ICON.box : nums[s.id]);
-      if (s.kind === 'home' || s.kind === 'task') cls = 'pin--home' + (state.done.has(s.id) ? ' is-done' : '');
+      if (s.kind === 'home' || s.kind === 'task') cls = 'pin--home' + (done ? ' is-done' : '');
       if (seen[key]) { dayMarkers[s.id] = seen[key]; return; }
-      var m = L.marker(inf.ll, { icon: pinIcon(cls, html), title: inf.name, riseOnHover: true }).bindPopup(popupHtml(day, s));
+      var m = L.marker(inf.ll, { icon: pinIcon(cls, html), title: inf.name, riseOnHover: true, zIndexOffset: 200 }).bindPopup(popupHtml(day, s));
       m.addTo(dayLayer);
       seen[key] = m;
       dayMarkers[s.id] = m;
@@ -372,59 +625,100 @@
     if (pts.length > 1) {
       L.polyline(pts, { className: 'route route--' + day.phase, weight: 3, opacity: .8, dashArray: '1 8', lineCap: 'round', interactive: false }).addTo(dayLayer);
     }
+    renderDayIdeas();
     if (state.me) drawMe();
     fitDay(false);
   }
 
+  function ideasNearDay(day) {
+    // Los trayectos (recogida del coche, aeropuerto) no cuentan: solo donde se pasa el día.
+    var pts = stopsOf(day).filter(function (s) { return !s.far && s.kind !== 'move' && s.kind !== 'home' && s.kind !== 'task'; })
+      .map(function (s) { return info(s).ll; }).filter(Boolean);
+    if (!pts.length) pts = dayPoints(day);
+    var radius = day.mode === 'car' ? 15000 : 3500;
+    var idx = planIndex();
+    return PLACES.filter(function (p) {
+      if (!p.ll || (idx['c:' + p.id] || []).indexOf(day.n) >= 0) return false;
+      if (p.fit && p.fit.indexOf(day.n) >= 0) return true;
+      return pts.some(function (q) { return haversine(p.ll, q) < radius; });
+    });
+  }
+
+  function renderDayIdeas() {
+    if (!ideaLayer) return;
+    ideaLayer.clearLayers();
+    $('#btn-ideas').classList.toggle('is-on', !!state.ideasOnDay);
+    $('#btn-ideas').setAttribute('aria-pressed', !!state.ideasOnDay);
+    if (!state.ideasOnDay) return;
+    var day = DAYS[state.day];
+    ideasNearDay(day).forEach(function (p) {
+      L.marker(p.ll, { icon: pinIcon('pin--idea', CAT_ICON[p.cat] || ICON.pin, 26), title: p.name })
+        .bindPopup(ideaPopup(p, day.n)).addTo(ideaLayer);
+    });
+  }
+
   function fitDay(animate) {
     if (!dayMap) return;
-    var day = DAYS[state.day];
-    // Las paradas lejanas (el aeropuerto) no cuentan para encuadrar el día.
-    var pts = day.stops.filter(function (s) { return !s.far; })
-      .map(function (s) { return info(s).ll; }).filter(Boolean);
+    var pts = dayPoints(DAYS[state.day]);
     dayMap.invalidateSize();
     if (pts.length === 1) dayMap.setView(pts[0], 15, { animate: animate });
     else if (pts.length) dayMap.fitBounds(L.latLngBounds(pts), { padding: [36, 36], maxZoom: 16, animate: animate });
+    else dayMap.setView(lodging(DAYS[state.day].base).ll, 13);
   }
 
   function focusStop(id) {
-    var day = DAYS[state.day];
-    var s = day.stops.find(function (x) { return x.id === id; });
+    var s = stopsOf(DAYS[state.day]).find(function (x) { return x.id === id; });
     if (!s || !dayMap) return;
     var inf = info(s);
     if (!inf.ll) return;
-    var wrap = $('.day-map-wrap');
     if (window.matchMedia('(max-width: 959px)').matches) {
-      var top = wrap.getBoundingClientRect().top + window.scrollY - $('.topbar').offsetHeight;
+      var top = $('.day-map-wrap').getBoundingClientRect().top + window.scrollY - $('.topbar').offsetHeight;
       window.scrollTo({ top: top, behavior: 'smooth' });
     }
     dayMap.flyTo(inf.ll, Math.max(dayMap.getZoom(), 15), { duration: .6 });
     var m = dayMarkers[id];
     if (m) setTimeout(function () { m.openPopup(); }, 650);
-    var el = document.getElementById('stop-' + id);
+    var el = document.getElementById('stop-' + cssId(id));
     if (el) highlight(el);
   }
 
   function ensureTripMap() {
     if (tripMap || !hasLeaflet) return;
-    tripMap = L.map('tripmap', { zoomControl: false, tap: true });
+    tripMap = L.map('tripmap', { zoomControl: false });
     L.control.zoom({ position: 'topright' }).addTo(tripMap);
     addBase(tripMap, $('#tripmap-offline'));
+    Object.keys(CATS).forEach(function (k) { tripIdeas[k] = L.layerGroup(); if (state.catsOn.has(k)) tripIdeas[k].addTo(tripMap); });
+    Object.keys(T.phases).forEach(function (ph) { tripLayers[ph] = L.layerGroup(); if (state.phasesOn.has(ph)) tripLayers[ph].addTo(tripMap); });
+    tripLayers.home = L.layerGroup().addTo(tripMap);
+    drawTrip();
     var all = [];
-    Object.keys(T.phases).forEach(function (ph) { tripLayers[ph] = L.layerGroup().addTo(tripMap); });
+    DAYS.forEach(function (d) { all = all.concat(dayPoints(d)); });
+    tripMap.fitBounds(L.latLngBounds(all), { padding: [30, 30] });
+    if (state.me) drawMe();
+  }
+
+  function drawTrip() {
+    if (!tripMap) return;
+    Object.keys(tripLayers).forEach(function (k) { tripLayers[k].clearLayers(); });
+    Object.keys(tripIdeas).forEach(function (k) { tripIdeas[k].clearLayers(); });
     DAYS.forEach(function (day) {
       var pts = [];
-      day.stops.forEach(function (s) {
+      stopsOf(day).forEach(function (s) {
         var inf = info(s);
         if (!inf.ll || s.far || s.kind === 'home' || s.kind === 'task') return;
         pts.push(inf.ll);
-        all.push(inf.ll);
-        L.marker(inf.ll, { icon: pinIcon('pin--dot pin--' + day.phase + (s.opt ? ' pin--opt' : ''), '', 14), title: inf.name })
+        L.marker(inf.ll, { icon: pinIcon('pin--dot pin--' + day.phase + (s.opt ? ' pin--opt' : ''), '', 14), title: inf.name, zIndexOffset: 300 })
           .bindPopup(popupHtml(day, s, true)).addTo(tripLayers[day.phase]);
       });
       if (pts.length > 1) {
         L.polyline(pts, { className: 'route route--' + day.phase, weight: 2, opacity: .7, dashArray: '1 6', lineCap: 'round', interactive: false }).addTo(tripLayers[day.phase]);
       }
+    });
+    var idx = planIndex();
+    PLACES.forEach(function (p) {
+      if (!p.ll || !tripIdeas[p.cat] || idx['c:' + p.id]) return;
+      L.marker(p.ll, { icon: pinIcon('pin--idea pin--idea-sm', CAT_ICON[p.cat] || ICON.pin, 22), title: p.name })
+        .bindPopup(ideaPopup(p)).addTo(tripIdeas[p.cat]);
     });
     Object.keys(T.lodging).forEach(function (k) {
       var l = lodging(k);
@@ -432,16 +726,19 @@
         .bindPopup('<p class="pop__t">' + esc(l.label) + '</p><p class="pop__n">' + esc(l.name) + '</p>' +
           (l.approx ? '<p class="pop__approx">Ubicación aproximada.</p>' : '') +
           '<div class="pop__a"><a class="btn btn--primary" target="_blank" rel="noopener" href="' + esc(gDir(l.q, '', 'transit')) + '">Cómo llegar</a></div>')
-        .addTo(tripMap);
+        .addTo(tripLayers.home);
     });
-    tripMap.fitBounds(L.latLngBounds(all), { padding: [30, 30] });
-    if (state.me) drawMe();
   }
+  function refreshTripMap() { if (tripMap) { tripMap.closePopup(); drawTrip(); } }
 
   function renderLegend() {
-    $('#legend').innerHTML = Object.keys(T.phases).map(function (k) {
-      return '<button class="chip" type="button" data-phase="' + k + '" aria-pressed="' + state.phasesOn.has(k) + '">' + esc(T.phases[k].name) + '</button>';
-    }).join('');
+    $('#legend').innerHTML =
+      '<div class="legend__row">' + Object.keys(T.phases).map(function (k) {
+        return '<button class="chip" type="button" data-phase="' + k + '" aria-pressed="' + state.phasesOn.has(k) + '">' + esc(T.phases[k].name) + '</button>';
+      }).join('') + '</div>' +
+      '<div class="legend__row legend__row--ideas" role="group" aria-label="Ideas"><span class="legend__label">Ideas</span>' + Object.keys(CATS).map(function (k) {
+        return '<button class="chip chip--idea" type="button" data-cat="' + k + '" aria-pressed="' + state.catsOn.has(k) + '">' + (CAT_ICON[k] || '') + esc(CATS[k].name) + '</button>';
+      }).join('') + '</div>';
   }
 
   // ── Ubicación ──────────────────────────────────────────────────────────
@@ -465,7 +762,7 @@
       state.me = null;
       drawMe();
       setLocateButtons(false);
-      renderDay();
+      if (state.tab === 'dias') rerenderKeepingScroll();
       return;
     }
     var first = true;
@@ -478,7 +775,7 @@
         first = false;
         var map = state.tab === 'mapa' ? tripMap : dayMap;
         if (map) map.flyTo([state.me.lat, state.me.lng], 15, { duration: .7 });
-        if (state.tab === 'dias') renderDay();
+        if (state.tab === 'dias') rerenderKeepingScroll();
       }
     }, function (err) {
       toast(err.code === 1 ? 'Permiso de ubicación denegado. Actívalo en los ajustes del navegador.' : 'No se pudo obtener la ubicación.');
@@ -489,6 +786,100 @@
   }
   function setLocateButtons(on) {
     ['#btn-locate', '#btn-locate-2'].forEach(function (s) { $(s).classList.toggle('is-on', on); $(s).setAttribute('aria-pressed', on); });
+  }
+
+  // ── Hoja «Añadir parada» ───────────────────────────────────────────────
+  var addDay = 1;
+  function openAdd(n, tab, values) {
+    addDay = n;
+    state.addTab = tab || state.addTab || 'ideas';
+    $('#add-title').textContent = 'Añadir al día ' + n;
+    renderAddTabs();
+    renderAddList();
+    var f = $('#add-mine');
+    f.reset();
+    if (values) {
+      ['name', 'place', 'time', 'kind', 'note'].forEach(function (k) { if (values[k] != null && f.elements[k]) f.elements[k].value = values[k]; });
+    }
+    var dlg = $('#add-sheet');
+    if (typeof dlg.showModal === 'function') { if (!dlg.open) dlg.showModal(); } else dlg.setAttribute('open', '');
+  }
+  function closeAdd() {
+    var dlg = $('#add-sheet');
+    if (dlg.open && typeof dlg.close === 'function') dlg.close(); else dlg.removeAttribute('open');
+  }
+  function renderAddTabs() {
+    document.querySelectorAll('[data-addtab]').forEach(function (b) {
+      var on = b.getAttribute('data-addtab') === state.addTab;
+      b.setAttribute('aria-selected', on);
+    });
+    $('#add-ideas').hidden = state.addTab !== 'ideas';
+    $('#add-mine').hidden = state.addTab !== 'mine';
+  }
+  function renderAddList() {
+    var day = dayByN(addDay);
+    var c = dayCenter(day);
+    var idx = planIndex();
+    var q = state.addQuery.trim().toLowerCase();
+    $('#add-cats').innerHTML = ['all'].concat(Object.keys(CATS)).map(function (k) {
+      return '<button class="chip chip--idea" type="button" data-addcat="' + k + '" aria-pressed="' + (state.addCat === k) + '">' +
+        (k === 'all' ? 'Todo' : (CAT_ICON[k] || '') + esc(CATS[k].name)) + '</button>';
+    }).join('');
+
+    // Paradas del plan original que se han quitado
+    var removed = Object.keys(BASE).filter(function (id) { return !idx[id] && BASE[id].kind !== 'home'; });
+    var html = '';
+    if (removed.length && state.addCat === 'all' && !q) {
+      html += '<li class="idea-group">Quitadas del plan</li>' + removed.map(function (id) {
+        var s = BASE[id], from = BASE_DAY[id].n;
+        return '<li class="idea"><span class="idea__icon">' + ICON.trash + '</span><div class="idea__body"><p class="idea__name">' + esc(s.name) + '</p>' +
+          '<p class="idea__meta">Era del día ' + from + '</p></div>' +
+          '<button class="btn btn--sm" type="button" data-restore="' + esc(id) + '">Recuperar</button></li>';
+      }).join('');
+    }
+
+    var items = PLACES.filter(function (p) {
+      if (state.addCat !== 'all' && p.cat !== state.addCat) return false;
+      if (!q) return true;
+      return (p.name + ' ' + (p.ja || '') + ' ' + p.area + ' ' + p.note).toLowerCase().indexOf(q) >= 0;
+    }).map(function (p) {
+      return { p: p, d: p.ll ? haversine(c, p.ll) : Infinity, fits: p.fit && p.fit.indexOf(addDay) >= 0 };
+    }).sort(function (a, b) { return (b.fits - a.fits) || (a.d - b.d); });
+
+    html += '<li class="idea-group">Ideas, de más cerca a más lejos</li>';
+    html += items.map(function (x) {
+      var p = x.p, here = (idx['c:' + p.id] || []).indexOf(addDay) >= 0, other = idx['c:' + p.id];
+      return '<li class="idea"><span class="idea__icon">' + (CAT_ICON[p.cat] || ICON.pin) + '</span><div class="idea__body">' +
+        '<p class="idea__name">' + esc(p.name) + '</p>' +
+        '<p class="idea__meta">' + esc(CATS[p.cat].name) + ' · ' + esc(p.area) + (isFinite(x.d) ? ' · a ' + fmtDist(x.d) : '') +
+        (x.fits ? ' · <b>encaja este día</b>' : '') + (p.car ? ' · en coche' : '') +
+        (other && !here ? ' · ya en el día ' + other.join(', ') : '') + '</p>' +
+        '<p class="idea__note">' + esc(p.note) + '</p></div>' +
+        (here ? '<span class="idea__in">En el día</span>' : '<button class="btn btn--sm btn--primary" type="button" data-addplace="' + esc(p.id) + '" data-day="' + addDay + '">Añadir</button>') +
+        '</li>';
+    }).join('');
+    if (!items.length) html += '<li class="idea-empty">Nada con ese filtro. Prueba otra categoría o añade tu propio sitio.</li>';
+    $('#add-list').innerHTML = html;
+    $('#add-nearby').innerHTML = nearbyChips(day);
+  }
+
+  function addCustomFromForm(f) {
+    var name = f.elements.name.value.trim();
+    if (!name) { f.elements.name.focus(); toast('Ponle un nombre al sitio.'); return; }
+    var place = f.elements.place.value.trim();
+    var ll = parseLL(place);
+    var isUrl = /^https?:\/\//i.test(place);
+    var id = 'u' + Date.now().toString(36);
+    plan.custom[id] = {
+      id: id, custom: true, kind: f.elements.kind.value || 'sight', name: name,
+      q: ll ? ll.join(',') : (isUrl ? name : (place || name)),
+      ll: ll, url: isUrl ? place : '', note: f.elements.note.value.trim(),
+      t: f.elements.time.value || ''
+    };
+    savePlan();
+    addToDay(id, addDay);
+    closeAdd();
+    toast('«' + name + '» añadido al día ' + addDay + (ll ? '.' : '. Sin coordenadas no sale en el mapa; la ruta usa el nombre.'));
   }
 
   // ── Reservas ───────────────────────────────────────────────────────────
@@ -532,15 +923,32 @@
   }
 
   // ── Info ───────────────────────────────────────────────────────────────
+  function planStats() {
+    var edited = DAYS.filter(function (d) { return isEdited(d.n); }).length;
+    var added = 0, idx = planIndex();
+    Object.keys(idx).forEach(function (id) { if (!BASE[id]) added += idx[id].length; });
+    return { edited: edited, added: added };
+  }
+
   function renderInfo() {
     var h = '<h1 class="page__title" id="info-title">Info del viaje</h1>' +
-      '<p class="page__lead">Qué se ha corregido del PDF, direcciones de los alojamientos y lo práctico para moverse.</p>';
+      '<p class="page__lead">Tu plan, qué se ha corregido del PDF, direcciones de los alojamientos y lo práctico para moverse.</p>';
+
+    var st = planStats();
+    h += '<h2>Tu plan</h2><p class="page__lead">' +
+      (st.edited ? 'Has cambiado ' + st.edited + (st.edited === 1 ? ' día' : ' días') + (st.added ? ' y añadido ' + st.added + (st.added === 1 ? ' sitio' : ' sitios') : '') + '. ' : 'Aún no has cambiado nada. ') +
+      'Se guarda en este dispositivo. Para pasarlo a otro móvil, o para enseñármelo y seguir ajustándolo, cópialo y pégalo.</p>' +
+      '<div class="lodge__row"><button class="btn btn--primary" type="button" id="plan-copy">Copiar mi plan</button>' +
+      '<button class="btn" type="button" id="plan-import-open">Pegar un plan</button>' +
+      '<button class="btn btn--ghost" type="button" id="plan-reset">Volver al plan original</button></div>' +
+      '<div class="plan-io" id="plan-io" hidden><label for="plan-text">Plan en texto</label><textarea id="plan-text" rows="5" spellcheck="false"></textarea>' +
+      '<div class="lodge__row"><button class="btn btn--primary" type="button" id="plan-import">Cargar este plan</button><button class="btn btn--ghost" type="button" id="plan-io-close">Cerrar</button></div></div>';
 
     h += '<h2>Qué ha cambiado</h2><ul class="changes">' + T.summary.map(function (c) {
       return '<li><a href="#dia-' + c.d + '">DÍA ' + c.d + '</a><p>' + esc(c.t) + '</p></li>';
     }).join('') + '</ul>';
 
-    h += '<h2>Alojamientos</h2><p class="page__lead">Pega la dirección exacta o unas coordenadas (por ejemplo, copiadas de Google Maps: <span lang="en">34.6658, 135.5058</span>). Con coordenadas, el pin se coloca exacto.</p><div class="lodging">';
+    h += '<h2>Alojamientos</h2><p class="page__lead">Pega la dirección exacta, un enlace de Google Maps con coordenadas o las coordenadas (por ejemplo <span lang="en">34.6658, 135.5058</span>). Con coordenadas, el pin se coloca exacto.</p><div class="lodging">';
     Object.keys(T.lodging).forEach(function (k) {
       var l = lodging(k);
       h += '<form class="lodge" data-lodge="' + k + '">' +
@@ -588,6 +996,25 @@
     $('#info').innerHTML = h;
   }
 
+  function exportPlan() {
+    return JSON.stringify({ app: 'ruta-japon-2026', v: 1, plan: plan, lodging: state.edits, done: Array.from(state.done), booked: Array.from(state.booked) });
+  }
+  function importPlan(text) {
+    var data;
+    try { data = JSON.parse(text); } catch (e) { toast('Ese texto no es un plan válido.'); return; }
+    if (!data || data.app !== 'ruta-japon-2026' || !data.plan) { toast('Ese texto no es un plan de esta app.'); return; }
+    plan = normalizePlan(data.plan);
+    savePlan();
+    if (data.lodging && typeof data.lodging === 'object') { state.edits = data.lodging; store.set('lodging', state.edits); }
+    if (Array.isArray(data.done)) { state.done = new Set(data.done); store.set('done', data.done); }
+    if (Array.isArray(data.booked)) { state.booked = new Set(data.booked); store.set('booked', data.booked); }
+    refreshTripMap();
+    renderInfo();
+    renderStrip();
+    renderBookings();
+    toast('Plan cargado.');
+  }
+
   // ── Hoja en japonés ────────────────────────────────────────────────────
   function openSheet(o) {
     $('#jp-sheet .sheet__eyebrow').textContent = o.eyebrow;
@@ -621,6 +1048,7 @@
       state.tab = 'dias';
       state.day = defaultDay();
     }
+    if (prevDay !== state.day) state.editing = false;
     store.set('day', state.day);
     show(prevTab !== state.tab || prevDay !== state.day);
   }
@@ -657,6 +1085,11 @@
     var t = e.target;
     var b;
     if ((b = t.closest('[data-focus]'))) { focusStop(b.getAttribute('data-focus')); return; }
+    if ((b = t.closest('[data-goto]'))) {
+      var el = document.getElementById('stop-' + cssId(b.getAttribute('data-goto')));
+      if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); highlight(el); }
+      return;
+    }
     if ((b = t.closest('[data-done]'))) {
       var id = b.getAttribute('data-done');
       var on = !state.done.has(id);
@@ -669,8 +1102,8 @@
       return;
     }
     if ((b = t.closest('[data-ja]'))) {
-      var day = DAYS[state.day];
-      var s = day.stops.find(function (x) { return x.id === b.getAttribute('data-ja'); });
+      var s = stopsOf(DAYS[state.day]).find(function (x) { return x.id === b.getAttribute('data-ja'); });
+      if (!s) return;
       var inf = info(s);
       openSheet({ eyebrow: 'Enseñar al taxista o al personal', ja: inf.ja || inf.place || inf.name, addr: inf.addr, phrase: true, es: 'Hasta aquí, por favor · ' + inf.name });
       return;
@@ -680,6 +1113,72 @@
       openSheet({ eyebrow: f.ro, ja: f.ja, phrase: false, es: f.es });
       return;
     }
+    // Edición
+    if (t.closest('#edit-toggle')) {
+      state.editing = !state.editing;
+      rerenderKeepingScroll();
+      return;
+    }
+    if ((b = t.closest('[data-move]'))) { moveStop(b.getAttribute('data-id'), +b.getAttribute('data-move')); return; }
+    if ((b = t.closest('[data-remove]'))) { removeStop(b.getAttribute('data-remove')); return; }
+    if (t.closest('#sort-time')) { sortByTime(); return; }
+    if (t.closest('#reset-day')) { resetDay(); return; }
+    if ((b = t.closest('[data-open-add]'))) { openAdd(+b.getAttribute('data-open-add'), 'ideas'); return; }
+    if ((b = t.closest('[data-addtab]'))) { state.addTab = b.getAttribute('data-addtab'); renderAddTabs(); return; }
+    if ((b = t.closest('[data-addcat]'))) { state.addCat = b.getAttribute('data-addcat'); renderAddList(); return; }
+    if (t.closest('[data-close-add]')) { closeAdd(); return; }
+    if ((b = t.closest('[data-addplace]'))) {
+      var pid = b.getAttribute('data-addplace');
+      var n = +b.getAttribute('data-day');
+      if (!n) { var sel = document.getElementById('pop-day-' + cssId(pid)); n = sel ? +sel.value : nearestDay(PLACE[pid]); }
+      if (addToDay('c:' + pid, n)) {
+        if (dayMap) dayMap.closePopup();
+        if ($('#add-sheet').open) renderAddList();
+        toast('«' + PLACE[pid].name + '» añadido al día ' + n + '.', DAYS[state.day].n === n && state.tab === 'dias' ? null : { label: 'Ver día ' + n, fn: function () { closeAdd(); location.hash = '#dia-' + n; } });
+      }
+      return;
+    }
+    if ((b = t.closest('[data-restore]'))) {
+      var rid = b.getAttribute('data-restore'), from = BASE_DAY[rid];
+      var arr = ensureOrder(from.n);
+      arr.splice(Math.min(from.i, arr.length), 0, rid);
+      savePlan();
+      renderAddList();
+      if (DAYS[state.day].n === from.n) rerenderKeepingScroll(); else renderStrip();
+      refreshTripMap();
+      toast('Recuperada en el día ' + from.n + '.');
+      return;
+    }
+    if (t.closest('#pick-on-map')) {
+      var form = $('#add-mine');
+      var vals = { name: form.elements.name.value, place: form.elements.place.value, time: form.elements.time.value, kind: form.elements.kind.value, note: form.elements.note.value };
+      closeAdd();
+      if (state.tab !== 'dias' || DAYS[state.day].n !== addDay) location.hash = '#dia-' + addDay;
+      state.picking = { n: addDay, values: vals };
+      $('#pick-banner').hidden = false;
+      $('#daymap').classList.add('is-picking');
+      setTimeout(function () {
+        var top = $('.day-map-wrap').getBoundingClientRect().top + window.scrollY - $('.topbar').offsetHeight;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      }, 50);
+      return;
+    }
+    if (t.closest('#pick-cancel')) {
+      var pk = state.picking;
+      state.picking = null;
+      $('#pick-banner').hidden = true;
+      $('#daymap').classList.remove('is-picking');
+      if (pk) openAdd(pk.n, 'mine', pk.values);
+      return;
+    }
+    if (t.closest('#btn-ideas')) {
+      state.ideasOnDay = !state.ideasOnDay;
+      store.set('ideas-day', state.ideasOnDay);
+      renderDayIdeas();
+      if (state.ideasOnDay) toast(ideasNearDay(DAYS[state.day]).length + ' ideas cerca de este día. Toca una para añadirla.');
+      return;
+    }
+    // Mapa general
     if ((b = t.closest('.chip[data-phase]'))) {
       var ph = b.getAttribute('data-phase');
       if (state.phasesOn.has(ph)) { state.phasesOn.delete(ph); tripLayers[ph] && tripLayers[ph].remove(); }
@@ -687,6 +1186,15 @@
       b.setAttribute('aria-pressed', state.phasesOn.has(ph));
       return;
     }
+    if ((b = t.closest('.chip[data-cat]'))) {
+      var ck = b.getAttribute('data-cat');
+      if (state.catsOn.has(ck)) { state.catsOn.delete(ck); tripIdeas[ck] && tripIdeas[ck].remove(); }
+      else { state.catsOn.add(ck); tripIdeas[ck] && tripIdeas[ck].addTo(tripMap); }
+      store.set('cats-on', Array.from(state.catsOn));
+      b.setAttribute('aria-pressed', state.catsOn.has(ck));
+      return;
+    }
+    // Info
     if ((b = t.closest('[data-lodge-reset]'))) {
       delete state.edits[b.getAttribute('data-lodge-reset')];
       store.set('lodging', state.edits);
@@ -694,10 +1202,36 @@
       return;
     }
     if ((b = t.closest('[data-theme-set]'))) {
-      var th = b.getAttribute('data-theme-set');
-      store.set('theme', th);
+      store.set('theme', b.getAttribute('data-theme-set'));
       applyTheme();
       renderInfo();
+      return;
+    }
+    if (t.closest('#plan-copy')) {
+      var text = exportPlan();
+      var showText = function () { $('#plan-io').hidden = false; var ta = $('#plan-text'); ta.value = text; ta.focus(); ta.select(); toast('Selecciona y copia el texto.'); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { toast('Plan copiado. Pégalo donde quieras guardarlo.'); }, showText);
+      } else showText();
+      return;
+    }
+    if (t.closest('#plan-import-open')) { $('#plan-io').hidden = false; $('#plan-text').value = ''; $('#plan-text').focus(); return; }
+    if (t.closest('#plan-io-close')) { $('#plan-io').hidden = true; return; }
+    if (t.closest('#plan-import')) { importPlan($('#plan-text').value.trim()); return; }
+    if (t.closest('#plan-reset')) {
+      var rb = t.closest('#plan-reset');
+      if (rb.dataset.armed) {
+        var backup = plan;
+        plan = normalizePlan(null);
+        savePlan();
+        refreshTripMap();
+        renderInfo();
+        renderStrip();
+        toast('Plan original recuperado.', { label: 'Deshacer', fn: function () { plan = backup; savePlan(); refreshTripMap(); renderInfo(); renderStrip(); } });
+      } else {
+        rb.dataset.armed = '1';
+        rb.textContent = '¿Seguro? Pulsa otra vez';
+      }
       return;
     }
     if (t.closest('#reset-progress')) {
@@ -719,13 +1253,35 @@
   });
 
   document.addEventListener('change', function (e) {
-    var c = e.target.closest('[data-bk]');
-    if (c) {
+    var c;
+    if ((c = e.target.closest('[data-bk]'))) {
       var id = c.getAttribute('data-bk');
       if (c.checked) state.booked.add(id); else state.booked.delete(id);
       store.set('booked', Array.from(state.booked));
       renderBookings();
+      return;
     }
+    if ((c = e.target.closest('[data-time]'))) {
+      var sid = c.getAttribute('data-time');
+      plan.times[sid] = c.value || '';
+      savePlan();
+      toast('Hora guardada.', { label: 'Ordenar por hora', fn: sortByTime });
+      return;
+    }
+    if ((c = e.target.closest('[data-moveday]'))) {
+      if (c.value) moveToDay(c.getAttribute('data-moveday'), +c.value);
+      return;
+    }
+    if ((c = e.target.closest('[data-note]'))) {
+      var nid = c.getAttribute('data-note');
+      if (c.value.trim()) plan.notes[nid] = c.value.trim(); else delete plan.notes[nid];
+      savePlan();
+      return;
+    }
+  });
+
+  document.addEventListener('input', function (e) {
+    if (e.target.id === 'add-search') { state.addQuery = e.target.value; renderAddList(); }
   });
 
   document.addEventListener('toggle', function (e) {
@@ -734,7 +1290,9 @@
   }, true);
 
   document.addEventListener('submit', function (e) {
-    var f = e.target.closest('form[data-lodge]');
+    var f = e.target;
+    if (f.id === 'add-mine') { e.preventDefault(); addCustomFromForm(f); return; }
+    f = f.closest('form[data-lodge]');
     if (!f) return;
     e.preventDefault();
     var k = f.getAttribute('data-lodge');
@@ -745,7 +1303,7 @@
   });
 
   function afterLodgingChange(msg) {
-    if (tripMap) { tripMap.remove(); tripMap = null; tripLayers = {}; }
+    refreshTripMap();
     renderInfo();
     renderDay();
     toast(msg);
@@ -757,7 +1315,6 @@
     else document.documentElement.setAttribute('data-theme', th);
   }
 
-  // Altura real de la cabecera para el mapa a pantalla completa.
   function syncHeader() {
     document.documentElement.style.setProperty('--top-h', $('.topbar').offsetHeight + 'px');
   }
@@ -773,7 +1330,6 @@
   if ('ResizeObserver' in window) new ResizeObserver(syncHeader).observe($('.topbar'));
   window.addEventListener('resize', function () { if (dayMap) dayMap.invalidateSize(); if (tripMap) tripMap.invalidateSize(); });
 
-  // Si cambia el día (app abierta de un día para otro), refrescar estado.
   setInterval(function () {
     var now = localISO();
     if (now !== today) { today = now; renderStatus(); renderStrip(); renderBookings(); }
