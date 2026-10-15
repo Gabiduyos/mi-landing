@@ -24,7 +24,12 @@
         <span class="brand__kanji" aria-hidden="true">旅</span>
         <span class="brand__text">Japón <span class="brand__year">2026</span></span>
       </a>
-      <p class="status" id="status" aria-live="polite"></p>
+      <div class="topbar__end">
+        <p class="status" id="status" aria-live="polite"></p>
+        <button class="tool tool--sm" type="button" id="btn-share" aria-label="Compartir la app">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14.5V3.5M7.5 8 12 3.5 16.5 8"/><path d="M8 10.5H5.5v10h13v-10H16"/></svg>
+        </button>
+      </div>
     </div>
     <nav class="daystrip" id="daystrip" aria-label="Días del viaje"></nav>
   </header>
@@ -221,6 +226,49 @@
         <p class="add-form__hint">Los enlaces cortos de Google Maps no traen coordenadas: el sitio se abrirá bien en Maps, pero para verlo en este mapa usa «Elegir el punto en el mapa».</p>
         <button class="btn btn--primary" type="submit">Añadir al día</button>
       </form>
+    </div>
+  </dialog>
+
+  <dialog class="sheet sheet--add" id="share-sheet" aria-labelledby="share-title">
+    <div class="add">
+      <div class="add__head">
+        <h2 class="add__title" id="share-title">Compartir</h2>
+        <button class="tool tool--sm" type="button" data-close-dialog="share-sheet" aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <p class="share__lead">Cualquiera con el enlace puede abrir la app en el móvil o el ordenador, sin cuenta y sin instalar nada.</p>
+      <section class="share-opt" aria-labelledby="share-app-title">
+        <h3 id="share-app-title">La app</h3>
+        <p>El itinerario tal como está publicado.</p>
+        <input class="share-url" id="share-url-app" readonly aria-label="Enlace de la app" />
+        <div class="lodge__row">
+          <button class="btn btn--primary" type="button" data-share="app">Compartir</button>
+          <button class="btn" type="button" data-copy="app">Copiar enlace</button>
+        </div>
+      </section>
+      <section class="share-opt" id="share-opt-plan" aria-labelledby="share-plan-title" hidden>
+        <h3 id="share-plan-title">La app con tu plan</h3>
+        <p id="share-plan-desc"></p>
+        <input class="share-url" id="share-url-plan" readonly aria-label="Enlace con tu plan" />
+        <div class="lodge__row">
+          <button class="btn btn--primary" type="button" data-share="plan">Compartir</button>
+          <button class="btn" type="button" data-copy="plan">Copiar enlace</button>
+        </div>
+      </section>
+      <p class="add-form__hint">El chat con IA solo funciona en la versión de Claude. Para compartir esa versión, ábrela en Claude y usa su menú ··· → Compartir; quien la abra necesita cuenta de Claude.</p>
+    </div>
+  </dialog>
+
+  <dialog class="sheet" id="incoming-sheet" aria-labelledby="incoming-title">
+    <div class="sheet__inner sheet__inner--left">
+      <p class="sheet__eyebrow">Plan compartido</p>
+      <h2 class="add__title" id="incoming-title">Te han pasado un plan</h2>
+      <p class="incoming__desc" id="incoming-desc"></p>
+      <div class="lodge__row">
+        <button class="btn btn--primary" type="button" id="incoming-load">Cargar este plan</button>
+        <button class="btn" type="button" data-close-dialog="incoming-sheet">Ahora no</button>
+      </div>
     </div>
   </dialog>
 
