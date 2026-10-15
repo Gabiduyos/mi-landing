@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Ruta Japón 2026</title>
+  <meta name="description" content="Itinerario revisado del viaje a Japón (15–29 nov 2026) con mapas, rutas y reservas." />
+  <meta name="theme-color" content="#1b2233" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" />
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar__row">
+      <a class="brand" href="#dia-1" aria-label="Ruta Japón 2026, ir al primer día">
+        <span class="brand__kanji" aria-hidden="true">旅</span>
+        <span class="brand__text">Japón <span class="brand__year">2026</span></span>
+      </a>
+      <p class="status" id="status" aria-live="polite"></p>
+    </div>
+    <nav class="daystrip" id="daystrip" aria-label="Días del viaje"></nav>
+  </header>
+
+  <main id="main">
+    <section class="view view--day" id="view-dias" aria-labelledby="day-title">
+      <div class="day-layout">
+        <div class="day-map-wrap">
+          <div class="map" id="daymap" role="region" aria-label="Mapa del día"></div>
+          <div class="pick-banner" id="pick-banner" hidden>
+            <span>Toca el mapa donde está el sitio</span>
+            <button class="btn btn--sm" type="button" id="pick-cancel">Cancelar</button>
+          </div>
+          <div class="map-tools">
+            <button class="tool" type="button" id="btn-ideas" aria-label="Mostrar ideas cerca de este día" aria-pressed="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>
+            </button>
+            <button class="tool tool--layer" type="button" id="btn-layer" aria-label="Cambiar entre satélite y mapa de calles" aria-pressed="true">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 21 8l-9 4.5L3 8z"/><path d="M3 12l9 4.5 9-4.5M3 16l9 4.5 9-4.5"/></svg><span class="tool__tag" data-layer-tag>SAT</span>
+            </button>
+            <button class="tool" type="button" id="btn-locate" aria-label="Mostrar mi ubicación">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7.5" fill="none"/></svg>
+            </button>
+            <button class="tool" type="button" id="btn-fit" aria-label="Encuadrar todas las paradas del día">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+            </button>
+          </div>
+          <p class="map-offline" id="daymap-offline" hidden><span class="map-offline__msg">Sin mapa: no hay conexión</span> <a class="map-offline__link" data-gmaps-sat target="_blank" rel="noopener" href="https://www.google.com/maps">Ver satélite en Google Maps</a></p>
+        </div>
+        <div class="day-body" id="day-body"></div>
+      </div>
+    </section>
+
+    <section class="view view--map" id="view-mapa" hidden aria-label="Mapa de todo el viaje">
+      <div class="overview">
+        <div class="map map--full" id="tripmap" role="region" aria-label="Mapa del viaje completo"></div>
+        <div class="legend" id="legend"></div>
+        <div class="map-tools map-tools--overview">
+          <button class="tool tool--layer" type="button" id="btn-layer-2" aria-label="Cambiar entre satélite y mapa de calles" aria-pressed="true">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 21 8l-9 4.5L3 8z"/><path d="M3 12l9 4.5 9-4.5M3 16l9 4.5 9-4.5"/></svg><span class="tool__tag" data-layer-tag>SAT</span>
+          </button>
+          <button class="tool" type="button" id="btn-locate-2" aria-label="Mostrar mi ubicación">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7.5" fill="none"/></svg>
+          </button>
+        </div>
+        <p class="map-offline" id="tripmap-offline" hidden><span class="map-offline__msg">Sin mapa: no hay conexión</span> <a class="map-offline__link" data-gmaps-sat target="_blank" rel="noopener" href="https://www.google.com/maps">Ver satélite en Google Maps</a></p>
+      </div>
+    </section>
+
+    <section class="view view--list" id="view-reservas" hidden aria-labelledby="bk-title">
+      <div class="page">
+        <h1 class="page__title" id="bk-title">Reservas y trámites</h1>
+        <p class="page__lead" id="bk-lead"></p>
+        <ol class="bookings" id="bookings"></ol>
+      </div>
+    </section>
+
+    <section class="view view--list" id="view-ia" hidden aria-labelledby="ia-title">
+      <div class="page page--ai">
+        <h1 class="page__title" id="ia-title">Asistente</h1>
+        <p class="page__lead">Cambio de moneda al momento y una IA para traducir carteles, menús y etiquetas, valorar precios o resolver dudas del viaje.</p>
+
+        <section class="fx" aria-labelledby="fx-title">
+          <h2 class="fx__title" id="fx-title">Yenes y euros</h2>
+          <div class="fx__row">
+            <label class="fx__field" for="fx-yen"><span>Yenes</span>
+              <span class="fx__box"><input id="fx-yen" inputmode="decimal" autocomplete="off" placeholder="1.000" /><b aria-hidden="true">¥</b></span>
+            </label>
+            <span class="fx__eq" aria-hidden="true">=</span>
+            <label class="fx__field" for="fx-eur"><span>Euros</span>
+              <span class="fx__box"><input id="fx-eur" inputmode="decimal" autocomplete="off" placeholder="5,56" /><b aria-hidden="true">€</b></span>
+            </label>
+          </div>
+          <p class="fx__tax" id="fx-tax">Si la etiqueta pone 税抜 (sin IVA), aquí verás el precio final con el 10 %.</p>
+          <div class="fx__chips" id="fx-chips"></div>
+          <p class="fx__rate"><label for="fx-rate">Tipo: 1 € =</label> <input id="fx-rate" inputmode="decimal" autocomplete="off" /> ¥ <span>· orientativo (sept. 2026); pon el de tu banco o tarjeta.</span></p>
+        </section>
+
+        <section class="ai" aria-labelledby="ai-title">
+          <h2 id="ai-title">Pregunta a la IA</h2>
+          <p class="ai__loading" id="ai-loading">Conectando con Claude…</p>
+          <div class="ai__off" id="ai-off" hidden></div>
+          <div id="ai-on" hidden>
+            <div class="ai__chips" id="ai-chips"></div>
+            <ol class="chat" id="chat" aria-live="polite"></ol>
+            <form class="composer" id="composer" novalidate>
+              <div class="composer__img" id="composer-img" hidden>
+                <img id="composer-img-prev" alt="Foto adjunta" />
+                <span>Foto lista para enviar</span>
+                <button class="btn btn--sm" type="button" id="composer-img-x">Quitar</button>
+              </div>
+              <label class="sr" for="ai-input">Tu pregunta</label>
+              <textarea id="ai-input" rows="2" placeholder="Escribe tu pregunta o adjunta una foto…"></textarea>
+              <div class="composer__row">
+                <label class="btn btn--sm composer__photo" id="ai-photo-btn" hidden>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="7" width="17" height="12" rx="2"/><circle cx="12" cy="13" r="3.5"/><path d="M8.5 7l1.5-2.5h4L15.5 7"/></svg>Foto
+                  <input type="file" id="ai-photo" accept="image/*" class="sr" />
+                </label>
+                <button class="btn btn--sm" type="button" id="ai-clear">Borrar chat</button>
+                <button class="btn" type="button" id="ai-stop" hidden>Parar</button>
+                <button class="btn btn--primary composer__send" type="submit" id="ai-send">Enviar</button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="view view--list" id="view-info" hidden aria-labelledby="info-title">
+      <div class="page" id="info"></div>
+    </section>
+  </main>
+
+  <nav class="tabbar" aria-label="Secciones">
+    <a class="tab" href="#dia-1" data-tab="dias">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+      <span>Días</span>
+    </a>
+    <a class="tab" href="#mapa" data-tab="mapa">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6z"/><path d="M9 4v14M15 6v14"/></svg>
+      <span>Mapa</span>
+    </a>
+    <a class="tab" href="#ia" data-tab="ia">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v10.5H10l-4 3.5v-3.5H4z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01" stroke-width="2.4"/></svg>
+      <span>Asistente</span>
+    </a>
+    <a class="tab" href="#reservas" data-tab="reservas">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v17l-7-4-7 4z"/></svg>
+      <span>Reservas</span><b class="tab__badge" id="bk-badge" hidden></b>
+    </a>
+    <a class="tab" href="#info" data-tab="info">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v6M12 7.5v.5"/></svg>
+      <span>Info</span>
+    </a>
+  </nav>
+
+  <dialog class="sheet" id="jp-sheet" aria-labelledby="jp-sheet-name">
+    <form method="dialog" class="sheet__inner">
+      <p class="sheet__eyebrow">Enseñar al taxista o al personal</p>
+      <p class="sheet__ja" id="jp-sheet-name" lang="ja"></p>
+      <p class="sheet__addr" id="jp-sheet-addr" lang="ja"></p>
+      <p class="sheet__phrase" lang="ja">ここまでお願いします。</p>
+      <p class="sheet__es" id="jp-sheet-es"></p>
+      <button class="btn btn--primary sheet__close" value="close">Cerrar</button>
+    </form>
+  </dialog>
+
+  <dialog class="sheet sheet--add" id="add-sheet" aria-labelledby="add-title">
+    <div class="add">
+      <div class="add__head">
+        <h2 class="add__title" id="add-title">Añadir parada</h2>
+        <button class="tool tool--sm" type="button" data-close-add aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <div class="seg" role="tablist" aria-label="Cómo añadir">
+        <button class="seg__btn" type="button" role="tab" data-addtab="ideas" aria-selected="true">Ideas investigadas</button>
+        <button class="seg__btn" type="button" role="tab" data-addtab="mine" aria-selected="false">Mi propio sitio</button>
+      </div>
+      <div class="add__panel" id="add-ideas">
+        <label class="search" for="add-search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>
+          <span class="sr">Buscar ideas</span>
+          <input id="add-search" type="search" placeholder="Buscar: cámaras, kimono, Gundam, templo…" autocomplete="off" />
+        </label>
+        <div class="add__cats" id="add-cats"></div>
+        <ul class="ideas" id="add-list"></ul>
+        <div class="add__nearby">
+          <p class="nearby__title">¿No está aquí? Busca cerca de ti</p>
+          <div id="add-nearby"></div>
+        </div>
+      </div>
+      <form class="add__panel add-form" id="add-mine" hidden novalidate>
+        <label for="mine-name">Nombre</label>
+        <input id="mine-name" name="name" autocomplete="off" placeholder="Ej.: tienda de cámaras que vi en Instagram" />
+        <label for="mine-place">Enlace de Google Maps, dirección o coordenadas</label>
+        <input id="mine-place" name="place" autocomplete="off" placeholder="https://maps.app.goo.gl/… o 35.6895, 139.6917" />
+        <button class="btn btn--sm add-form__pick" type="button" id="pick-on-map">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Elegir el punto en el mapa
+        </button>
+        <div class="add-form__row">
+          <div><label for="mine-time">Hora</label><input id="mine-time" name="time" type="time" /></div>
+          <div><label for="mine-kind">Tipo</label>
+            <select id="mine-kind" name="kind">
+              <option value="sight">Visita</option>
+              <option value="shop">Tiendas</option>
+              <option value="food">Comida</option>
+              <option value="move">Trayecto</option>
+            </select>
+          </div>
+        </div>
+        <label for="mine-note">Nota</label>
+        <input id="mine-note" name="note" autocomplete="off" placeholder="Opcional" />
+        <p class="add-form__hint">Los enlaces cortos de Google Maps no traen coordenadas: el sitio se abrirá bien en Maps, pero para verlo en este mapa usa «Elegir el punto en el mapa».</p>
+        <button class="btn btn--primary" type="submit">Añadir al día</button>
+      </form>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script src="coast.js"></script>
+  <script src="data.js"></script>
+  <script src="places.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
