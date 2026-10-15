@@ -42,6 +42,9 @@
             <button class="tool" type="button" id="btn-ideas" aria-label="Mostrar ideas cerca de este día" aria-pressed="false">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>
             </button>
+            <button class="tool tool--layer" type="button" id="btn-layer" aria-label="Cambiar entre satélite y mapa de calles" aria-pressed="true">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 21 8l-9 4.5L3 8z"/><path d="M3 12l9 4.5 9-4.5M3 16l9 4.5 9-4.5"/></svg><span class="tool__tag" data-layer-tag>SAT</span>
+            </button>
             <button class="tool" type="button" id="btn-locate" aria-label="Mostrar mi ubicación">
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7.5" fill="none"/></svg>
             </button>
@@ -49,7 +52,7 @@
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
             </button>
           </div>
-          <p class="map-offline" id="daymap-offline" hidden>Sin mapa de calles: no hay conexión</p>
+          <p class="map-offline" id="daymap-offline" hidden><span class="map-offline__msg">Sin mapa: no hay conexión</span> <a class="map-offline__link" data-gmaps-sat target="_blank" rel="noopener" href="https://www.google.com/maps">Ver satélite en Google Maps</a></p>
         </div>
         <div class="day-body" id="day-body"></div>
       </div>
@@ -60,11 +63,14 @@
         <div class="map map--full" id="tripmap" role="region" aria-label="Mapa del viaje completo"></div>
         <div class="legend" id="legend"></div>
         <div class="map-tools map-tools--overview">
+          <button class="tool tool--layer" type="button" id="btn-layer-2" aria-label="Cambiar entre satélite y mapa de calles" aria-pressed="true">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 21 8l-9 4.5L3 8z"/><path d="M3 12l9 4.5 9-4.5M3 16l9 4.5 9-4.5"/></svg><span class="tool__tag" data-layer-tag>SAT</span>
+          </button>
           <button class="tool" type="button" id="btn-locate-2" aria-label="Mostrar mi ubicación">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7.5" fill="none"/></svg>
           </button>
         </div>
-        <p class="map-offline" id="tripmap-offline" hidden>Sin mapa de calles: no hay conexión</p>
+        <p class="map-offline" id="tripmap-offline" hidden><span class="map-offline__msg">Sin mapa: no hay conexión</span> <a class="map-offline__link" data-gmaps-sat target="_blank" rel="noopener" href="https://www.google.com/maps">Ver satélite en Google Maps</a></p>
       </div>
     </section>
 

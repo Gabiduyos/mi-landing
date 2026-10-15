@@ -46,7 +46,8 @@
     addTab: 'ideas',
     addCat: 'all',
     addQuery: '',
-    picking: null
+    picking: null,
+    basemap: store.get('basemap', 'sat')
   };
 
   // Índices
@@ -506,6 +507,8 @@
   // ── Mapas ──────────────────────────────────────────────────────────────
   var dayMap = null, dayLayer = null, ideaLayer = null, dayMarkers = {}, tripMap = null, tripLayers = {}, tripIdeas = {}, meLayers = [];
 
+  // Mapa base: satélite (Esri) con nombres, o calles (OpenStreetMap). La elección se recuerda.
+  var bases = [];
   function addBase(map, offlineEl) {
     map.createPane('coast');
     map.getPane('coast').style.zIndex = 150;
@@ -515,15 +518,66 @@
       }).addTo(map);
     }
     var ok = 0, bad = 0;
-    var tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    function watch(layer) {
+      layer.on('tileload', function () { ok++; offlineEl.hidden = true; });
+      layer.on('tileerror', function () { bad++; if (!ok && bad >= 3) { offlineEl.hidden = false; updateGmapsLinks(); } });
+      return layer;
+    }
+    var street = watch(L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       crossOrigin: 'anonymous',
       className: 'tiles',
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'
+    }));
+    var sat = L.layerGroup([
+      watch(L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19,
+        maxNativeZoom: 19,
+        crossOrigin: 'anonymous',
+        className: 'tiles-sat',
+        zIndex: 1,
+        attribution: 'Imágenes &copy; Esri, Maxar, Earthstar Geographics'
+      })),
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19,
+        maxNativeZoom: 18,
+        crossOrigin: 'anonymous',
+        className: 'tiles-sat',
+        zIndex: 2
+      })
+    ]);
+    var b = { map: map, street: street, sat: sat };
+    bases.push(b);
+    (state.basemap === 'street' ? street : sat).addTo(map);
+    map.on('moveend', updateGmapsLinks);
+  }
+  function setBasemap(kind) {
+    state.basemap = kind;
+    store.set('basemap', kind);
+    bases.forEach(function (b) {
+      if (kind === 'street') { b.map.removeLayer(b.sat); b.street.addTo(b.map); }
+      else { b.map.removeLayer(b.street); b.sat.addTo(b.map); }
     });
-    tiles.on('tileload', function () { ok++; offlineEl.hidden = true; });
-    tiles.on('tileerror', function () { bad++; if (!ok && bad >= 3) offlineEl.hidden = false; });
-    tiles.addTo(map);
+    syncLayerButtons();
+  }
+  function syncLayerButtons() {
+    var sat = state.basemap !== 'street';
+    ['#btn-layer', '#btn-layer-2'].forEach(function (sel) {
+      var btn = $(sel);
+      if (!btn) return;
+      btn.setAttribute('aria-pressed', sat);
+      btn.querySelector('[data-layer-tag]').textContent = sat ? 'SAT' : 'MAPA';
+    });
+  }
+  // Enlace a la misma zona en Google Maps en modo satélite (útil sin conexión o dentro de Claude).
+  function updateGmapsLinks() {
+    [[dayMap, '#daymap-offline'], [tripMap, '#tripmap-offline']].forEach(function (pair) {
+      var map = pair[0], el = $(pair[1] + ' [data-gmaps-sat]');
+      if (!map || !el) return;
+      var c = map.getCenter();
+      el.href = 'https://www.google.com/maps/@?api=1&map_action=map&center=' + c.lat.toFixed(5) + ',' + c.lng.toFixed(5) +
+        '&zoom=' + Math.max(3, Math.min(20, Math.round(map.getZoom()))) + '&basemap=satellite';
+    });
   }
 
   function pinIcon(cls, html, size) {
@@ -1594,6 +1648,11 @@
     }
     if (t.closest('#btn-locate') || t.closest('#btn-locate-2')) { toggleLocate(); return; }
     if (t.closest('#btn-fit')) { fitDay(true); return; }
+    if (t.closest('#btn-layer') || t.closest('#btn-layer-2')) {
+      setBasemap(state.basemap === 'street' ? 'sat' : 'street');
+      toast(state.basemap === 'street' ? 'Mapa de calles.' : 'Vista de satélite.');
+      return;
+    }
   });
 
   document.addEventListener('change', function (e) {
@@ -1691,6 +1750,7 @@
 
   // ── Arranque ───────────────────────────────────────────────────────────
   applyTheme();
+  syncLayerButtons();
   initAI();
   renderStatus();
   renderLegend();

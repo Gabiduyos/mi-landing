@@ -1,5 +1,5 @@
 // Service worker: la app funciona sin conexión y guarda los mapas ya vistos.
-var VERSION = 'ruta-japon-v3';
+var VERSION = 'ruta-japon-v4';
 var SHELL = [
   './',
   'index.html',
@@ -71,7 +71,7 @@ self.addEventListener('fetch', function (e) {
   var req = e.request;
   if (req.method !== 'GET') return;
   var url = new URL(req.url);
-  if (url.hostname === 'tile.openstreetmap.org') {
+  if (url.hostname === 'tile.openstreetmap.org' || url.hostname === 'server.arcgisonline.com') {
     e.respondWith(cacheFirst(req, TILES, function () { if (++puts % 60 === 0) trimTiles(); }));
   } else if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
     e.respondWith(cacheFirst(req, FONTS));
