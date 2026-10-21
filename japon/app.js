@@ -206,6 +206,7 @@
   // ── Iconos ─────────────────────────────────────────────────────────────
   function svg(d) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + d + '</svg>'; }
   var ICON = {
+    cam: svg('<path d="M4 8h3l1.6-2.2h6.8L17 8h3v11H4z"/><circle cx="12" cy="13.3" r="3.6"/>'),
     home: svg('<path d="M4 11.5 12 5l8 6.5"/><path d="M6.5 10v9h11v-9"/>'),
     box: svg('<path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v8"/>'),
     route: svg('<circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="6" r="2.2"/><path d="M8 18h7a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h7"/>'),
@@ -375,7 +376,7 @@
       html += '<div class="stop__card">';
       if (done && !ed) html += '<span class="hanko' + (newlyDone === s.id ? ' is-new' : '') + '" aria-hidden="true">済</span>';
       html += '<p class="stop__kind">' + (t ? '<span class="stop__time">' + esc(t) + '</span>' : '') + '<span>' + esc(kindLabel(s)) + '</span>' +
-        (s.opt ? '<span class="tag">Opcional</span>' : '') +
+        (s.opt ? '<span class="tag">Opcional</span>' : '') + (s.photo ? '<span class="tag tag--photo">Foto</span>' : '') +
         (s.fromCatalog ? '<span class="tag">Añadida</span>' : '') +
         (inf.approx && inf.ll ? '<span class="tag">Ubicación aprox.</span>' : '') +
         (!inf.ll && !s.lodge ? '<span class="tag">Sin pin</span>' : '') +
@@ -400,13 +401,17 @@
         if (s.note) html += '<p class="stop__note">' + esc(s.note) + '</p>';
         if (s.mine) html += '<p class="stop__mine"><b>Tu nota:</b> ' + esc(s.mine) + '</p>';
         if (s.tips && s.tips.length) html += '<ul class="stop__tips">' + s.tips.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>';
+        if (s.photo) html += '<div class="photo"><p class="photo__h">' + ICON.cam + '<span>Foto' + (s.photo.when ? ' · ' + esc(s.photo.when) : '') + '</span></p>' +
+          '<p>' + esc(s.photo.tip) + '</p>' + (s.photo.lens ? '<p class="photo__lens">Con la A7 IV: ' + esc(s.photo.lens.charAt(0).toLowerCase() + s.photo.lens.slice(1)) + '</p>' : '') + '</div>';
         if (s.shops && s.shops.length) {
           html += '<ul class="shops" aria-label="Tiendas">' + s.shops.map(function (sh) {
             return '<li><a target="_blank" rel="noopener" href="' + esc(gSearch(sh.q)) + '">' + ICON.pin + esc(sh.n) + '</a></li>';
           }).join('') + '</ul>';
         }
         html += '<div class="stop__actions">';
-        if (inf.q) {
+        if (s.go) {
+          html += '<a class="btn btn--primary" target="_blank" rel="noopener" href="' + esc(gDir(s.go, inf.q, mode)) + '">' + ICON.route + 'Ruta desde casa</a>';
+        } else if (inf.q) {
           html += '<a class="btn btn--primary" target="_blank" rel="noopener" href="' + esc(gDir(inf.q, '', mode)) + '">' + ICON.route + 'Cómo llegar</a>';
           if (prev && prev.q && prev.q !== inf.q) html += '<a class="btn" target="_blank" rel="noopener" href="' + esc(gDir(inf.q, prev.q, mode)) + '">' + ICON.from + 'Desde la anterior</a>';
         }
@@ -938,7 +943,7 @@
 
   // ── Reservas ───────────────────────────────────────────────────────────
   function bkStatus(b) {
-    if (state.booked.has(b.id)) return { cls: 'done', label: 'Hecho', rank: 3 };
+    if (b.done || state.booked.has(b.id)) return { cls: 'done', label: 'Hecho', rank: 3 };
     var diff = daysBetween(today, b.due);
     if (b.opens) {
       if (diff > 1) return { cls: 'opens', label: 'Abre el ' + fmtShort(b.due), rank: 1 };

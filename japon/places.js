@@ -29,6 +29,13 @@ window.NEARBY = [
 ];
 
 window.PLACES = [
+
+  // ── De tus listas de Google Maps: los que quedan fuera de ruta ──────
+  {"id": "gm-shizuoka-kanteidan-garage-ma", "cat": "mercado", "area": "Fuera de ruta", "name": "Shizuoka Kanteidan Garage Market Makinohara", "q": "Shizuoka Kanteidan Garage Market Makinohara", "ll": [34.68743, 138.19155], "fit": [], "car": true, "note": "De tu lista «Quiero ir» de Google Maps. Queda a más de 1 h de la ruta: solo si cambiáis el plan."},
+  {"id": "gm-camera-no-risamai-kanazawa", "cat": "foto", "area": "Fuera de ruta", "name": "Camera no Risamai Kanazawa", "q": "Camera no Risamai Kanazawa", "ll": [36.56624, 136.62046], "fit": [], "car": true, "note": "De tu lista «Quiero ir» de Google Maps. Queda a más de 1 h de la ruta: solo si cambiáis el plan."},
+  {"id": "gm-bookoff-aeon-town-kanazawa", "cat": "retro", "area": "Fuera de ruta", "name": "BOOKOFF AEON TOWN Kanazawa", "q": "BOOKOFF AEON TOWN Kanazawa", "ll": [36.58354, 136.62987], "fit": [], "car": true, "note": "De tu lista «Quiero ir» de Google Maps. Queda a más de 1 h de la ruta: solo si cambiáis el plan."},
+  {"id": "gm-hard-off-oizumi", "cat": "retro", "area": "Fuera de ruta", "name": "Hard Off Oizumi", "q": "Hard Off Oizumi", "ll": [36.25766, 139.39556], "fit": [], "car": true, "note": "De tu lista «Compras» de Google Maps. Queda a más de 1 h de la ruta: solo si cambiáis el plan."},
+  {"id": "gm-hard-off-kanazawa-moroe", "cat": "retro", "area": "Fuera de ruta", "name": "Hard Off Kanazawa Moroe", "q": "Hard Off Kanazawa Moroe", "ll": [36.59416, 136.64351], "fit": [], "car": true, "note": "De tu lista «Compras» de Google Maps. Queda a más de 1 h de la ruta: solo si cambiáis el plan."},
   // ── Osaka ───────────────────────────────────────────────────────────
   { id: 'naniwa-umeda', cat: 'foto', area: 'Osaka', name: 'Camera no Naniwa Umeda (usadas)', ja: 'カメラのナニワ 梅田中古買取センター',
     q: 'カメラのナニワ 梅田中古買取センター', ll: [34.7062, 135.4990], approx: true, fit: [3],
@@ -129,7 +136,7 @@ window.PLACES = [
 
   // ── Tokio ───────────────────────────────────────────────────────────
   { id: 'fujiya', cat: 'foto', area: 'Tokio', name: 'Fujiya Camera (Nakano)', ja: 'フジヤカメラ',
-    q: 'フジヤカメラ 中野', ll: [35.7063, 139.6650], approx: true, fit: [8],
+    q: 'フジヤカメラ 中野', ll: [35.7063, 139.6650], approx: true, fit: [9],
     note: 'Desde 1938: cuatro tiendas alrededor de la estación de Nakano, usado barato y cajas de «junk». Encaja con Nakano Broadway.' },
   { id: 'lemonsha', cat: 'foto', area: 'Tokio', name: 'Lemonsha Ikebukuro', ja: 'レモン社 池袋店',
     q: 'レモン社 池袋店', ll: [35.7300, 139.7120], approx: true, fit: [],
@@ -141,7 +148,7 @@ window.PLACES = [
     q: 'Yodobashi Akiba', ll: [35.6987, 139.7744], fit: [7, 15],
     note: 'Planta entera de cámaras y objetivos nuevos; también juguetes y figuras arriba.' },
   { id: 'shimokita', cat: 'ropa', area: 'Tokio', name: 'Shimokitazawa (vintage)', ja: '下北沢',
-    q: 'Shimokitazawa', ll: [35.6613, 139.6680], fit: [8, 13],
+    q: 'Shimokitazawa', ll: [35.6613, 139.6680], fit: [9, 13],
     note: 'La capital del vintage de Tokio: ropa, vinilos, libros y menaje. A 10 min de Gōtokuji (día 13). Muchas tiendas abren hacia las 12:00.',
     shops: [
       { n: 'Flamingo', q: 'Flamingo Shimokitazawa' },
@@ -149,7 +156,7 @@ window.PLACES = [
       { n: 'New York Joe Exchange', q: 'New York Joe Exchange Shimokitazawa' }
     ] },
   { id: 'harajuku', cat: 'ropa', area: 'Tokio', name: 'Harajuku: Chicago, RAGTAG, KINJI', ja: '原宿',
-    q: 'Harajuku Station', ll: [35.6702, 139.7027], fit: [8],
+    q: 'Harajuku Station', ll: [35.6702, 139.7027], fit: [9],
     note: 'Entre Shibuya y Shinjuku. KINJI es grande y barato; RAGTAG es de marca; Chicago tiene kimonos usados.',
     shops: [
       { n: 'Chicago Harajuku', q: 'Chicago Harajuku' },
@@ -169,16 +176,16 @@ window.PLACES = [
       { n: 'Surugaya Ikebukuro', q: '駿河屋 池袋' }
     ] },
   { id: 'gundam-base', cat: 'figuras', area: 'Tokio', name: 'The Gundam Base Tokyo', ja: 'ガンダムベース東京',
-    q: 'The Gundam Base Tokyo', ll: [35.6251, 139.7757], approx: true, fit: [9],
+    q: 'The Gundam Base Tokyo', ll: [35.6251, 139.7757], approx: true, fit: [8],
     note: 'Sigue abierta en la 7.ª planta de DiverCity aunque ya no esté la estatua. En noviembre abre otra en Shibuya PARCO.' },
   { id: 'kiddyland', cat: 'figuras', area: 'Tokio', name: 'Kiddy Land Harajuku', ja: 'キデイランド原宿店',
-    q: 'Kiddy Land Harajuku', ll: [35.6688, 139.7055], fit: [8],
+    q: 'Kiddy Land Harajuku', ll: [35.6688, 139.7055], fit: [9],
     note: 'Cinco plantas de juguetes y personajes (Snoopy, Ghibli, Sanrio, Pokémon).' },
   { id: 'char-street', cat: 'figuras', area: 'Tokio', name: 'Tokyo Character Street', ja: '東京キャラクターストリート',
     q: 'Tokyo Character Street', ll: [35.6800, 139.7685], approx: true, fit: [15],
     note: 'Una treintena de tiendas oficiales (Jump, Ghibli, Pokémon, Sanrio) bajo la estación de Tokio.' },
   { id: 'ghibli', cat: 'figuras', area: 'Tokio', name: 'Museo Ghibli (Mitaka)', ja: '三鷹の森ジブリ美術館',
-    q: 'Ghibli Museum', ll: [35.6962, 139.5704], fit: [8],
+    q: 'Ghibli Museum', ll: [35.6962, 139.5704], fit: [9],
     note: 'Solo con entrada con fecha. Las de noviembre salieron el 10 oct: mirar si quedan huecos en Lawson Ticket.' },
   { id: 'akiba-retro', cat: 'retro', area: 'Tokio', name: 'Retro en Akihabara: BEEP y Retro Game Camp', ja: 'BEEP・レトロゲームキャンプ',
     q: 'BEEP Akihabara', ll: [35.7010, 139.7708], approx: true, fit: [7, 15],
@@ -189,7 +196,7 @@ window.PLACES = [
       { n: 'Surugaya Akihabara', q: '駿河屋 秋葉原' }
     ] },
   { id: 'meiji', cat: 'cultura', area: 'Tokio', name: 'Meiji Jingū', ja: '明治神宮',
-    q: 'Meiji Jingu', ll: [35.6764, 139.6993], fit: [8],
+    q: 'Meiji Jingu', ll: [35.6764, 139.6993], fit: [9],
     note: 'Santuario en un bosque de 70 hectáreas junto a Harajuku.' },
   { id: 'yanaka', cat: 'cultura', area: 'Tokio', name: 'Yanaka Ginza y Yanaka', ja: '谷中銀座',
     q: 'Yanaka Ginza', ll: [35.7277, 139.7660], fit: [14, 15],
@@ -210,11 +217,11 @@ window.PLACES = [
     q: 'Sumida Hokusai Museum', ll: [35.6966, 139.8007], fit: [14],
     note: 'Dedicado al autor de La gran ola, en su barrio natal.' },
   { id: 'rikugien', cat: 'cultura', area: 'Tokio', name: 'Jardín Rikugien', ja: '六義園',
-    q: 'Rikugien Garden', ll: [35.7330, 139.7468], fit: [9, 14],
+    q: 'Rikugien Garden', ll: [35.7330, 139.7468], fit: [8, 14],
     note: 'Jardín de la era Edo con arces; a finales de noviembre suele abrir de noche con iluminación (comprobar fechas).' },
   { id: 'koishikawa', cat: 'cultura', area: 'Tokio', name: 'Koishikawa Kōrakuen', ja: '小石川後楽園',
-    q: 'Koishikawa Korakuen', ll: [35.7055, 139.7495], fit: [9],
-    note: 'Jardín Edo pegado a Tokyo Dome City (tienda de Doraemon, día 9), con arces en noviembre.' },
+    q: 'Koishikawa Korakuen', ll: [35.7055, 139.7495], fit: [8],
+    note: 'Jardín Edo pegado a Tokyo Dome City (tienda de Doraemon, día 8), con arces en noviembre.' },
   { id: 'kabukiza', cat: 'cultura', area: 'Tokio', name: 'Kabuki-za (Ginza)', ja: '歌舞伎座',
     q: 'Kabukiza Theatre', ll: [35.6696, 139.7680], fit: [],
     note: 'Entradas para un solo acto (hitomakumi) que se compran el mismo día.' },

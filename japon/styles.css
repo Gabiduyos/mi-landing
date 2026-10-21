@@ -438,6 +438,12 @@ svg { stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-lin
 .stop__note { margin: 8px 0 0; max-width: 68ch; }
 .stop__tips { margin: 6px 0 0; padding-left: 18px; font-size: 14px; color: var(--muted); }
 .stop__tips li { margin: 3px 0; }
+.photo { margin: 10px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); border-left: 3px solid var(--shu); max-width: 68ch; }
+.photo__h { margin: 0; display: flex; align-items: center; gap: 6px; font: 500 12px/1.3 var(--f-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--shu); }
+.photo__h svg { width: 15px; height: 15px; flex: 0 0 auto; }
+.photo p { margin: 4px 0 0; font-size: 14px; }
+.photo .photo__lens { color: var(--muted); }
+.stop__kind .tag--photo { color: var(--shu); }
 .shops { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; }
 .shops a {
   display: inline-flex;

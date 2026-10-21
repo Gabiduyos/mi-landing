@@ -1,5 +1,5 @@
 // Service worker: la app funciona sin conexión y guarda los mapas ya vistos.
-var VERSION = 'ruta-japon-v5';
+var VERSION = 'ruta-japon-v6';
 var SHELL = [
   './',
   'index.html',
