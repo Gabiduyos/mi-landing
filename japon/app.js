@@ -153,6 +153,76 @@
     if (n) o.mine = n;
     return o;
   }
+  // ── Tiempos recomendados y cálculo del día ─────────────────────────────
+  var DUR_DEF = { sight: 60, shop: 30, food: 60, home: 15, move: 0, task: 15 };
+  function durOf(s) {
+    if (typeof s.dur === 'number') return s.dur;
+    if (/-start$/.test(s.id)) return 0;
+    return DUR_DEF[s.kind] != null ? DUR_DEF[s.kind] : 45;
+  }
+  function fmtDur(m) {
+    m = Math.round(m / 5) * 5;
+    if (m < 60) return m + ' min';
+    var h = Math.floor(m / 60), r = m % 60;
+    return h + ' h' + (r ? ' ' + pad(r) : '');
+  }
+  function legMin(a, b, car) {
+    if (!a || !b || a.far || b.far) return 0;
+    var ia = info(a), ib = info(b);
+    if (!ia.ll || !ib.ll) return 0;
+    var km = haversine(ia.ll, ib.ll) / 1000;
+    if (km < 0.05 || km > 60) return 0;
+    if (car) return Math.round(km < 15 ? 8 + km * 1.6 : 15 + km * 1.0);
+    if (km < 1.2) return Math.round(km * 15) + 2;
+    if (km < 10) return Math.round(10 + km * 2.2);
+    return Math.round(25 + km * 0.8);
+  }
+  function dayCheck(day) {
+    var list = stopsOf(day), car = day.mode === 'car';
+    function run(withOpt) {
+      var cur = null, prev = null, visit = 0, travel = 0, gaps = [], n = 0;
+      list.forEach(function (s) {
+        if (s.opt && !withOpt) return;
+        var t = timeToMin(s.t);
+        if (prev) { var l = legMin(prev, s, car); travel += l; if (cur != null) cur += l; }
+        if (t != null) {
+          if (cur == null || cur <= t) cur = t;
+          else if (cur - t > 15 && !withOpt) gaps.push({ a: prev, b: s, over: cur - t });
+        }
+        var d = durOf(s); visit += d; if (cur != null) cur += d;
+        if (d > 0) n++;
+        prev = s;
+      });
+      return { end: cur, visit: visit, travel: travel, gaps: gaps, n: n };
+    }
+    var core = run(false), all = run(true);
+    var opts = list.filter(function (s) { return s.opt; }).length;
+    return { core: core, all: all, opts: opts };
+  }
+  function dayPlanHtml(day) {
+    var c = dayCheck(day), k = c.core;
+    if (k.end == null) return '';
+    var h = '<div class="dayplan" aria-label="Tiempo del día">';
+    h += '<p class="dayplan__main">' + ICON.clock + '<span><b>≈' + fmtDur(k.visit) + '</b> de visitas + ≈' + fmtDur(k.travel) + ' de trayectos. ' +
+      'Acabaríais hacia las <b>' + fmtMin(k.end) + '</b>.</span></p>';
+    if (k.gaps.length) {
+      k.gaps.slice(0, 2).forEach(function (g) {
+        h += '<p class="dayplan__warn">Va justo: para llegar a «' + esc(g.b.name) + '» a las ' + timeForDisplay(g.b.t) + ' faltan ≈' + fmtDur(g.over) + '. Acortad la parada anterior o retrasad la hora.</p>';
+      });
+    } else {
+      h += '<p class="dayplan__ok">Da tiempo a todo lo fijo.</p>';
+    }
+    if (c.opts) {
+      var extra = Math.max(0, c.all.end - k.end);
+      var one = c.opts === 1;
+      if (extra < 10) h += '<p>' + (one ? 'La parada opcional cabe' : 'Las ' + c.opts + ' opcionales caben') + ' sin problema.</p>';
+      else h += '<p>' + (one ? 'Con la opcional' : 'Con las ' + c.opts + ' opcionales') + ': +≈' + fmtDur(extra) + ' (hasta las ' + fmtMin(c.all.end) + ').' +
+        (c.all.end > 21 * 60 ? (one ? ' Solo si vais sobrados.' : ' No caben todas: elegid las que más os apetezcan.') : ' Caben si vais a buen ritmo.') + '</p>';
+    }
+    h += '<p class="dayplan__fine">Tiempos orientativos: visita recomendada en cada sitio y trayectos estimados por distancia.</p></div>';
+    return h;
+  }
+
   function stopsOf(day) {
     var ids = plan.order[day.n];
     var list = ids ? ids.map(stopById).filter(Boolean) : day.stops;
@@ -206,6 +276,7 @@
   // ── Iconos ─────────────────────────────────────────────────────────────
   function svg(d) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + d + '</svg>'; }
   var ICON = {
+    clock: svg('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'),
     cam: svg('<path d="M4 8h3l1.6-2.2h6.8L17 8h3v11H4z"/><circle cx="12" cy="13.3" r="3.6"/>'),
     home: svg('<path d="M4 11.5 12 5l8 6.5"/><path d="M6.5 10v9h11v-9"/>'),
     box: svg('<path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v8"/>'),
@@ -341,6 +412,7 @@
       '<li>' + ICON.sunset + '<span>Se pone <b>' + fmtMin(sun.set) + '</b></span></li>' +
       '<li>' + (day.mode === 'car' ? ICON.car + '<span>En coche</span>' : ICON.train + '<span>Transporte público</span>') + '</li>' +
       '</ul>';
+    html += dayPlanHtml(day);
 
     html += '<div class="day-actions">';
     if (ed) {
@@ -376,7 +448,7 @@
       html += '<div class="stop__card">';
       if (done && !ed) html += '<span class="hanko' + (newlyDone === s.id ? ' is-new' : '') + '" aria-hidden="true">済</span>';
       html += '<p class="stop__kind">' + (t ? '<span class="stop__time">' + esc(t) + '</span>' : '') + '<span>' + esc(kindLabel(s)) + '</span>' +
-        (s.opt ? '<span class="tag">Opcional</span>' : '') + (s.photo ? '<span class="tag tag--photo">Foto</span>' : '') +
+        (durOf(s) > 0 ? '<span class="tag tag--dur">⏱ ' + fmtDur(durOf(s)) + '</span>' : '') + (s.opt ? '<span class="tag">Opcional</span>' : '') + (s.photo ? '<span class="tag tag--photo">Foto</span>' : '') +
         (s.fromCatalog ? '<span class="tag">Añadida</span>' : '') +
         (inf.approx && inf.ll ? '<span class="tag">Ubicación aprox.</span>' : '') +
         (!inf.ll && !s.lodge ? '<span class="tag">Sin pin</span>' : '') +
