@@ -107,6 +107,13 @@ window.TRIP = {
           note: 'De tu lista «Compras · Segunda mano Osaka». Extra en las afueras (a 9 km de Shinsekai y torre Tsūtenkaku). Solo si os sobra tiempo al final del día.'
         },
         {
+          id: 'tombori', t: '20:00', kind: 'sight', name: 'Barco por el canal de Dōtonbori', ja: 'とんぼりリバークルーズ（太左衛門橋船着場）',
+          q: 'Tombori River Cruise Tazaemonbashi', ll: [34.6689, 135.5030], approx: true, how: 'A pie · ≈5 min',
+          note: 'Tombori River Cruise: 20 min bajo los puentes, con el cartel de Glico y los neones. 2.000 ¥ por persona. Salidas cada media hora; las de noche, de 17:00 a 21:00. Embarque en el muelle Tazaemonbashi, delante del Don Quijote con la noria.',
+          tips: ['Las entradas son con hora y por la noche se agotan: comprarlas al pasar por la taquilla del muelle después del check-in, o antes online (Klook y similares, ≈10 % más barato).', 'Si el jet lag pesa, se puede hacer el día 2 por la noche: el muelle está a 5 min de casa.'],
+          photo: { when: '20:00, de noche', tip: 'Desde el barco, los carteles reflejados en el agua y la gente saludando desde el puente Ebisubashi.', lens: '24–35 mm con el diafragma abierto e ISO 3200–6400: el barco se mueve, mejor 1/125 s o más rápido.' }
+        },
+        {
           id: 'gm-hard-off-yaominami-store', t: '', kind: 'shop', opt: true, name: 'Hard Off Yaominami store',
           q: 'Hard Off Yaominami store', ll: [34.58774, 135.60692], how: 'Tren · ≈3 km (lejos del centro)',
           note: 'De tu lista «Segunda mano Osaka». Extra en las afueras (a 12 km de Shinsekai y torre Tsūtenkaku). Solo si os sobra tiempo al final del día.'
@@ -1479,6 +1486,8 @@ window.TRIP = {
   bookings: [
     { id: 'cancel-tokyo', due: '2026-10-22', crit: true, title: 'Airbnb Tokio: fin de la cancelación gratis', who: 'Airbnb · HMSNFHTNEK',
       body: 'Hasta el 22 oct a las 15:00 se puede cancelar gratis el alojamiento de Taitō (21–29 nov). Después, solo reembolso parcial hasta el 14 nov. Si estáis contentos con él, no hay que hacer nada.' },
+    { id: 'tombori-bk', due: '2026-11-15', title: 'Barco de Dōtonbori · 15 nov 20:00', who: 'Taquilla del muelle Tazaemonbashi o Klook',
+      body: 'Entradas con hora (2.000 ¥ por persona). Se venden el mismo día en el muelle; por la noche se agotan. Comprarlas por la tarde o antes online.' },
     { id: 'kimono-bk', due: '2026-11-05', title: 'Kimono en Kioto · 19 nov', who: 'Web de Okamoto, Yumeyakata o Maiko-ya',
       body: 'Reservar plan para 2 a las 12:30 en la tienda de Kiyomizu. Reservando con antelación suele haber 10–20 % de descuento; añadir peinado si se quiere (≈1.500 ¥).' },
     { id: 'flights', due: '2026-11-14', done: true, title: 'Vuelos China Eastern · 2 pasajeros', who: 'Trip.com · reserva 1598740088554566',
