@@ -79,16 +79,6 @@ window.TRIP = {
           note: 'Escenario con forma de cabeza de león gigante (mide 12 m). Entrada libre.'
         },
         {
-          id: 'gm-mr-hiro-car-studio', t: '', kind: 'shop', name: 'Mr. Hiro Car Studio',
-          q: 'Mr. Hiro Car Studio', ll: [34.65668, 135.47187], how: 'Tren · ≈2 km (metro o JR)',
-          note: '★ De tu lista «Quiero ir». Cerca de Santuario Namba Yasaka (2.4 km).'
-        },
-        {
-          id: 'gm-hard-off-osaka-taisho-store', t: '', kind: 'shop', opt: true, name: 'Hard Off Osaka Taisho Store',
-          q: 'Hard Off Osaka Taisho Store', ll: [34.64701, 135.4714], how: 'A pie · ≈14 min',
-          note: 'De tu lista «Segunda mano Osaka». Cerca de Santuario Namba Yasaka (2.8 km).'
-        },
-        {
           id: 'shinsekai', t: '17:00', kind: 'sight', name: 'Shinsekai y torre Tsūtenkaku', ja: '新世界・通天閣',
           q: 'Tsutenkaku Tower', ll: [34.6525, 135.5063], how: 'A pie ≈25 min o metro Sakaisuji hasta Ebisuchō',
           note: 'Barrio retro de los años 50. La torre abre de 10:00 a 20:00 (última entrada 19:30).',
@@ -302,9 +292,21 @@ window.TRIP = {
           note: 'Opcional: vistas de la bahía. Comida en Tempozan Marketplace (zona retro Naniwa Kuishinbo Yokochō).'
         },
         {
-          id: 'umeda', t: '14:30', kind: 'shop', name: 'Tiendas de Umeda', ja: '梅田',
-          q: 'Yodobashi Umeda', ll: [34.7046, 135.4962], how: 'Metro Chūō → Hommachi → Midōsuji → Umeda · ≈30 min',
-          note: 'Anime, Pokémon y cámaras en un radio de 10 minutos a pie.',
+          id: 'mrhiro', t: '13:30', kind: 'sight', name: 'Mr. Hiro Car Studio', ja: 'MR.HIRO CAR STUDIO',
+          q: 'Mr. Hiro Car Studio', ll: [34.65668, 135.47187], how: 'Taxi ≈10 min (o metro Chūō a Bentenchō + JR Loop a Taishō + 15 min a pie)',
+          note: '★ De tu lista «Quiero ir». Garaje y cafetería de coches JDM (RX-7, AE86 de Initial D, Skyline…): ver los coches y tomar algo, ≈1 h. Abre a las 9:00. Dirección: 4-12-21 Izuo, Taishō-ku.',
+          tips: ['Los coches se pueden alquilar (Klook, desde ≈208 € por 6 h), pero hoy solo vamos de visita.'],
+          photo: { when: 'primera hora de la tarde', tip: 'Los coches JDM en fila delante del garaje y detalles de llantas, faros y logos.', lens: '35 mm para el conjunto; 85 mm para detalles con fondo desenfocado.' }
+        },
+        {
+          id: 'gm-hard-off-osaka-taisho-store', t: '14:40', kind: 'shop', opt: true, name: 'Hard Off Osaka Taisho Store',
+          q: 'Hard Off Osaka Taisho Store', ll: [34.64701, 135.4714], how: 'A pie · ≈15 min o taxi 5 min',
+          note: 'De tu lista «Segunda mano Osaka». Al lado de Mr. Hiro: aprovechar si os apetece antes de ir a Umeda.'
+        },
+        {
+          id: 'umeda', t: '15:30', kind: 'shop', name: 'Tiendas de Umeda', ja: '梅田',
+          q: 'Yodobashi Umeda', ll: [34.7046, 135.4962], how: 'JR Loop Line desde Taishō hasta Ōsaka · ≈15 min',
+          note: 'Anime, Pokémon y cámaras en un radio de 10 minutos a pie. Primera ronda antes del atardecer; después del Sky Building se puede seguir hasta la cena (muchas cierran a las 21:00).',
           shops: [
             { n: 'Animate Umeda', ja: 'アニメイト梅田', q: 'Animate Umeda' },
             { n: 'Pokémon Center Osaka (Daimaru Umeda 13F)', ja: 'ポケモンセンターオーサカ', q: 'Pokémon Center Osaka Daimaru Umeda' },
@@ -330,7 +332,7 @@ window.TRIP = {
           note: '★ De tu lista «Quiero ir». Cerca de Tiendas de Umeda (668 m).'
         },
         {
-          id: 'umedasky', t: '16:10', kind: 'sight', name: 'Umeda Sky Building', ja: '梅田スカイビル 空中庭園展望台',
+          id: 'umedasky', t: '16:30', kind: 'sight', name: 'Umeda Sky Building', ja: '梅田スカイビル 空中庭園展望台',
           q: 'Umeda Sky Building', ll: [34.7053, 135.4903], how: 'A pie · ≈10 min por el túnel bajo las vías',
           note: 'Puesta de sol ≈16:55. Llegar 30–40 min antes para coger sitio en la terraza circular y quedarse a ver las luces. Abre hasta las 22:30.',
           photo: { when: 'puesta de sol ≈16:55', tip: 'El mirador Floating Garden con la ciudad hacia el oeste. Desde abajo, las escaleras mecánicas en tubo de cristal entre las dos torres.', lens: '16–35 mm para el tubo; 24–70 mm en el mirador, apoyando la cámara en la barandilla.' }
