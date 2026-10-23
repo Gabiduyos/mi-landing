@@ -206,8 +206,9 @@ window.TRIP = {
         {
           id: 'pkdx-osaka', t: '15:15', kind: 'shop', dur: 45, name: 'Pokémon Center Osaka DX', ja: 'ポケモンセンターオーサカDX（大丸心斎橋店 本館9F）',
           q: 'Pokémon Center Osaka DX Daimaru Shinsaibashi', ll: [34.6727, 135.5011], how: 'A pie · 3 min',
-          note: 'Planta 9 de Daimaru Shinsaibashi. Al lado está el Pokémon Café, solo con reserva.',
-          tips: ['Las reservas del café abren 31 días antes a las 18:00 de Japón (11:00 en España peninsular) y vuelan en minutos.']
+          note: 'Planta 9 de Daimaru Shinsaibashi. Estatuas a tamaño real de Articuno, Zapdos y Moltres (hasta 2 m). Al lado está el Pokémon Café, solo con reserva.',
+          tips: ['Las reservas del café abren 31 días antes a las 18:00 de Japón (11:00 en España peninsular) y vuelan en minutos.'],
+          photo: { when: 'al entrar', tip: 'Los tres pájaros legendarios juntos: ponerse delante de Moltres, que es el más alto.', lens: '24 mm para que quepan los tres.' }
         },
         {
           id: 'gm-allu-sinsaibashi-store', t: '', kind: 'shop', dur: 30, opt: true, name: 'ALLU Sinsaibashi store',
@@ -487,7 +488,8 @@ window.TRIP = {
             'Reservar online con antelación: suele haber 10–20 % de descuento y en noviembre (otoño) se llenan.',
             'Mejores fotos en orden de paso: escaleras de Ninenzaka, pagoda Yasaka desde Yasaka-dōri, Nene-no-michi y el canal de Shirakawa.',
             'En noviembre hace fresco: camiseta térmica de cuello ancho debajo (no se ve) y calcetines finos para los tabi.',
-            'Lo barato suele ser yukata de algodón; si queréis seda o un kimono de más calidad, mirar planes «premium».'
+            'Lo barato suele ser yukata de algodón; si queréis seda o un kimono de más calidad, mirar planes «premium».',
+            'Ojo: el kimono se devuelve en la misma tienda antes de que cierre. Si queréis llegar a Shirakawa al atardecer vestidos, reservad en una tienda de Gion (Maiko-ya) en vez de la de Kiyomizu.'
           ],
           shops: [
             { n: 'Okamoto · Kiyomizu (≈3.300 ¥)', ja: '岡本 清水寺店', q: '着物レンタル岡本 清水寺店' },
@@ -527,7 +529,13 @@ window.TRIP = {
           photo: { when: 'hora azul ≈17:00', tip: 'Puente Tatsumi y el canal con farolillos y sauces: de las fotos más bonitas de Gion.', lens: '24–35 mm; ISO alto a mano.' }
         },
         {
-          id: 'pontocho', t: '18:30', kind: 'food', dur: 90, name: 'Cena en Pontochō', ja: '先斗町',
+          id: 'pkc-kyoto', t: '17:45', kind: 'shop', dur: 30, name: 'Pokémon Center Kyoto', ja: 'ポケモンセンターキョウト（SUINA室町）',
+          q: 'Pokémon Center Kyoto', ll: [35.0037, 135.7592], approx: true, how: 'A pie por Shijō-dōri · ≈20 min (o Hankyū 1 parada hasta Karasuma)',
+          note: 'En SUINA Muromachi, con acceso directo desde las estaciones Shijō (metro) y Karasuma (Hankyū). Pikachu vestido de maiko, Lugia y Ho-Oh. Suele cerrar sobre las 20:00: comprobar el horario.',
+          photo: { when: 'antes de cenar', tip: 'El Pikachu maiko, que solo existe aquí.', lens: '35 mm.' }
+        },
+        {
+          id: 'pontocho', t: '18:45', kind: 'food', dur: 90, name: 'Cena en Pontochō', ja: '先斗町',
           q: 'Pontocho Alley', ll: [35.0053, 135.7707], how: 'A pie · 5 min',
           note: 'Callejón estrecho junto al río Kamo. Muchos sitios piden reserva: mirar antes de ir.'
         },
@@ -894,7 +902,7 @@ window.TRIP = {
         {
           id: 'parco', t: '11:30', kind: 'shop', dur: 60, name: 'Shibuya PARCO', ja: '渋谷PARCO',
           q: 'Shibuya PARCO', ll: [35.6620, 139.6987], how: 'A pie · ≈7 min',
-          note: 'Planta 6: Pokémon Center Shibuya, Nintendo TOKYO, Capcom Store y Jump Shop. En la 5.ª abre en noviembre la Gundam Base Shibuya (fecha por confirmar).',
+          note: 'Planta 6: Pokémon Center Shibuya (con Mewtwo a tamaño real dentro de un tubo de laboratorio en la entrada), Nintendo TOKYO, Capcom Store y Jump Shop. En la 5.ª abre en noviembre la Gundam Base Shibuya (fecha por confirmar).',
           shops: [
             { n: 'Mandarake Shibuya', ja: 'まんだらけ渋谷店', q: 'Mandarake Shibuya' }
           ]
@@ -1350,9 +1358,11 @@ window.TRIP = {
           note: 'De tu lista «Compras». Cerca de Ikebukuro (590 m).'
         },
         {
-          id: 'gm-centro-pok-mon-mega-tokio-y-', t: '', kind: 'shop', dur: 45, opt: true, name: 'Centro Pokémon Mega Tokio y Dulces Pikachu',
-          q: 'Centro Pokémon Mega Tokio y Dulces Pikachu', ll: [35.72891, 139.71932], how: 'Coche · ≈1 km',
-          note: 'De tu lista «Compras». Cerca de Ikebukuro (666 m).'
+          id: 'gm-centro-pok-mon-mega-tokio-y-', t: '', kind: 'shop', dur: 45, name: 'Pokémon Center Mega Tokyo',
+          ja: 'ポケモンセンターメガトウキョー（サンシャインシティ アルパ2F）',
+          q: 'Pokémon Center Mega Tokyo Sunshine City', ll: [35.72891, 139.71932], how: 'A pie · ≈10 min por Sunshine City',
+          note: 'Sunshine City Alpa, 2.ª planta. Mega Charizard X y Mega Charizard Y a tamaño real, y estatuas de los iniciales en el pasillo. Al lado, Pikachu Sweets. 10:00–20:00. Reabrió el 24 ago 2026 tras estar cerrado desde marzo.',
+          photo: { when: 'al abrir, con menos gente', tip: 'Los dos Mega Charizard sobre el pedestal blanco.', lens: '24–35 mm.' }
         },
         {
           id: 'gm-treasure-factory-kami-itabas', t: '', kind: 'shop', dur: 45, opt: true, name: 'Treasure Factory Kami-itabashi',
@@ -1401,7 +1411,7 @@ window.TRIP = {
         {
           id: 'skytree', t: '17:00', kind: 'shop', dur: 75, name: 'Tokyo Skytree Town', ja: '東京スカイツリータウン（ソラマチ）',
           q: 'Tokyo Solamachi', ll: [35.7101, 139.8107], how: 'A pie · ≈15 min',
-          note: 'Pokémon Center Skytree Town en la 4.ª planta de Solamachi. Subir a la torre es opcional.',
+          note: 'Pokémon Center Skytree Town en la 4.ª planta de Solamachi, con Rayquaza a tamaño real saliendo de un estanque iluminado y Pikachu enroscado. Subir a la torre es opcional.',
           photo: { when: 'hora azul', tip: 'Skytree reflejada en el canal Kitajukken, a 5 min a pie de la torre.', lens: '24–35 mm, 1–2 s apoyado.' }
         },
         {
