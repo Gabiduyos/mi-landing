@@ -950,7 +950,7 @@ window.TRIP = {
           note: 'De tu lista «Compras». Cerca de Shibuya PARCO (2.8 km).'
         },
         {
-          id: 'shinjukucam', t: '15:00', kind: 'shop', dur: 90, name: 'Cámaras en Shinjuku', ja: '新宿 カメラ店',
+          id: 'shinjukucam', t: '15:30', kind: 'shop', dur: 90, name: 'Cámaras en Shinjuku', ja: '新宿 カメラ店',
           q: 'Map Camera Shinjuku', ll: [35.6918, 139.6975], approx: true, how: 'JR Yamanote desde Harajuku · ≈5 min',
           note: 'Lado oeste de la estación: usadas y nuevas, con mucho stock de objetivos.',
           shops: [
