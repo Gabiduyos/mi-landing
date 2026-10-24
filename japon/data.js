@@ -692,7 +692,7 @@ window.TRIP = {
         {
           id: 'akiba', t: '17:00', kind: 'shop', dur: 120, name: 'Akihabara', ja: '秋葉原',
           q: 'Akihabara Radio Kaikan', ll: [35.6987, 139.7713], how: 'JR · 1–2 paradas desde Ueno',
-          note: 'Muchas tiendas cierran entre las 20:00 y las 21:00.',
+          note: 'Muchas tiendas cierran entre las 20:00 y las 21:00. Anime: el edificio Radio Kaikan sale en Steins;Gate (y es la entrada clásica de Akihabara).',
           shops: [
             { n: 'TRADER', ja: 'トレーダー', q: 'トレーダー 秋葉原' },
             { n: 'AmiAmi (Radio Kaikan)', ja: 'あみあみ', q: 'あみあみ 秋葉原ラジオ会館店' },
@@ -831,11 +831,17 @@ window.TRIP = {
           note: 'De tu lista «Saved places». Tienda off-price de ropa de marca rebajada, en la 2.ª planta de Ariake Garden. Si os sobra tiempo entre teamLab y Odaiba.'
         },
         {
-          id: 'odaiba', t: '16:15', kind: 'sight', dur: 60, name: 'Atardecer en Odaiba', ja: 'お台場海浜公園',
+          id: 'odaiba', t: '16:15', kind: 'sight', dur: 45, name: 'Atardecer en Odaiba', ja: 'お台場海浜公園',
           q: 'Odaiba Seaside Park', ll: [35.6298, 139.7745], how: 'Yurikamome desde Shin-Toyosu · ≈15 min',
           note: 'Puesta de sol ≈16:30 con el Rainbow Bridge y la réplica de la Estatua de la Libertad.',
           tips: ['En la Yurikamome, primer vagón: la vista frontal del recorrido por la bahía merece la pena.', 'The Gundam Base Tokyo sigue abierta en la 7.ª planta de DiverCity, a 5 min del parque.'],
           photo: { when: '16:30–17:15', tip: 'Rainbow Bridge con la ciudad detrás desde la playa de Odaiba Seaside Park; las luces del puente se encienden al anochecer.', lens: '24–70 mm apoyado en la barandilla, 1–2 s.' }
+        },
+        {
+          id: 'anime-digimon-fujitv', t: '', kind: 'sight', dur: 15, name: 'Anime: Digimon en la Fuji TV', ja: 'フジテレビ本社ビル（球体展望室）',
+          q: 'Fuji Television Building Odaiba', ll: [35.6272, 139.7741], how: 'A pie · ≈8 min',
+          note: 'Digimon Adventure (eps. 35–37): el edificio con la esfera gigante donde se libra la batalla de Odaiba. Odaiba es «el barrio» de los Niños Elegidos.',
+          photo: { when: 'noche temprana', tip: 'Desde abajo, la esfera entre las vigas del edificio; o desde el puente peatonal de enfrente con el edificio entero.', lens: '16–24 mm para que quepa la esfera.' }
         },
         {
           id: 'gm-otakara-market-odaiba', t: '', kind: 'shop', dur: 30, name: 'Otakara @ Market Odaiba',
@@ -886,10 +892,16 @@ window.TRIP = {
           photo: { when: '9:00–11:00', tip: 'Puestos de antigüedades entre los edificios de cristal del Tokyo International Forum. Pedir permiso antes de fotografiar los objetos.', lens: '35 mm.' }
         },
         {
-          id: 'hachiko', t: '10:30', kind: 'sight', dur: 30, name: 'Hachikō y el cruce de Shibuya', ja: 'ハチ公像・スクランブル交差点',
+          id: 'hachiko', t: '10:00', kind: 'sight', dur: 30, name: 'Hachikō y el cruce de Shibuya', ja: 'ハチ公像・スクランブル交差点',
           q: 'Hachiko Statue', ll: [35.6591, 139.7006], how: 'Metro Ginza directo (desde Ueno o Ginza) · ≈30 min',
           note: 'Para verlo desde arriba: Shibuya Sky (con reserva) o la azotea de Magnet by Shibuya109.',
           photo: { when: 'mediodía o anochecer', tip: 'El cruce desde arriba: Shibuya Sky (con reserva) o la azotea de Magnet by Shibuya109.', lens: '16–24 mm; 1/4 s apoyado para el «río» de gente.' }
+        },
+        {
+          id: 'anime-jjk-shibuya', t: '', kind: 'sight', dur: 20, name: 'Anime: Jujutsu Kaisen, Incidente de Shibuya', ja: '渋谷駅・渋谷ヒカリエ',
+          q: 'Shibuya Hikarie', ll: [35.659, 139.7036], how: 'A pie · ≈3 min',
+          note: 'Jujutsu Kaisen T2 (Incidente de Shibuya): el cruce, la estación y la torre Hikarie salen una y otra vez. Al lado, Shibuya 109 aparece en Digimon Adventure (ep. 33).',
+          photo: { when: 'con luz o de noche', tip: 'El cruce desde el paso elevado de la estación hacia Hikarie, como en los planos de la serie; y el cartel de Shibuya 109 desde el centro del cruce.', lens: '24 mm; de noche, ISO alto y 1/60 s.' }
         },
         {
           id: 'gm-square-enix-garden', t: '', kind: 'shop', dur: 30, name: 'SQUARE ENIX GARDEN',
@@ -998,6 +1010,18 @@ window.TRIP = {
           id: 'gm-2nd-street-shinjuku-2', t: '', kind: 'shop', dur: 45, opt: true, name: '2nd Street Shinjuku 2',
           q: '2nd Street Shinjuku 2', ll: [35.69048, 139.70367], how: 'A pie · ≈2 min',
           note: 'De tu lista «Compras». Cerca de Omoide Yokochō (457 m).'
+        },
+        {
+          id: 'anime-jjk-tocho', t: '', kind: 'sight', dur: 40, opt: true, name: 'Anime: Jujutsu Kaisen en el Gobierno de Tokio', ja: '東京都庁 展望室',
+          q: 'Tokyo Metropolitan Government Building', ll: [35.6896, 139.6921], how: 'A pie · ≈10 min desde la estación',
+          note: 'Las torres del Gobierno Metropolitano salen en Jujutsu Kaisen. Mirador gratis en la planta 45 (abierto hasta ≈22:00, comprobar): vistas de Tokio de noche.',
+          photo: { when: 'de noche', tip: 'La ciudad iluminada desde el mirador, apoyando la cámara en el cristal.', lens: '24–35 mm pegado al cristal, con una prenda oscura detrás para evitar reflejos.' }
+        },
+        {
+          id: 'anime-yourname', t: '', kind: 'sight', dur: 30, opt: true, name: 'Anime: escaleras de «Your Name» (Kimi no Na wa)', ja: '須賀神社 男坂',
+          q: 'Suga Shrine stairs Yotsuya', ll: [35.6862, 139.7231], how: 'Taxi ≈10 min o metro Marunouchi a Yotsuya-sanchōme + 10 min a pie',
+          note: 'Las escaleras del santuario Suga, donde Taki y Mitsuha se cruzan al final de la película. Barrio residencial: silencio y no bloquear el paso a los vecinos.',
+          photo: { when: 'con luz, antes de las 16:30', tip: 'Desde abajo de las escaleras, mirando hacia arriba, con la barandilla roja en el centro.', lens: '35–50 mm.' }
         },
         {
           id: 'kabukicho', t: '19:30', kind: 'sight', dur: 45, name: 'Kabukichō y Tokyu Kabukichō Tower', ja: '東急歌舞伎町タワー',
@@ -1343,6 +1367,12 @@ window.TRIP = {
           q: 'Pokémon Center Mega Tokyo Sunshine City', ll: [35.72891, 139.71932], how: 'A pie · 5 min dentro de Sunshine City',
           note: 'Sunshine City Alpa, 2.ª planta. Mega Charizard X y Mega Charizard Y a tamaño real, y estatuas de los iniciales en el pasillo. Al lado, Pikachu Sweets. 10:00–20:00. Reabrió el 24 ago 2026 tras estar cerrado desde marzo.',
           photo: { when: 'al abrir, con menos gente', tip: 'Los dos Mega Charizard sobre el pedestal blanco.', lens: '24–35 mm.' }
+        },
+        {
+          id: 'anime-digimon-hikarigaoka', t: '', kind: 'sight', dur: 30, opt: true, name: 'Anime: Digimon en Hikarigaoka', ja: '光が丘・月見緑道',
+          q: 'Hikarigaoka Station', ll: [35.758, 139.629], approx: true, how: 'Coche · ≈20 min desde Ikebukuro',
+          note: 'Hikarigaoka (Nerima) es donde empieza todo en Digimon: el huevo cae aquí en la primera película y vuelve a salir en el ep. 30 (estación y puente Tsukimio).',
+          photo: { when: 'mañana', tip: 'Los bloques de pisos y la pasarela junto a la estación, como en la película de 1999.', lens: '24–35 mm.' }
         },
         {
           id: 'gm-yodobashi-hd-ikebukuro-bldgs', t: '', kind: 'shop', dur: 45, opt: true, name: 'Yodobashi HD Ikebukuro bldgs.',
