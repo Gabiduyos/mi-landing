@@ -950,7 +950,7 @@ window.TRIP = {
           note: 'De tu lista «Compras». Cerca de Shibuya PARCO (2.8 km).'
         },
         {
-          id: 'shinjukucam', t: '15:30', kind: 'shop', dur: 90, name: 'Cámaras en Shinjuku', ja: '新宿 カメラ店',
+          id: 'shinjukucam', t: '15:30', kind: 'shop', dur: 60, name: 'Cámaras en Shinjuku', ja: '新宿 カメラ店',
           q: 'Map Camera Shinjuku', ll: [35.6918, 139.6975], approx: true, how: 'JR Yamanote desde Harajuku · ≈5 min',
           note: 'Lado oeste de la estación: usadas y nuevas, con mucho stock de objetivos.',
           shops: [
@@ -1000,13 +1000,13 @@ window.TRIP = {
           note: 'De tu lista «Compras». Cerca de Omoide Yokochō (457 m).'
         },
         {
-          id: 'kabukicho', t: '19:00', kind: 'sight', dur: 45, name: 'Kabukichō y Tokyu Kabukichō Tower', ja: '東急歌舞伎町タワー',
+          id: 'kabukicho', t: '19:30', kind: 'sight', dur: 45, name: 'Kabukichō y Tokyu Kabukichō Tower', ja: '東急歌舞伎町タワー',
           q: 'Tokyu Kabukicho Tower', ll: [35.6958, 139.7005], how: 'JR Chūō · ≈5 min',
           note: 'Neones, la cabeza de Godzilla del Hotel Gracery y la torre nueva de Kabukichō.',
           photo: { when: 'de noche', tip: 'La cabeza de Godzilla del Hotel Gracery vista desde la calle Shinjuku Tōhō, y los neones de Kabukichō Ichiban-gai.', lens: '24–70 mm.' }
         },
         {
-          id: 'omoide', t: '20:00', kind: 'food', dur: 75, name: 'Omoide Yokochō', ja: '思い出横丁',
+          id: 'omoide', t: '20:30', kind: 'food', dur: 75, name: 'Omoide Yokochō', ja: '思い出横丁',
           q: 'Omoide Yokocho', ll: [35.6930, 139.6997], how: 'A pie · ≈8 min',
           note: 'Yakitori en el «callejón del humo». Después, copa en Golden Gai.',
           photo: { when: 'de noche', tip: 'Callejón de humo y farolillos. Algunos locales no dejan hacer fotos: respetarlo y no fotografiar de cerca a los clientes.', lens: '35 mm f/1.8, ISO 3200–6400.' }
