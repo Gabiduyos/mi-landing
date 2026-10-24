@@ -246,6 +246,11 @@ window.TRIP = {
           note: 'De tu lista «Segunda mano Osaka». Cerca de Mandarake Grand Chaos (232 m).'
         },
         {
+          id: 'gm-chapperuru', t: '', kind: 'shop', dur: 30, name: 'Chapperuru (ropa de marca de segunda mano)',
+          q: 'Chapperuru Osaka', ll: [34.67023, 135.49786], how: 'A pie · ≈2 min',
+          note: '★ De tu lista «Quiero ir». Nishishinsaibashi 2-13-18, en Amerika-mura. Está a ≈70 m de Chappie Used Clothing (puede que sean la misma tienda o hermanas): hacedlas juntas.'
+        },
+        {
           id: 'uranamba', t: '19:00', kind: 'food', dur: 90, name: 'Cena en Ura-Namba', ja: '裏なんば',
           q: 'Ura Namba', ll: [34.6653, 135.5040], approx: true, how: 'A pie · ≈15 min',
           note: 'Callejuelas con izakayas pequeñas detrás de Namba, más de barrio que Dōtonbori.',
