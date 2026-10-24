@@ -251,7 +251,7 @@ window.TRIP = {
           note: '★ De tu lista «Quiero ir». Nishishinsaibashi 2-13-18, en Amerika-mura. Está a ≈70 m de Chappie Used Clothing (puede que sean la misma tienda o hermanas): hacedlas juntas.'
         },
         {
-          id: 'uranamba', t: '19:00', kind: 'food', dur: 90, name: 'Cena en Ura-Namba', ja: '裏なんば',
+          id: 'uranamba', t: '19:30', kind: 'food', dur: 90, name: 'Cena en Ura-Namba', ja: '裏なんば',
           q: 'Ura Namba', ll: [34.6653, 135.5040], approx: true, how: 'A pie · ≈15 min',
           note: 'Callejuelas con izakayas pequeñas detrás de Namba, más de barrio que Dōtonbori.',
           photo: { when: 'de noche', tip: 'Callejones con farolillos rojos y vapor de las cocinas. Pedir permiso antes de fotografiar a la gente de las barras.', lens: '35 mm f/1.8 a f/2, ISO 3200–6400.' }
@@ -774,6 +774,7 @@ window.TRIP = {
       temp: [15, 7],
       changes: [
         'El rastro de Ōi pasa al domingo 22 a primera hora: es lo más importante del día.',
+        'Comida y tiendas de Ginza (Uniqlo, Sankyo Camera) entre el rastro y teamLab: Ginza queda de camino.',
         'teamLab Planets está en Toyosu, no en Odaiba. Se enlaza con Odaiba en el tren Yurikamome.',
         'La Doraemon Future Department Store de DiverCity está cerrada por reforma (1 oct – principios de dic.). Su tienda temporal en Tokyo Dome City abre hasta el 23 nov: hoy da tiempo.',
         'La estatua del Gundam Unicorn de DiverCity se desmontó en agosto de 2026.',
@@ -794,14 +795,44 @@ window.TRIP = {
           photo: { when: '9:00–11:00', tip: 'Detalles de los puestos: cámaras viejas, cerámica, juguetes. Preguntar antes: «Shashin ii desu ka?» (¿puedo hacer una foto?).', lens: '35 mm discreto.' }
         },
         {
-          id: 'teamlab', t: '13:30', kind: 'sight', dur: 120, name: 'teamLab Planets', ja: 'チームラボプラネッツ TOKYO',
-          q: 'teamLab Planets TOKYO', ll: [35.6491, 139.7899], how: 'Tren · ≈40 min',
+          id: 'gm-uniqlo-tokyo-ginza', t: '', kind: 'shop', dur: 30, name: 'Uniqlo Tokyo (Ginza)',
+          q: 'Uniqlo Tokyo (Ginza)', ll: [35.67376, 139.76513], how: 'Monorraíl a Hamamatsuchō + JR a Yūrakuchō · ≈30 min',
+          note: '★ De tu lista «Quiero ir». Cerca de Ōedo Antique Market (351 m).'
+        },
+        {
+          id: 'gm-sankyo-camera', t: '', kind: 'shop', dur: 30, name: 'Sankyo Camera',
+          q: 'Sankyo Camera', ll: [35.67019, 139.76691], how: 'A pie · ≈5 min',
+          note: '★ De tu lista «Quiero ir». Cerca de Ōedo Antique Market (779 m).'
+        },
+        {
+          id: 'gm-lemon-sha-ginza-kyokai-store', t: '', kind: 'shop', dur: 30, opt: true, name: 'Lemon-sha Ginza-kyokai Store',
+          q: 'Lemon-sha Ginza-kyokai Store', ll: [35.67291, 139.76427], how: 'A pie · ≈2 min',
+          note: 'De tu lista «Compras». Cerca de Ōedo Antique Market (424 m).'
+        },
+        {
+          id: 'gm-crayon-shin-chan-official-sh', t: '', kind: 'shop', dur: 30, opt: true, name: 'Crayon Shin-chan Official shop',
+          q: 'Crayon Shin-chan Official shop', ll: [35.6813, 139.76834], how: 'A pie · ≈16 min',
+          note: 'De tu lista «Compras». Cerca de Ōedo Antique Market (663 m).'
+        },
+        {
+          id: 'gm-pok-mon-center-tokyo-dx', t: '', kind: 'shop', dur: 45, opt: true, name: 'Pokémon Center Tokyo DX',
+          q: 'Pokémon Center Tokyo DX', ll: [35.68029, 139.77427], how: 'A pie · ≈7 min',
+          note: 'De tu lista «Compras». Cerca de Ōedo Antique Market (1.0 km).'
+        },
+        {
+          id: 'teamlab', t: '14:00', kind: 'sight', dur: 120, name: 'teamLab Planets', ja: 'チームラボプラネッツ TOKYO',
+          q: 'teamLab Planets TOKYO', ll: [35.6491, 139.7899], how: 'Metro Yūrakuchō desde Ginza-itchōme hasta Toyosu · ≈20 min',
           note: 'Se va descalzo y en algunas salas el agua llega a las rodillas: pantalón que se pueda remangar. Entrada con hora: en festivo se agota.',
           photo: { when: 'toda la visita', tip: 'Salas de espejos y agua. Los suelos reflejan: con falda, pedir los pantalones cortos que prestan.', lens: 'El gran angular más abierto que tengáis, o el móvil; nada de trípode.' }
         },
         {
-          id: 'odaiba', t: '16:00', kind: 'sight', dur: 60, name: 'Atardecer en Odaiba', ja: 'お台場海浜公園',
-          q: 'Odaiba Seaside Park', ll: [35.6298, 139.7745], how: 'Yurikamome desde Shin-Toyosu · ≈20 min',
+          id: 'gm-locust-ariake', t: '', kind: 'shop', dur: 30, opt: true, name: 'LOCUST (Ariake Garden)',
+          q: 'LOCUST Ariake Garden', ll: [35.6387, 139.79337], how: 'A pie · ≈15 min desde teamLab',
+          note: 'De tu lista «Saved places». Tienda off-price de ropa de marca rebajada, en la 2.ª planta de Ariake Garden. Si os sobra tiempo entre teamLab y Odaiba.'
+        },
+        {
+          id: 'odaiba', t: '16:15', kind: 'sight', dur: 60, name: 'Atardecer en Odaiba', ja: 'お台場海浜公園',
+          q: 'Odaiba Seaside Park', ll: [35.6298, 139.7745], how: 'Yurikamome desde Shin-Toyosu · ≈15 min',
           note: 'Puesta de sol ≈16:30 con el Rainbow Bridge y la réplica de la Estatua de la Libertad.',
           tips: ['En la Yurikamome, primer vagón: la vista frontal del recorrido por la bahía merece la pena.', 'The Gundam Base Tokyo sigue abierta en la 7.ª planta de DiverCity, a 5 min del parque.'],
           photo: { when: '16:30–17:15', tip: 'Rainbow Bridge con la ciudad detrás desde la playa de Odaiba Seaside Park; las luces del puente se encienden al anochecer.', lens: '24–70 mm apoyado en la barandilla, 1–2 s.' }
@@ -812,7 +843,7 @@ window.TRIP = {
           note: '★ De tu lista «Quiero ir». Cerca de Atardecer en Odaiba (144 m).'
         },
         {
-          id: 'doraemon', t: '18:00', kind: 'shop', dur: 45, name: 'Doraemon: tienda temporal', ja: 'ドラえもん未来デパート（東京ドームシティ期間限定店）',
+          id: 'doraemon', t: '18:20', kind: 'shop', dur: 45, name: 'Doraemon: tienda temporal', ja: 'ドラえもん未来デパート（東京ドームシティ期間限定店）',
           q: 'Tokyo Dome City', ll: [35.7056, 139.7519], how: 'Yurikamome + JR · ≈45 min',
           note: 'En Tokyo Dome City (zona Central Park), del 9 oct al 23 nov, 11:00–19:00. Si no llega a tiempo, la tienda online vende desde el 12 nov.'
         },
@@ -825,20 +856,21 @@ window.TRIP = {
           id: 'gm-hobby-off-musashikoyama-palm', t: '', kind: 'shop', dur: 30, opt: true, name: 'Hobby Off musashikoyama-palm',
           q: 'Hobby Off musashikoyama-palm', ll: [35.61727, 139.70743], how: 'A pie · ≈12 min',
           note: 'De tu lista «Compras». Extra en las afueras (a 4 km de Tokyo City Flea Market (Ōi)). Solo si os sobra tiempo al final del día.'
-        },
+        }
       ]
     },
 
     {
       n: 9, date: '2026-11-23', phase: 'tokyo', base: 'tokyo', mode: 'transit',
       title: 'Shibuya, Shinjuku y Nakano',
-      sub: 'Festivo nacional: antigüedades de Ōedo (opcional) y tiendas en línea: Shibuya → Shinjuku → Nakano.',
+      sub: 'Festivo nacional: antigüedades de Ōedo (opcional), Shibuya, Harajuku y Omotesandō, y Shinjuku hasta la noche.',
       temp: [15, 7],
       changes: [
         'La Tokyu Kabukichō Tower está en Shinjuku, no en Shibuya. Reordenado para no cruzar la ciudad dos veces.',
         'Pasa al lunes 23 (festivo) para dejar el domingo al rastro de Ōi. Shinjuku vuelve por la noche, cuando luce el neón.',
         'Desde Ueno, la línea Ginza llega directa a Shibuya.',
-        'El 23 hay Ōedo Antique Market en el Tokyo International Forum (el mayor rastro de antigüedades al aire libre de Japón): opcional a primera hora. Kōenji queda a una parada de Nakano.'
+        'El 23 hay Ōedo Antique Market en el Tokyo International Forum (el mayor rastro de antigüedades al aire libre de Japón): opcional a primera hora.',
+        'Nakano Broadway y Kōenji pasan al día 14 (en coche) y las tiendas de Ginza al día 8: así hoy da tiempo a Harajuku y Shinjuku con calma.'
       ],
       rain: 'Todo funciona con lluvia; cambiar el cruce de Shibuya por la vista desde una cafetería.',
       stops: [
@@ -852,31 +884,6 @@ window.TRIP = {
           q: 'Oedo Antique Market Tokyo International Forum', ll: [35.6767, 139.7637], how: 'JR Yamanote a Yūrakuchō · ≈10 min',
           note: 'Unos 250 puestos de antigüedades, 9:00–16:00. Se cancela con lluvia: confirmar en su web la víspera. Luego metro Ginza directo a Shibuya.',
           photo: { when: '9:00–11:00', tip: 'Puestos de antigüedades entre los edificios de cristal del Tokyo International Forum. Pedir permiso antes de fotografiar los objetos.', lens: '35 mm.' }
-        },
-        {
-          id: 'gm-uniqlo-tokyo-ginza', t: '', kind: 'shop', dur: 30, name: 'Uniqlo Tokyo (Ginza)',
-          q: 'Uniqlo Tokyo (Ginza)', ll: [35.67376, 139.76513], how: 'A pie · ≈5 min',
-          note: '★ De tu lista «Quiero ir». Cerca de Ōedo Antique Market (351 m).'
-        },
-        {
-          id: 'gm-lemon-sha-ginza-kyokai-store', t: '', kind: 'shop', dur: 30, opt: true, name: 'Lemon-sha Ginza-kyokai Store',
-          q: 'Lemon-sha Ginza-kyokai Store', ll: [35.67291, 139.76427], how: 'A pie · ≈2 min',
-          note: 'De tu lista «Compras». Cerca de Ōedo Antique Market (424 m).'
-        },
-        {
-          id: 'gm-sankyo-camera', t: '', kind: 'shop', dur: 30, name: 'Sankyo Camera',
-          q: 'Sankyo Camera', ll: [35.67019, 139.76691], how: 'A pie · ≈5 min',
-          note: '★ De tu lista «Quiero ir». Cerca de Ōedo Antique Market (779 m).'
-        },
-        {
-          id: 'gm-crayon-shin-chan-official-sh', t: '', kind: 'shop', dur: 30, opt: true, name: 'Crayon Shin-chan Official shop',
-          q: 'Crayon Shin-chan Official shop', ll: [35.6813, 139.76834], how: 'A pie · ≈16 min',
-          note: 'De tu lista «Compras». Cerca de Ōedo Antique Market (663 m).'
-        },
-        {
-          id: 'gm-pok-mon-center-tokyo-dx', t: '', kind: 'shop', dur: 45, opt: true, name: 'Pokémon Center Tokyo DX',
-          q: 'Pokémon Center Tokyo DX', ll: [35.68029, 139.77427], how: 'A pie · ≈7 min',
-          note: 'De tu lista «Compras». Cerca de Ōedo Antique Market (1.0 km).'
         },
         {
           id: 'hachiko', t: '10:30', kind: 'sight', dur: 30, name: 'Hachikō y el cruce de Shibuya', ja: 'ハチ公像・スクランブル交差点',
@@ -905,7 +912,7 @@ window.TRIP = {
           note: 'De tu lista «Compras». Cerca de Hachikō y el cruce de Shibuya (1.5 km).'
         },
         {
-          id: 'parco', t: '11:30', kind: 'shop', dur: 60, name: 'Shibuya PARCO', ja: '渋谷PARCO',
+          id: 'parco', t: '11:45', kind: 'shop', dur: 60, name: 'Shibuya PARCO', ja: '渋谷PARCO',
           q: 'Shibuya PARCO', ll: [35.6620, 139.6987], how: 'A pie · ≈7 min',
           note: 'Planta 6: Pokémon Center Shibuya (con Mewtwo a tamaño real dentro de un tubo de laboratorio en la entrada), Nintendo TOKYO, Capcom Store y Jump Shop. En la 5.ª abre en noviembre la Gundam Base Shibuya (fecha por confirmar).',
           shops: [
@@ -943,14 +950,24 @@ window.TRIP = {
           note: 'De tu lista «Compras». Cerca de Shibuya PARCO (2.8 km).'
         },
         {
-          id: 'shinjukucam', t: '13:00', kind: 'shop', dur: 90, name: 'Cámaras en Shinjuku', ja: '新宿 カメラ店',
-          q: 'Map Camera Shinjuku', ll: [35.6918, 139.6975], approx: true, how: 'JR Yamanote · ≈7 min',
+          id: 'shinjukucam', t: '15:00', kind: 'shop', dur: 90, name: 'Cámaras en Shinjuku', ja: '新宿 カメラ店',
+          q: 'Map Camera Shinjuku', ll: [35.6918, 139.6975], approx: true, how: 'JR Yamanote desde Harajuku · ≈5 min',
           note: 'Lado oeste de la estación: usadas y nuevas, con mucho stock de objetivos.',
           shops: [
             { n: 'Map Camera', ja: 'マップカメラ', q: 'Map Camera Shinjuku' },
             { n: 'Kitamura Camera', ja: 'カメラのキタムラ', q: 'カメラのキタムラ 新宿' },
             { n: 'Yodobashi Camera (tienda principal)', ja: 'ヨドバシカメラ 新宿西口本店', q: 'Yodobashi Camera Shinjuku Nishiguchi' }
           ]
+        },
+        {
+          id: 'gm-used-camera-box', t: '', kind: 'shop', dur: 30, name: 'Used camera BOX',
+          q: 'Used camera BOX', ll: [35.68948, 139.69665], how: 'A pie · ≈2 min',
+          note: '★ De tu lista «Quiero ir». Cerca de Cámaras en Shinjuku (269 m).'
+        },
+        {
+          id: 'gm-shinjuku-kitamura-camera', t: '', kind: 'shop', dur: 30, name: 'Shinjuku Kitamura Camera',
+          q: 'Shinjuku Kitamura Camera', ll: [35.69166, 139.70244], how: 'A pie · ≈4 min',
+          note: '★ De tu lista «Quiero ir». Cerca de Omoide Yokochō (291 m).'
         },
         {
           id: 'gm-yodobashi-camera-shinjuku-we', t: '', kind: 'shop', dur: 45, opt: true, name: 'Yodobashi Camera Shinjuku West Main Store',
@@ -963,52 +980,24 @@ window.TRIP = {
           note: 'De tu lista «Compras». Cerca de Cámaras en Shinjuku (238 m).'
         },
         {
-          id: 'gm-used-camera-box', t: '', kind: 'shop', dur: 30, name: 'Used camera BOX',
-          q: 'Used camera BOX', ll: [35.68948, 139.69665], how: 'A pie · ≈2 min',
-          note: '★ De tu lista «Quiero ir». Cerca de Cámaras en Shinjuku (269 m).'
+          id: 'gm-locust-plus-shinjuku', t: '', kind: 'shop', dur: 30, name: 'LOCUST+ (Shinjuku Marui Honkan)',
+          q: 'LOCUST+ 新宿マルイ本館', ll: [35.6909, 139.70407], how: 'A pie · ≈5 min',
+          note: '★ De tu lista «Quiero ir». Tienda off-price de ropa de marca rebajada, en la 7.ª planta de Marui Honkan (Shinjuku 3-30-13).'
         },
         {
-          id: 'nakano', t: '15:15', kind: 'shop', dur: 120, name: 'Nakano Broadway', ja: '中野ブロードウェイ',
-          q: 'Nakano Broadway', ll: [35.7090, 139.6656], how: 'JR Chūō rápido · ≈5 min',
-          note: 'Mandarake (una veintena de locales), Lashinbang, relojes y juguetes retro. Muchas tiendas abren a las 12:00 y cierran a las 20:00.',
-          shops: [
-            { n: 'Fujiya Camera (usadas y «junk»)', ja: 'フジヤカメラ', q: 'フジヤカメラ 中野' }
-          ]
+          id: 'gm-lashinbang-shinjuku-marui-an', t: '', kind: 'shop', dur: 30, name: 'Lashinbang Shinjuku Marui Annex',
+          q: 'Lashinbang Shinjuku Marui Annex', ll: [35.69008, 139.70592], how: 'A pie · ≈2 min',
+          note: '★ De tu lista «Quiero ir». Cerca de Omoide Yokochō (652 m).'
         },
         {
-          id: 'gm-lashinbang-nakano-kaitori', t: '', kind: 'shop', dur: 30, name: 'Lashinbang Nakano Kaitori',
-          q: 'Lashinbang Nakano Kaitori', ll: [35.70893, 139.66578], how: 'A pie · ≈2 min',
-          note: '★ De tu lista «Quiero ir». Cerca de Nakano Broadway (18 m).'
+          id: 'gm-2nd-street-shinjuku', t: '', kind: 'shop', dur: 45, opt: true, name: '2nd Street Shinjuku',
+          q: '2nd Street Shinjuku', ll: [35.69056, 139.70425], how: 'A pie · ≈2 min',
+          note: 'De tu lista «Compras». Cerca de Omoide Yokochō (495 m).'
         },
         {
-          id: 'gm-yth-nakano-broadway-c-maras-', t: '', kind: 'shop', dur: 30, name: 'YTH Nakano Broadway (cámaras usadas)',
-          q: 'YTH Nakano Broadway (cámaras usadas)', ll: [35.70963, 139.66554], how: 'A pie · ≈2 min',
-          note: '★ De tu lista «Quiero ir». Cerca de Nakano Broadway (70 m).'
-        },
-        {
-          id: 'gm-fujiya-camera-junk-hall', t: '', kind: 'shop', dur: 30, opt: true, name: 'FUJIYA Camera Junk Hall',
-          q: 'FUJIYA Camera Junk Hall', ll: [35.70667, 139.66603], how: 'A pie · ≈4 min',
-          note: 'De tu lista «Compras · Foto vintage». Cerca de Nakano Broadway (262 m).'
-        },
-        {
-          id: 'gm-fujiya-camera-video-gallery', t: '', kind: 'shop', dur: 30, opt: true, name: 'Fujiya Camera Video Gallery',
-          q: 'Fujiya Camera Video Gallery', ll: [35.70671, 139.66656], how: 'A pie · ≈2 min',
-          note: 'De tu lista «Compras · Foto vintage». Cerca de Nakano Broadway (269 m).'
-        },
-        {
-          id: 'koenji', t: '17:15', kind: 'shop', dur: 75, opt: true, name: 'Kōenji (ropa vintage)', ja: '高円寺',
-          q: 'Koenji Station', ll: [35.7053, 139.6497], how: 'JR Chūō · 1 parada',
-          note: 'Galerías cubiertas y callejones con tiendas de ropa usada baratas. Abren hasta las 20:00 aprox.'
-        },
-        {
-          id: 'gm-hard-off', t: '', kind: 'shop', dur: 45, opt: true, name: 'Hard Off',
-          q: 'Hard Off', ll: [35.70673, 139.64987], how: 'A pie · ≈2 min',
-          note: 'De tu lista «Compras». Cerca de Kōenji (ropa vintage) (159 m).'
-        },
-        {
-          id: 'gm-trefacstyle-koenji-1', t: '', kind: 'shop', dur: 45, opt: true, name: 'TreFacStyle Koenji 1',
-          q: 'TreFacStyle Koenji 1', ll: [35.70254, 139.65196], how: 'A pie · ≈7 min',
-          note: 'De tu lista «Compras». Cerca de Kōenji (ropa vintage) (369 m).'
+          id: 'gm-2nd-street-shinjuku-2', t: '', kind: 'shop', dur: 45, opt: true, name: '2nd Street Shinjuku 2',
+          q: '2nd Street Shinjuku 2', ll: [35.69048, 139.70367], how: 'A pie · ≈2 min',
+          note: 'De tu lista «Compras». Cerca de Omoide Yokochō (457 m).'
         },
         {
           id: 'kabukicho', t: '19:00', kind: 'sight', dur: 45, name: 'Kabukichō y Tokyu Kabukichō Tower', ja: '東急歌舞伎町タワー',
@@ -1021,27 +1010,7 @@ window.TRIP = {
           q: 'Omoide Yokocho', ll: [35.6930, 139.6997], how: 'A pie · ≈8 min',
           note: 'Yakitori en el «callejón del humo». Después, copa en Golden Gai.',
           photo: { when: 'de noche', tip: 'Callejón de humo y farolillos. Algunos locales no dejan hacer fotos: respetarlo y no fotografiar de cerca a los clientes.', lens: '35 mm f/1.8, ISO 3200–6400.' }
-        },
-        {
-          id: 'gm-shinjuku-kitamura-camera', t: '', kind: 'shop', dur: 30, name: 'Shinjuku Kitamura Camera',
-          q: 'Shinjuku Kitamura Camera', ll: [35.69166, 139.70244], how: 'A pie · ≈4 min',
-          note: '★ De tu lista «Quiero ir». Cerca de Omoide Yokochō (291 m).'
-        },
-        {
-          id: 'gm-2nd-street-shinjuku-2', t: '', kind: 'shop', dur: 45, opt: true, name: '2nd Street Shinjuku 2',
-          q: '2nd Street Shinjuku 2', ll: [35.69048, 139.70367], how: 'A pie · ≈2 min',
-          note: 'De tu lista «Compras». Cerca de Omoide Yokochō (457 m).'
-        },
-        {
-          id: 'gm-2nd-street-shinjuku', t: '', kind: 'shop', dur: 45, opt: true, name: '2nd Street Shinjuku',
-          q: '2nd Street Shinjuku', ll: [35.69056, 139.70425], how: 'A pie · ≈2 min',
-          note: 'De tu lista «Compras». Cerca de Omoide Yokochō (495 m).'
-        },
-        {
-          id: 'gm-lashinbang-shinjuku-marui-an', t: '', kind: 'shop', dur: 30, name: 'Lashinbang Shinjuku Marui Annex',
-          q: 'Lashinbang Shinjuku Marui Annex', ll: [35.69008, 139.70592], how: 'A pie · ≈2 min',
-          note: '★ De tu lista «Quiero ir». Cerca de Omoide Yokochō (652 m).'
-        },
+        }
       ]
     },
 
@@ -1349,9 +1318,10 @@ window.TRIP = {
     {
       n: 14, date: '2026-11-28', phase: 'car', base: 'tokyo', mode: 'car', to: 'tokyo',
       title: 'Últimas compras, capibaras y Asakusa',
-      sub: 'Ruta de compras en coche por Ikebukuro y el norte de Tokio, y tarde en Sumida y Asakusa.',
+      sub: 'En coche: Ikebukuro y Mega Tokyo, Nakano Broadway, capibaras, Skytree y Asakusa de noche.',
       temp: [14, 6],
       changes: [
+        'Nakano Broadway (y Kōenji, opcional) entran hoy en coche desde Ikebukuro: se quitan del día 9, que no cabía.',
         'Añadido Sensō-ji: estáis alojados en Taitō y no aparecía en el plan.',
         'Cafe Capyba y el Pokémon Center de Skytree Town están a 1 km uno del otro, a 10 min de Asakusa.'
       ],
@@ -1361,6 +1331,18 @@ window.TRIP = {
           id: 'd14-start', t: '9:30', kind: 'home', dur: 0, lodge: 'tokyo', name: 'Salida de casa',
           how: 'Coche · ≈25 min', go: 'Sunshine City Ikebukuro',
           note: 'Por la avenida Kasuga-dōri. Aparcar en el parking de Sunshine City y hacer las tiendas de Ikebukuro a pie; luego seguir en coche hacia Itabashi y Adachi.'
+        },
+        {
+          id: 'gm-bookoff-ikebukuro-sunshine-6', t: '', kind: 'shop', dur: 30, name: 'BOOKOFF Ikebukuro Sunshine 60',
+          q: 'BOOKOFF Ikebukuro Sunshine 60', ll: [35.72968, 139.71577], how: 'Coche · ≈20 min desde casa (parking de Sunshine City)',
+          note: '★ De tu lista «Quiero ir». Cerca de Ikebukuro (351 m).'
+        },
+        {
+          id: 'gm-centro-pok-mon-mega-tokio-y-', t: '', kind: 'shop', dur: 45, name: 'Pokémon Center Mega Tokyo',
+          ja: 'ポケモンセンターメガトウキョー（サンシャインシティ アルパ2F）',
+          q: 'Pokémon Center Mega Tokyo Sunshine City', ll: [35.72891, 139.71932], how: 'A pie · 5 min dentro de Sunshine City',
+          note: 'Sunshine City Alpa, 2.ª planta. Mega Charizard X y Mega Charizard Y a tamaño real, y estatuas de los iniciales en el pasillo. Al lado, Pikachu Sweets. 10:00–20:00. Reabrió el 24 ago 2026 tras estar cerrado desde marzo.',
+          photo: { when: 'al abrir, con menos gente', tip: 'Los dos Mega Charizard sobre el pedestal blanco.', lens: '24–35 mm.' }
         },
         {
           id: 'gm-yodobashi-hd-ikebukuro-bldgs', t: '', kind: 'shop', dur: 45, opt: true, name: 'Yodobashi HD Ikebukuro bldgs.',
@@ -1378,21 +1360,83 @@ window.TRIP = {
           note: 'De tu lista «Compras». Cerca de Ikebukuro (390 m).'
         },
         {
-          id: 'gm-bookoff-ikebukuro-sunshine-6', t: '', kind: 'shop', dur: 30, name: 'BOOKOFF Ikebukuro Sunshine 60',
-          q: 'BOOKOFF Ikebukuro Sunshine 60', ll: [35.72968, 139.71577], how: 'Coche · ≈1 km',
-          note: '★ De tu lista «Quiero ir». Cerca de Ikebukuro (351 m).'
-        },
-        {
           id: 'gm-mandarake-lalala-ikebukuro', t: '', kind: 'shop', dur: 30, opt: true, name: 'Mandarake LaLaLa Ikebukuro',
           q: 'Mandarake LaLaLa Ikebukuro', ll: [35.73079, 139.71811], how: 'Coche · ≈1 km',
           note: 'De tu lista «Compras». Cerca de Ikebukuro (590 m).'
         },
         {
-          id: 'gm-centro-pok-mon-mega-tokio-y-', t: '', kind: 'shop', dur: 45, name: 'Pokémon Center Mega Tokyo',
-          ja: 'ポケモンセンターメガトウキョー（サンシャインシティ アルパ2F）',
-          q: 'Pokémon Center Mega Tokyo Sunshine City', ll: [35.72891, 139.71932], how: 'A pie · ≈10 min por Sunshine City',
-          note: 'Sunshine City Alpa, 2.ª planta. Mega Charizard X y Mega Charizard Y a tamaño real, y estatuas de los iniciales en el pasillo. Al lado, Pikachu Sweets. 10:00–20:00. Reabrió el 24 ago 2026 tras estar cerrado desde marzo.',
-          photo: { when: 'al abrir, con menos gente', tip: 'Los dos Mega Charizard sobre el pedestal blanco.', lens: '24–35 mm.' }
+          id: 'nakano', t: '11:45', kind: 'shop', dur: 120, name: 'Nakano Broadway', ja: '中野ブロードウェイ',
+          q: 'Nakano Broadway', ll: [35.7090, 139.6656], how: 'Coche · ≈20 min desde Ikebukuro (parkings de pago junto a Nakano Broadway)',
+          note: 'Mandarake (una veintena de locales), Lashinbang, relojes y juguetes retro. Muchas tiendas abren a las 12:00 y cierran a las 20:00.',
+          shops: [
+            { n: 'Fujiya Camera (usadas y «junk»)', ja: 'フジヤカメラ', q: 'フジヤカメラ 中野' }
+          ]
+        },
+        {
+          id: 'gm-lashinbang-nakano-kaitori', t: '', kind: 'shop', dur: 20, name: 'Lashinbang Nakano Kaitori',
+          q: 'Lashinbang Nakano Kaitori', ll: [35.70893, 139.66578], how: 'Dentro de Nakano Broadway',
+          note: '★ De tu lista «Quiero ir». Cerca de Nakano Broadway (18 m).'
+        },
+        {
+          id: 'gm-yth-nakano-broadway-c-maras-', t: '', kind: 'shop', dur: 20, name: 'YTH Nakano Broadway (cámaras usadas)',
+          q: 'YTH Nakano Broadway (cámaras usadas)', ll: [35.70963, 139.66554], how: 'Dentro de Nakano Broadway',
+          note: '★ De tu lista «Quiero ir». Cerca de Nakano Broadway (70 m).'
+        },
+        {
+          id: 'gm-fujiya-camera-junk-hall', t: '', kind: 'shop', dur: 30, opt: true, name: 'FUJIYA Camera Junk Hall',
+          q: 'FUJIYA Camera Junk Hall', ll: [35.70667, 139.66603], how: 'A pie · ≈4 min',
+          note: 'De tu lista «Compras · Foto vintage». Cerca de Nakano Broadway (262 m).'
+        },
+        {
+          id: 'gm-fujiya-camera-video-gallery', t: '', kind: 'shop', dur: 30, opt: true, name: 'Fujiya Camera Video Gallery',
+          q: 'Fujiya Camera Video Gallery', ll: [35.70671, 139.66656], how: 'A pie · ≈2 min',
+          note: 'De tu lista «Compras · Foto vintage». Cerca de Nakano Broadway (269 m).'
+        },
+        {
+          id: 'koenji', t: '', kind: 'shop', dur: 75, opt: true, name: 'Kōenji (ropa vintage)', ja: '高円寺',
+          q: 'Koenji Station', ll: [35.7053, 139.6497], how: 'Coche · ≈5 min (o 20 min a pie)',
+          note: 'Galerías cubiertas y callejones con tiendas de ropa usada baratas. Abren hasta las 20:00 aprox.'
+        },
+        {
+          id: 'gm-hard-off', t: '', kind: 'shop', dur: 45, opt: true, name: 'Hard Off',
+          q: 'Hard Off', ll: [35.70673, 139.64987], how: 'A pie · ≈2 min',
+          note: 'De tu lista «Compras». Cerca de Kōenji (ropa vintage) (159 m).'
+        },
+        {
+          id: 'gm-trefacstyle-koenji-1', t: '', kind: 'shop', dur: 45, opt: true, name: 'TreFacStyle Koenji 1',
+          q: 'TreFacStyle Koenji 1', ll: [35.70254, 139.65196], how: 'A pie · ≈7 min',
+          note: 'De tu lista «Compras». Cerca de Kōenji (ropa vintage) (369 m).'
+        },
+        {
+          id: 'd14-home', t: '', kind: 'home', dur: 20, lodge: 'tokyo', name: 'Descargar compras en el alojamiento'
+        },
+        {
+          id: 'capyba', t: '16:00', kind: 'sight', dur: 60, name: 'Cafe Capyba', ja: 'cafe capyba（東向島）',
+          q: 'cafe capyba 東向島', ll: [35.7193, 139.8146], approx: true, how: 'Metro/Tobu · ≈20 min',
+          note: 'Café con capibaras. Sábados 10:00–17:30; consumición obligatoria; desde 6 años.',
+          tips: ['Reserva obligatoria; se abre 2 semanas antes (≈14 nov). Puede cerrar sin aviso si los animales no están bien.']
+        },
+        {
+          id: 'gm-daikeien', t: '', kind: 'shop', dur: 45, opt: true, name: 'Daikeien',
+          q: 'Daikeien', ll: [35.76223, 139.96939], how: 'Coche · ≈15 km',
+          note: 'De tu lista «Saved places». Cerca de Cafe Capyba (14.9 km).'
+        },
+        {
+          id: 'skytree', t: '17:15', kind: 'shop', dur: 75, name: 'Tokyo Skytree Town', ja: '東京スカイツリータウン（ソラマチ）',
+          q: 'Tokyo Solamachi', ll: [35.7101, 139.8107], how: 'A pie · ≈15 min',
+          note: 'Pokémon Center Skytree Town en la 4.ª planta de Solamachi, con Rayquaza a tamaño real saliendo de un estanque iluminado y Pikachu enroscado. Subir a la torre es opcional.',
+          photo: { when: 'hora azul', tip: 'Skytree reflejada en el canal Kitajukken, a 5 min a pie de la torre.', lens: '24–35 mm, 1–2 s apoyado.' }
+        },
+        {
+          id: 'gm-tokyo-hobby-center-asakusa', t: '18:50', kind: 'shop', dur: 30, name: 'Tokyo Hobby Center Asakusa',
+          q: 'TOKYO HOBBY CENTER ASAKUSA', ll: [35.71338, 139.7939], how: 'A pie cruzando el río · ≈20 min (o coche 5 min)',
+          note: '★ De tu lista «Quiero ir». Figuras, maquetas y hobby en Rokku-dōri (Asakusa 2-4-3), a 5 min de Sensō-ji.'
+        },
+        {
+          id: 'sensoji', t: '19:30', kind: 'sight', dur: 60, name: 'Sensō-ji de noche', ja: '浅草寺',
+          q: 'Sensoji Temple', ll: [35.7148, 139.7967], how: 'A pie · 5 min',
+          note: 'Templo y pagoda iluminados, casi sin gente. Cena en Hoppy-dōri (guisos y cerveza en la calle).',
+          photo: { when: 'de noche', tip: 'La pagoda y la puerta Hōzōmon iluminadas, casi sin gente; el farolillo gigante de Kaminarimon desde abajo.', lens: '16–35 mm.' }
         },
         {
           id: 'gm-treasure-factory-kami-itabas', t: '', kind: 'shop', dur: 45, opt: true, name: 'Treasure Factory Kami-itabashi',
@@ -1423,32 +1467,6 @@ window.TRIP = {
           id: 'gm-bookoff-super-bazaar-matsudo', t: '', kind: 'shop', dur: 45, opt: true, name: 'BOOKOFF SUPER BAZAAR Matsudo',
           q: 'BOOKOFF SUPER BAZAAR Matsudo', ll: [35.78362, 139.9009], how: 'Coche · ≈1 km',
           note: '★ De tu lista «Quiero ir». Cerca de Ikebukuro (10.0 km).'
-        },
-        {
-          id: 'd14-home', t: '13:00', kind: 'home', dur: 30, lodge: 'tokyo', name: 'Descargar compras en el alojamiento'
-        },
-        {
-          id: 'capyba', t: '15:30', kind: 'sight', dur: 60, name: 'Cafe Capyba', ja: 'cafe capyba（東向島）',
-          q: 'cafe capyba 東向島', ll: [35.7193, 139.8146], approx: true, how: 'Metro/Tobu · ≈20 min',
-          note: 'Café con capibaras. Sábados 10:00–17:30; consumición obligatoria; desde 6 años.',
-          tips: ['Reserva obligatoria; se abre 2 semanas antes (≈14 nov). Puede cerrar sin aviso si los animales no están bien.']
-        },
-        {
-          id: 'gm-daikeien', t: '', kind: 'shop', dur: 45, opt: true, name: 'Daikeien',
-          q: 'Daikeien', ll: [35.76223, 139.96939], how: 'Coche · ≈15 km',
-          note: 'De tu lista «Saved places». Cerca de Cafe Capyba (14.9 km).'
-        },
-        {
-          id: 'skytree', t: '17:00', kind: 'shop', dur: 75, name: 'Tokyo Skytree Town', ja: '東京スカイツリータウン（ソラマチ）',
-          q: 'Tokyo Solamachi', ll: [35.7101, 139.8107], how: 'A pie · ≈15 min',
-          note: 'Pokémon Center Skytree Town en la 4.ª planta de Solamachi, con Rayquaza a tamaño real saliendo de un estanque iluminado y Pikachu enroscado. Subir a la torre es opcional.',
-          photo: { when: 'hora azul', tip: 'Skytree reflejada en el canal Kitajukken, a 5 min a pie de la torre.', lens: '24–35 mm, 1–2 s apoyado.' }
-        },
-        {
-          id: 'sensoji', t: '19:00', kind: 'sight', dur: 60, name: 'Sensō-ji de noche', ja: '浅草寺',
-          q: 'Sensoji Temple', ll: [35.7148, 139.7967], how: 'A pie cruzando el río · ≈20 min',
-          note: 'Templo y pagoda iluminados, casi sin gente. Cena en Hoppy-dōri (guisos y cerveza en la calle).',
-          photo: { when: 'de noche', tip: 'La pagoda y la puerta Hōzōmon iluminadas, casi sin gente; el farolillo gigante de Kaminarimon desde abajo.', lens: '16–35 mm.' }
         }
       ]
     },
@@ -1502,7 +1520,7 @@ window.TRIP = {
   // Errores del PDF original y cambios principales (d = día afectado).
   summary: [
     { d: 4, t: 'El Crayon Shin-chan Buriburi Cinema Studio está en Kasukabe (Saitama), no en Osaka. Movido al día 13, que ya va a Saitama.' },
-    { d: 9, t: 'La Tokyu Kabukichō Tower está en Shinjuku, no en Shibuya. Día reordenado: Shibuya → Shinjuku → Nakano → Shinjuku de noche.' },
+    { d: 9, t: 'La Tokyu Kabukichō Tower está en Shinjuku, no en Shibuya. Día reordenado: Shibuya → Harajuku → Shinjuku hasta la noche.' },
     { d: 8, t: 'teamLab Planets está en Toyosu y el Pokémon Center Tokyo DX en Nihonbashi; ninguno en Odaiba.' },
     { d: 8, t: 'La Doraemon Future Department Store de Odaiba está cerrada por reforma hasta diciembre. Su tienda temporal en Tokyo Dome City abre hasta el 23 nov: se visita el 22.' },
     { d: 8, t: 'La estatua del Gundam Unicorn de Odaiba se retiró en agosto de 2026.' },
@@ -1510,7 +1528,7 @@ window.TRIP = {
     { d: 3, t: 'Animate Umeda y las tiendas de cámaras de Umeda, juntas con el Umeda Sky Building.' },
     { d: 3, t: '«OS Camera Service» está cerca de la estación de Umeda: va al día 3 con las demás tiendas de cámaras.' },
     { d: 7, t: 'El 21 nov hay mercadillo de antigüedades en Tō-ji (Kioto), a 15 min de la estación: añadido como opcional antes del Shinkansen.' },
-    { d: 9, t: 'Lunes 23 (festivo): Ōedo Antique Market opcional por la mañana y Kōenji (vintage) a una parada de Nakano.' },
+    { d: 9, t: 'Lunes 23 (festivo): Ōedo Antique Market opcional por la mañana. Nakano y Kōenji pasan al día 14 y Ginza al día 8 para que todo quepa.' },
     { d: 7, t: 'El PDF tenía dos «Día 7». Ahora es un único día Kioto → Tokio, con Arashiyama y Kinkaku-ji.' },
     { d: 4, t: 'Envío de maletas Osaka → Tokio para hacer Kioto solo con mochila.' },
     { d: 11, t: 'Fuji por la mañana, que es cuando suele estar despejado, y noche propuesta en Kawaguchiko.' },
@@ -1545,7 +1563,7 @@ window.TRIP = {
     { id: 'disney', due: '2026-10-20', crit: true, title: 'Entradas Tokyo DisneySea · 24 nov', who: 'Web o app oficial de Tokyo Disney Resort',
       body: 'Entrada con fecha y precio variable (≈7.900–10.900 ¥). Instalar la app para Premier Access.' },
     { id: 'teamlab', due: '2026-10-25', crit: true, title: 'teamLab Planets · 22 nov', who: 'Web oficial de teamLab',
-      body: 'Domingo: las franjas se agotan. Elegir sobre las 13:30, después del rastro de Ōi.' },
+      body: 'Domingo: las franjas se agotan. Elegir la de las 14:00, después del rastro de Ōi y Ginza.' },
     { id: 'car', due: '2026-10-31', crit: true, title: 'Coche de alquiler 25–29 nov', who: 'Toyota / Times / Nippon Rent-a-Car',
       body: 'Recogida en Ueno el 25 a primera hora (o la tarde del 24) y devolución en el aeropuerto de Narita el 29 antes de las 14:00. Pedir tarjeta ETC. Preguntar al Airbnb de Taitō por aparcamiento.' },
     { id: 'shinkansen', due: '2026-10-21', opens: true, crit: true, title: 'Shinkansen Kioto → Tokio · 21 nov', who: 'App smartEX',
