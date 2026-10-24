@@ -1157,6 +1157,11 @@ window.TRIP = {
           ]
         },
         {
+          id: 'inazuma-katakura', t: '', kind: 'sight', dur: 20, opt: true, name: 'Torre de Inazuma Eleven (Katakura)', ja: '八王子市片倉町',
+          q: '片倉町 八王子', ll: [35.6395, 139.3415], approx: true, how: 'Coche · ≈10 min',
+          note: 'Una web de rutas de anime lo da como posible modelo del pueblo de Inazuma: la torre metálica (una antena de NTT) y la explanada del campo. No es oficial: parada corta para fotos.'
+        },
+        {
           id: 'gm-surugaya-tachikawa', t: '', kind: 'shop', dur: 30, opt: true, name: 'Surugaya Tachikawa',
           q: 'Surugaya Tachikawa', ll: [35.70055, 139.41224], how: 'Coche · ≈7 km',
           note: '★ De tu lista «Quiero ir». Cerca de Eco Town Hachiōji (6.8 km).'
@@ -1200,14 +1205,20 @@ window.TRIP = {
           id: 'd12-home', t: '', kind: 'home', dur: 0, lodge: 'tokyo', name: 'Vuelta a Taitō',
           how: 'Tōmei + Shuto · ≈1 h 30 (hora punta)',
           note: 'Aparcamiento: preguntar al alojamiento. Si no tiene, parking de monedas cercano (≈2.000–3.500 ¥ por 24 h).'
-        }
+        },
+        {
+          id: 'tatsumi', t: '20:30', kind: 'sight', dur: 45, name: 'Tatsumi PA (coches de noche)', ja: '辰巳第一パーキングエリア',
+          q: '辰巳第一PA', ll: [35.6467, 139.8105], approx: true, how: 'Shuto · ≈15 min desde casa (solo por la Ruta 9 hacia el centro)',
+          note: 'Área de descanso pequeña (29 plazas) con ambiente de la vieja escena Wangan. Entre semana es cuando se puede: los fines de semana cierra de noche. Salida con badén: pasarlo despacio.',
+          photo: { when: 'de noche', tip: 'Los coches con los rascacielos de la bahía iluminados detrás.', lens: '24–35 mm f/1.8, ISO alto.' }
+        },
       ]
     },
 
     {
       n: 13, date: '2026-11-27', phase: 'car', base: 'tokyo', mode: 'car',
       title: 'Saitama retro, Shin-chan y el templo de los gatos',
-      sub: 'Kasukabe, la ciudad de Shin-chan, Hard Off en Ōmiya y Gōtokuji.',
+      sub: 'Kasukabe, la ciudad de Shin-chan, Hard Off en Ōmiya, Gōtokuji, el campo de Inazuma Eleven y Daikoku de noche.',
       temp: [15, 6],
       changes: [
         'Aquí va el Crayon Shin-chan Buriburi Cinema Studio: está en Kasukabe (Saitama), a 40 min de Ōmiya.',
@@ -1280,6 +1291,13 @@ window.TRIP = {
           photo: { when: 'antes de las 15:00', tip: 'Cientos de maneki-neko blancos en las estanterías del templo.', lens: '50 mm o macro, diafragma abierto para desenfocar las filas de gatos.' }
         },
         {
+          id: 'inazuma-futako', t: '15:45', kind: 'sight', dur: 60, name: 'Campo de Inazuma Eleven (río Tama)', ja: '二子玉川 河川敷（多摩川）',
+          q: 'Futako-Tamagawa riverbank Tama River', ll: [35.6075, 139.6290], approx: true, how: 'Coche · ≈15 min (parking de pago junto a la estación)',
+          note: 'La ribera del Tama entre Futako-Tamagawa y Futako-Shinchi, que los fans señalan como inspiración del campo del río de Inazuma Eleven: campos de fútbol de tierra y bancos como los del anime. No es un sitio oficial.',
+          tips: ['Si veis un balón y hay hueco, unos toques en el campo de tierra son obligatorios.'],
+          photo: { when: 'atardecer ≈16:30', tip: 'El campo de tierra con el puente del tren al fondo y el sol bajando sobre el río.', lens: '24–35 mm; a contraluz, exponer para el cielo.' }
+        },
+        {
           id: 'gm-wattmann-kawasaki-kajigaya', t: '', kind: 'shop', dur: 45, opt: true, name: 'Wattmann Kawasaki Kajigaya',
           q: 'Wattmann Kawasaki Kajigaya', ll: [35.59387, 139.59311], how: 'Coche · ≈8 km',
           note: 'De tu lista «Compras». Cerca de Templo Gōtokuji (7.8 km).'
@@ -1312,7 +1330,14 @@ window.TRIP = {
         {
           id: 'd13-home', t: '', kind: 'home', dur: 0, lodge: 'tokyo', name: 'Vuelta a Taitō',
           how: 'Shuto · ≈1 h'
-        }
+        },
+        {
+          id: 'daikoku', t: '20:30', kind: 'sight', dur: 120, name: 'Daikoku PA (quedada de coches)', ja: '大黒パーキングエリア',
+          q: '大黒PA', ll: [35.4626, 139.6826], approx: true, how: 'Shuto Expressway · ≈30 min (poner «大黒PA» en el GPS)',
+          note: 'El área de descanso de la autopista donde se juntan los coches tuning y JDM. Solo en coche; entrada gratis (se pagan peajes con ETC). Quedadas no oficiales: la policía la cierra sin avisar si hay mucha gente.',
+          tips: ['Si está cerrada: Umihotaru PA (Aqua-Line, peajes caros) o volver otra noche.', 'Normas: nada de acelerones ni derrapes, no bloquear carriles y pedir permiso antes de fotografiar un coche de cerca.'],
+          photo: { when: '20:30–22:30', tip: 'Los coches bajo las farolas naranjas con la espiral de la autopista detrás.', lens: '24–35 mm f/1.8; 1/60 s e ISO 3200–6400. Sin flash.' }
+        },
       ]
     },
 
