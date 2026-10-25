@@ -892,6 +892,12 @@ window.TRIP = {
           photo: { when: '9:00–11:00', tip: 'Puestos de antigüedades entre los edificios de cristal del Tokyo International Forum. Pedir permiso antes de fotografiar los objetos.', lens: '35 mm.' }
         },
         {
+          id: 'tokyo-watch-market', t: '', kind: 'shop', dur: 40, opt: true, name: 'Tokyo Watch Market (relojes)', ja: 'TOKYO WATCH MARKET（赤坂ビル1F）',
+          q: 'TOKYO WATCH MARKET Akasaka', ll: [35.67685, 139.73494], how: 'Metro Marunouchi o Ginza hasta Akasaka-mitsuke · ≈10 min',
+          note: 'La tienda del reel: más de 5.000 relojes, sobre todo por debajo de 200.000 ¥, de marcas japonesas y extranjeras. Akasaka 4-1-32, Akasaka Bldg. 1F. Después, la línea Ginza va directa a Shibuya (≈15 min).',
+          tips: ['Comprobar el horario en su Instagram (@tokyo_watch_market) antes de ir: si abre tarde, dejarla para después de Shibuya.', 'Llevar el pasaporte para el tax-free.']
+        },
+        {
           id: 'hachiko', t: '10:00', kind: 'sight', dur: 30, name: 'Hachikō y el cruce de Shibuya', ja: 'ハチ公像・スクランブル交差点',
           q: 'Hachiko Statue', ll: [35.6591, 139.7006], how: 'Metro Ginza directo (desde Ueno o Ginza) · ≈30 min',
           note: 'Para verlo desde arriba: Shibuya Sky (con reserva) o la azotea de Magnet by Shibuya109.',
