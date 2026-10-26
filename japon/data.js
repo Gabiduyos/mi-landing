@@ -1453,6 +1453,12 @@ window.TRIP = {
           tips: ['Reserva obligatoria; se abre 2 semanas antes (≈14 nov). Puede cerrar sin aviso si los animales no están bien.']
         },
         {
+          id: 'time-hospital', t: '', kind: 'shop', dur: 30, opt: true, name: 'Atelier Bigi Time Hospital (relojes)', ja: 'アトリエビギ タイムホスピタル（石橋ビル）',
+          q: 'アトリエビギ タイムホスピタル', ll: [35.7072, 139.7985], approx: true, how: 'Coche · ≈10 min',
+          note: 'Taller de reparación de relojes que también vende relojes (4,3 en Google, 85 reseñas). Honjo 1-16-10, Sumida: entre Asakusa, Skytree y Ryōgoku. Comprobar horario antes de ir.',
+          tips: ['Si os compráis un reloj de segunda mano en otra tienda, aquí os pueden cambiar la pila o ajustar la correa.']
+        },
+        {
           id: 'gm-daikeien', t: '', kind: 'shop', dur: 45, opt: true, name: 'Daikeien',
           q: 'Daikeien', ll: [35.76223, 139.96939], how: 'Coche · ≈15 km',
           note: 'De tu lista «Saved places». Cerca de Cafe Capyba (14.9 km).'
