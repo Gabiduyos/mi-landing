@@ -302,6 +302,7 @@ function renderTimeline(d,root){
   }
   if(s.opt){var optional=document.createElement('p');optional.className='atlas-step__opt';optional.textContent='Parada opcional';box.appendChild(optional);}
   if(s.mine||s.note){var note=document.createElement('p');note.className='atlas-step__note';note.textContent=s.mine||s.note;box.appendChild(note);}
+  if(s.ticketUrl){var ticket=document.createElement('a');ticket.href=s.ticketUrl;ticket.target='_blank';ticket.rel='noopener';ticket.className='atlas-ticket-link';ticket.textContent='🎫 Consultar entradas y plazas';box.appendChild(ticket);}
   var pt=pointFor(s);if(hasCoords(pt)){
    var buttons=document.createElement('div');buttons.className='atlas-step__buttons';
    buttons.appendChild(button('Ver en mapa','',function(){showDayMap(d.n);atlas.map.setView(pt.ll,14);var p=atlas.all.find(function(p){return p.id==='plan:'+s.id||p.id==='idea:'+s.id.replace(/^c:/,'')});if(p)atlas.select(p);}));
@@ -316,9 +317,21 @@ function dayDetail(n){
  var head=document.createElement('div');head.className='atlas-dayhead';
  head.appendChild(button('← Volver a los 15 días','atlas-dayhead__back',function(){dayPanel=null;renderDays();$('screentitle').textContent='Mi viaje · 15 días';}));
  var daypick=document.createElement('select');daypick.className='atlas-day-picker';daypick.setAttribute('aria-label','Seleccionar jornada');DAYS.forEach(function(dd){var op=document.createElement('option');op.value=dd.n;op.textContent='Día '+dd.n+' · '+dateLabel(dd);if(dd.n===n)op.selected=true;daypick.appendChild(op)});daypick.onchange=function(){dayDetail(+this.value)};head.appendChild(daypick);
- var h=document.createElement('h3');h.textContent=d.title;head.appendChild(h);
- var sub=document.createElement('p');sub.textContent=d.sub||'Organiza tu jornada en Japón';head.appendChild(sub);root.appendChild(head);
- var origin=originFor(d);var lodging=document.createElement('div');lodging.className='atlas-lodging';lodging.innerHTML='<span class="atlas-lodging__icon">'+(origin.key==='airport'?'✈️':'🏠')+'</span><div><strong>Salida: '+esc(origin.name)+'</strong><p>'+esc(origin.addr)+'</p></div>';root.appendChild(lodging);
+ var h=document.createElement('h3');h.textContent=(d.n===1&&arrivalMode())?'Llegada a Osaka y primer paseo':d.title;head.appendChild(h);
+ var sub=document.createElement('p');sub.textContent=(d.n===1&&arrivalMode())?'Si llegáis antes de las 16:00, pasead con poco equipaje por Nipponbashi, cerca del Airbnb. Después, check-in, descanso y Dōtonbori con el barco como experiencia opcional.':(d.sub||'Organiza tu jornada en Japón');head.appendChild(sub);root.appendChild(head);
+ if(d.n===1){
+  var arrivalBox=document.createElement('div');arrivalBox.className='atlas-dayoptions';
+  arrivalBox.innerHTML='<label><input id="atlas-arrivalmode" type="checkbox"'+(arrivalMode()?' checked':'')+'> <strong>Primer día ligero (recomendado)</strong></label><p class="tiny">Paseo cerca del alojamiento hasta las 16:00 si llegáis a tiempo. No bloqueamos la tarde con visitas lejanas. Puedes volver a ver el plan original desactivando esta opción.</p>';
+  root.appendChild(arrivalBox);
+  arrivalBox.querySelector('input').onchange=function(){localStorage.setItem('jp26:atlas-arrival-mode',JSON.stringify(this.checked));dayDetail(1)};
+ }
+ var origin=originFor(d);var lodging=document.createElement('div');lodging.className='atlas-lodging';
+ if(d.n===1&&arrivalMode()){
+  lodging.innerHTML='<span class="atlas-lodging__icon">✈️</span><div><strong>Vuelo → Namba → zona del Airbnb</strong><p>Primero llegar a Osaka. Si os sobra tiempo antes de las 16:00, paseo corto con el equipaje ligero. El apartamento no se puede dar por disponible antes del check-in.</p></div>';
+ }else{
+  lodging.innerHTML='<span class="atlas-lodging__icon">'+(origin.key==='airport'?'✈️':'🏠')+'</span><div><strong>Salida: '+esc(origin.name)+'</strong><p>'+esc(origin.addr)+'</p></div>';
+ }
+ root.appendChild(lodging);
  if(d.n===12){
   var opts=document.createElement('div');opts.className='atlas-dayoptions';opts.innerHTML='<label><input id="atlas-fuji" type="checkbox"'+(storage('atlas-fuji-12',false)?' checked':'')+'> Salgo desde Kawaguchiko (solo si finalmente duermo allí)</label>';
   root.appendChild(opts);opts.querySelector('input').onchange=function(){localStorage.setItem('jp26:atlas-fuji-12',JSON.stringify(this.checked));dayDetail(12)};
@@ -329,7 +342,7 @@ function dayDetail(n){
  act.appendChild(button('🗺 Ver ruta en mapa','atlas-primary',function(){showDayMap(n)}));
  var original=document.createElement('a');original.className='atlas-secondary';original.textContent='Plan original ↗';original.href='./#dia-'+n;act.appendChild(original);
  root.appendChild(act);
- var links=dayRouteLinks(d);if(links.length){var box=document.createElement('div');box.className='atlas-routebox';var p=document.createElement('small');p.textContent='Navegación real por tramos desde el alojamiento. Google Maps calcula el trayecto; no se inventan tiempos.';box.appendChild(p);
+ var links=dayRouteLinks(d);if(links.length){var box=document.createElement('div');box.className='atlas-routebox';var p=document.createElement('small');p.textContent=(d.n===1&&arrivalMode())?'Ruta en tres partes: traslado desde el aeropuerto, paseo cercano al Airbnb y salida nocturna. Sin recorrer Osaka de punta a punta.':'Navegación por tramos desde el alojamiento. Google Maps calcula el trayecto; no se inventan tiempos.';box.appendChild(p);
  links.forEach(function(l){var a=document.createElement('a');a.href=l.url;a.textContent='📍 '+l.name;a.target='_blank';a.rel='noopener';box.appendChild(a)});root.appendChild(box);}
  var completed=effectiveStops(d).filter(function(s){return doneSet().has(s.id)}).length;var title=document.createElement('p');title.className='atlas-daycount';title.textContent='✓ '+completed+' visitas marcadas · Seguimiento compartido con tu app original en este dispositivo';root.appendChild(title);
  if(!(d.n===1&&arrivalMode()))renderDiscoveries(d,root);renderTimeline(d,root);$('screen').classList.remove('hidden');
