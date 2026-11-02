@@ -87,11 +87,10 @@ function showDayMap(n){
  $('atlas-daybar-start').textContent='Desde: '+originFor(d).name;
  $('atlas-daybar').hidden=false;
  atlas.setTab('mapa');$('screen').classList.add('hidden');
- // Keep the existing card, but move its selected stop to this day's route.
- var first=mapStops(d)[0];
- if(first){var p=atlas.all.find(function(x){return x.id==='plan:'+first.id||x.id==='idea:'+first.id.replace(/^c:/,'')});if(p)atlas.select(p);}
+ // El mapa del día comienza despejado; las fichas solo aparecen cuando tocas un pin.
+ if(atlas.closeCard)atlas.closeCard();
 }
-function clearDay(){appDay=null;dayPanel=null;window.jpAtlasRouteFilter=null;homeLayer.clearLayers();poiLayer.clearLayers();$('atlas-daybar').hidden=true;atlas.renderMarkers();atlas.map.setView([35.0,137.6],6);atlas.setTab('mapa');}
+function clearDay(){appDay=null;dayPanel=null;if(atlas.closeCard)atlas.closeCard();window.jpAtlasRouteFilter=null;homeLayer.clearLayers();poiLayer.clearLayers();$('atlas-daybar').hidden=true;atlas.renderMarkers();atlas.map.setView([35.0,137.6],6);atlas.setTab('mapa');}
 
   // ── Descubrimientos de camino (distancias geométricas orientativas) ──
   var poiLayer=L.layerGroup().addTo(atlas.map),poiSuggestions=[],onRoadFilters='all';
