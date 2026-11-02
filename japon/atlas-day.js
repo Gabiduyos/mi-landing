@@ -69,16 +69,54 @@ function travelSequence(d){
   });
   return result;
 }
-function legLink(from,to,mode){var u='https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(from.q||from.name)+'&destination='+encodeURIComponent(to.q||to.name);
-  return u+'&travelmode='+(mode==='car'?'driving':'transit');
+function distanceKm(a,b){
+ if(!a||!b||!hasCoords(a)||!hasCoords(b))return null;
+ var lat1=a.ll[0]*Math.PI/180,lat2=b.ll[0]*Math.PI/180;
+ var dlat=lat2-lat1,dlon=(b.ll[1]-a.ll[1])*Math.PI/180;
+ var r=2*Math.atan2(Math.sqrt(Math.sin(dlat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dlon/2)**2),Math.sqrt(1-(Math.sin(dlat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dlon/2)**2)));
+ return Math.round(6371*r*10)/10;
 }
+function legSuggestion(d,s,from,to){
+ var km=distanceKm(from,to),hint=String(s.how||''),h=hint.toLowerCase(),title=String((s.name||'')+' '+(from.name||'')),mode=d.mode==='car'?'driving':'transit',label=d.mode==='car'?'Coche':'Metro / tren',detail='';
+ if(mode==='driving'){detail='Día con coche: consulta la carretera, aparcamiento y peajes.';}
+ else if(km!==null&&km>=150){mode='transit';label='Shinkansen / tren';detail='Trayecto de larga distancia: revisar estación, billete y horario.';}
+ else if(km!==null&&km>=35){mode='transit';label='Tren interurbano';detail='Cambias de zona: verifica el servicio y los transbordos.';}
+ else if(/taxi/i.test(h)&&(km===null||km>=1.1)){mode='driving';label='Taxi';detail='El plan original recomienda taxi en este tramo. Compara precio con transporte público.';}
+ else if(km!==null&&(km<=1.15||(km<=1.7&&/a pie|andando|caminando/.test(h)))){mode='walking';label='A pie';detail='Se encuentra relativamente cerca: evita perder tiempo entrando al metro.';}
+ else if(/bus|autob[uú]s/.test(h)){mode='transit';label='Bus / tren';detail='El plan prevé bus; comprueba paradas y frecuencia en Maps.';}
+ else if(/metro|subway/.test(h)){mode='transit';label='Metro / tren';detail='Consulta línea, acceso y salida de estación.';}
+ else if(/tren|jr|keihan|hanky[uū]|nankai|kintetsu/.test(h)){mode='transit';label='Tren';detail='Consulta línea, andén y posibles transbordos.';}
+ else if(km!==null&&km<2.4){mode='walking';label='A pie';detail='Puede ser más sencillo caminar; compara el recorrido peatonal real.';}
+ else{detail='Prioriza transporte público; comprueba qué tren, metro o bus llega mejor.';}
+ if(d.n===1&&(/kansai|kix/i.test(title))&&mode==='transit'){label='Tren Nankai + a pie';detail='Desde KIX hacia Namba en Nankai y después andando; revisa el servicio disponible.';}
+ return {mode:mode,label:label,detail:detail,km:km,hint:hint};
+}
+function legLink(from,to,mode){
+ var googleMode=mode==='car'?'driving':mode==='taxi'?'driving':mode;
+ if(['transit','walking','driving'].indexOf(googleMode)<0)googleMode='transit';
+ function location(x){return (x.addr&&x.addr.trim())||x.q||x.name||((hasCoords(x))?x.ll.join(','):'');}
+ var u='https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(location(from))+'&destination='+encodeURIComponent(location(to));
+ return u+'&travelmode='+googleMode;
+}
+function transportAlternatives(d,advice){
+ if(d.mode==='car')return [{mode:'driving',name:'🚗 Coche',best:true}];
+ if(advice.km!==null&&advice.km>=35)return [{mode:'transit',name:'🚄 Tren',best:true}];
+ var choices=[
+  {mode:'walking',name:'🚶 A pie',best:advice.mode==='walking'},
+  {mode:'transit',name:'🚇 Metro / tren',best:advice.mode==='transit'},
+  {mode:'driving',name:'🚕 Taxi',best:advice.mode==='driving'}
+ ];
+ if(advice.km!==null&&advice.km>4.5)choices=choices.filter(function(x){return x.mode!=='walking';});
+ return choices;
+}
+
 function itineraryStartLabel(d){
   var list=effectiveStops(d),start=list.find(function(s){return s.kind==='home'&&readableClock(s.t);});
   return d.n===1?'Llegada del vuelo: 12:10 (KIX)':start?'Salida prevista: '+readableClock(start.t):'Salida flexible · consultar el primer horario';
 }
 function dayRouteLinks(d){
   return travelSequence(d).filter(function(x){return !!x.leg;}).map(function(x){
-    return {name:x.leg.from.name+' → '+x.leg.to.name,url:legLink(x.leg.from,x.leg.to,d.mode),note:x.leg.how||''};
+    var suggestion=legSuggestion(d,x.stop,x.leg.from,x.leg.to);return {name:x.leg.from.name+' → '+x.leg.to.name,url:legLink(x.leg.from,x.leg.to,suggestion.mode),note:suggestion.label};
   });
 }
 function dateLabel(d){return ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][new Date(d.date+'T12:00:00').getDay()]+' '+d.date.substring(8)+' nov';}
