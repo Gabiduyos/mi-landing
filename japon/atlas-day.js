@@ -106,7 +106,7 @@ function renderDays(){
 function renderTimeline(d,root){
  var list=document.createElement('div');list.className='atlas-timeline';var count=0;
  effectiveStops(d).forEach(function(s){
-  if(s.opt&&!showOptions)return;count++;
+  if(s.opt&&!showOptions)return;count++;var stepNumber=count;
   var completed=doneSet().has(s.id);
   var item=document.createElement('div');item.className='atlas-step'+(completed?' is-completed':'');
   var rail=document.createElement('div');rail.className='atlas-rail';rail.innerHTML='<span class="atlas-dot">'+(completed?'✓':count)+'</span>';item.appendChild(rail);
@@ -115,7 +115,7 @@ function renderTimeline(d,root){
   var body=document.createElement('div');body.className='atlas-step__main';
   body.innerHTML='<strong>'+esc(s.name||'Parada')+'</strong><span>'+esc(s.t||'Horario libre')+(s.dur?' · '+s.dur+' min':'')+'</span>';
   top.appendChild(body);
-  if(s.kind!=='move'&&s.kind!=='task'&&s.kind!=='home'){var check=document.createElement('input');check.type='checkbox';check.className='atlas-step__check';check.checked=completed;check.setAttribute('aria-label','Marcar como visitado: '+s.name);check.onchange=function(){setDone(s.id,check.checked);item.classList.toggle('is-completed',check.checked);rail.querySelector('.atlas-dot').textContent=check.checked?'✓':count};top.appendChild(check);}
+  if(s.kind!=='move'&&s.kind!=='task'&&s.kind!=='home'){var check=document.createElement('input');check.type='checkbox';check.className='atlas-step__check';check.checked=completed;check.setAttribute('aria-label','Marcar como visitado: '+s.name);check.onchange=function(){setDone(s.id,check.checked);item.classList.toggle('is-completed',check.checked);rail.querySelector('.atlas-dot').textContent=check.checked?'✓':stepNumber};top.appendChild(check);}
   box.appendChild(top);
   if(s.opt){var optional=document.createElement('p');optional.className='atlas-step__opt';optional.textContent='Parada opcional';box.appendChild(optional);}
   if(s.mine||s.note){var note=document.createElement('p');note.className='atlas-step__note';note.textContent=s.mine||s.note;box.appendChild(note);}
