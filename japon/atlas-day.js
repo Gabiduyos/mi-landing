@@ -159,7 +159,7 @@ function clearDay(){appDay=null;dayPanel=null;if(atlas.closeCard)atlas.closeCard
     return legs;
   }
   function scorePoi(p){
-    var score=({foto:3,relojes:3,ropa:3,figuras:3,retro:3,mercado:2,jdm:2,cultura:0,vistas:0})[p.cat]||0;
+    var score=({gym:3,foto:3,relojes:3,ropa:3,figuras:3,retro:3,mercado:2,jdm:2,cultura:0,vistas:0})[p.cat]||0;
     var name=normText(p.name);
     if(/book.?off|hard.?off|off house|2nd street|surugaya|mandarake|fujiya|camera|second|hobby/.test(name))score+=3;
     if(onRoadFilters!=='all'&&p.cat===onRoadFilters)score+=12;
@@ -226,7 +226,7 @@ function clearDay(){appDay=null;dayPanel=null;if(atlas.closeCard)atlas.closeCard
     title.innerHTML='<span class="atlas-nearby__sparkle">✦</span><div><strong>Descubrimientos en el camino</strong><small>Paradas extra que podrían pillarte de paso</small></div>';
     wrap.appendChild(title);
     var filters=document.createElement('div');filters.className='atlas-poifilters';
-    [['all','Todos'],['figuras','🎮 Coleccionismo'],['foto','📷 Cámaras'],['ropa','👕 Ropa'],['relojes','⌚ Relojes'],['mercado','🛍️ Mercados']].forEach(function(c){
+    [['all','Todos'],['gym','💪 Gym y anime'],['figuras','🎮 Coleccionismo'],['foto','📷 Cámaras'],['ropa','👕 Ropa'],['relojes','⌚ Relojes'],['mercado','🛍️ Mercados']].forEach(function(c){
       var b=button(c[1],'atlas-poifilter'+(onRoadFilters===c[0]?' active':''),function(){onRoadFilters=c[0];dayDetail(d.n);});
       filters.appendChild(b);
     });
@@ -240,7 +240,7 @@ function clearDay(){appDay=null;dayPanel=null;if(atlas.closeCard)atlas.closeCard
       found.slice(0,5).forEach(function(item){
         var p=item.p,n=item.near,box=document.createElement('div');box.className='atlas-poicard';
         var label=document.createElement('div');label.className='atlas-poicard__label';
-        label.innerHTML='<span class="atlas-poicard__icon">'+esc(({foto:'📷',ropa:'👕',relojes:'⌚',figuras:'🎮',retro:'🎮',mercado:'🛍️',jdm:'🏎️'})[p.cat]||'📍')+'</span><span class="atlas-poicard__info"><strong>'+esc(p.name)+'</strong><small>✦ aprox. '+Math.round(n.km*1000)+' m de la línea entre paradas</small><small>Entre '+esc(n.a)+' y '+esc(n.b)+'</small></span>';
+        label.innerHTML='<span class="atlas-poicard__icon">'+esc(({gym:'💪',foto:'📷',ropa:'👕',relojes:'⌚',figuras:'🎮',retro:'🎮',mercado:'🛍️',jdm:'🏎️'})[p.cat]||'📍')+'</span><span class="atlas-poicard__info"><strong>'+esc(p.name)+'</strong><small>✦ aprox. '+Math.round(n.km*1000)+' m de la línea entre paradas</small><small>Entre '+esc(n.a)+' y '+esc(n.b)+'</small></span>';
         box.appendChild(label);
         if(p.note){var note=document.createElement('p');note.textContent=p.note;box.appendChild(note);}
         var actions=document.createElement('div');actions.className='atlas-poicard__buttons';
@@ -298,7 +298,7 @@ function renderTimeline(d,root){
   top.appendChild(body);
   if(s.kind!=='move'&&s.kind!=='task'&&s.kind!=='home'){var check=document.createElement('input');check.type='checkbox';check.className='atlas-step__check';check.checked=completed;check.setAttribute('aria-label','Marcar como visitado: '+s.name);check.onchange=function(){setDone(s.id,check.checked);item.classList.toggle('is-completed',check.checked);rail.querySelector('.atlas-dot').textContent=check.checked?'✓':stepNumber};top.appendChild(check);}
   box.appendChild(top);
-  if(s.kind!=='move'&&s.kind!=='home'&&s.kind!=='task'&&!isFixed(s)){
+  if(s.kind!=='move'&&s.kind!=='home'&&s.kind!=='task'&&!isFixed(s)&&!(d.n===1&&arrivalMode())){
     var editRow=document.createElement('div');editRow.className='atlas-step__edit';
     editRow.appendChild(button('↑','atlas-step__move',function(){if(moveStop(d,s.id,-1))dayDetail(d.n);else alert('No puedo mover esta parada por encima de una reserva o traslado fijo.')})); 
     editRow.appendChild(button('↓','atlas-step__move',function(){if(moveStop(d,s.id,1))dayDetail(d.n);else alert('No puedo mover esta parada a través de una reserva o traslado fijo.')})); 
