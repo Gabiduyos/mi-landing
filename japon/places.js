@@ -2,6 +2,7 @@
 // fit = días en los que encaja por zona; car = solo práctico en coche.
 // approx:true = pin aproximado (la navegación usa el nombre en Google Maps).
 window.PLACE_CATS = {
+  gym: { name: 'Gym y ropa anime', kind: 'shop' },
   foto: { name: 'Fotografía', kind: 'shop' },
   relojes: { name: 'Relojes japoneses', kind: 'shop' },
   jdm: { name: 'Coches JDM', kind: 'sight' },
@@ -35,6 +36,12 @@ window.NEARBY = [
 ];
 
 window.PLACES = [
+  // Tiendas verificadas en 2026; ropa anime no equivale necesariamente a tejido deportivo técnico.
+  {id:'v3-guf-dotonbori',cat:'gym',area:'Osaka · Dōtonbori',name:'Guf Dōtonbori · camisetas de anime',q:'Guf Dotonbori 1-7-5 Dotonbori Osaka',ll:[34.6680,135.5028],approx:true,fit:[1,2],note:'Ropa y camisetas oficiales/temáticas de anime, Dragon Ball, One Piece, etc. No está verificado que sean prendas técnicas de entrenamiento. Tienda oficial: abierta 10:00–02:00 según web, revisar el día de visita. Dōtonbori 1-7-5. Buena parada antes del barco.',priority:true},
+  {id:'v3-fitness-namba',cat:'gym',area:'Osaka · Namba',name:'Fitness Shop Namba · accesorios de gimnasio',q:'Fitness Shop Namba Cross Hotel Osaka 2-5-15 Shinsaibashisuji',ll:[34.6698,135.5011],approx:true,fit:[1,2],note:'Especializada en material de fuerza y entrenamiento, correas, cinturones y artículos deportivos (stock por verificar). No es tienda de anime. Domingo 11:00–19:00 según web oficial. Cross Hotel Osaka 2F.',priority:true},
+  {id:'v3-lyft-horie',cat:'gym',area:'Osaka · Minamihorie',name:'LÝFT Osaka · ropa de entrenamiento',q:'LYFT OSAKA STORE 1-21-16 Minamihorie Osaka',ll:[34.6727,135.4910],approx:true,fit:[2],note:'Ropa y accesorios de fitness de marca japonesa. No es merchandising de anime. Horario publicado 12:00–20:00. Mejor combinar con Horie o Amerika-mura, no forzar el día de llegada.',priority:true},
+  {id:'v3-geestore-osaka',cat:'gym',area:'Osaka · Namba',name:'Gee Store Osaka · camisetas anime',q:'Gee Store Osaka 7-7 Nanbasennichimae',ll:[34.6636,135.5020],approx:true,fit:[2],note:'Tienda especializada en camisetas y accesorios de anime y cultura japonesa. Prendas de coleccionismo, no necesariamente técnicas para gimnasio. Abre normalmente de 11:00 a 20:00. Encaja con Den Den Town el día 2.'},
+
   // ── Selección personalizada 2.0 (opcionales, nunca altera reservas) ──
   {"id": "v2-mapcamera", "cat": "foto", "area": "Tokio · Shinjuku", "name": "Map Camera · Sony E y cámaras usadas", "q": "Map Camera Shinjuku", "ll": [35.6908, 139.6987], "approx": true, "fit": [9], "note": "★ Recomendado para tus intereses. Especialista en objetivos Sony E nuevos y usados; llevar la A7 IV para probar compatibilidad. Revisar precios y garantía. Mejor antes de las 19:00.", "priority": true},
   {"id": "v2-fujiya", "cat": "foto", "area": "Tokio · Nakano", "name": "Fujiya Camera · Sony y analógicas", "q": "Fujiya Camera Nakano Tokyo", "ll": [35.7068, 139.6652], "approx": true, "fit": [14], "note": "★ Recomendado para tus intereses. Objetivos Sony E, cámaras analógicas y artículos usados. Combinar con Nakano Broadway y comparar estado y garantía.", "priority": true},
