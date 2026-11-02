@@ -18,3 +18,34 @@
 .atlas-routebox small{font-size:10px;color:#b0c5c8;line-height:1.35}.atlas-homepin{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:#ffbc55;border:3px solid #fff;box-shadow:0 0 0 4px #ffb45b44;font-size:18px}
 .atlas-route-note{font-size:10px;color:#9ebcc4;margin:7px 0 2px}
 @media(max-width:440px){.atlas-daybar{left:12px;right:12px}.atlas-dayrow{padding:11px}}
+
+/* Descubrimientos en ruta, inspiración mapa de exploración */
+.atlas-day-picker{display:block;margin-top:14px;background:#1c3b49;border:1px solid #ffffff37;color:#f9cf9c;padding:11px;border-radius:12px;font-size:13px;font-weight:800;width:100%}
+.atlas-nearby{margin:19px 0 20px;padding:14px;border-radius:20px;background:linear-gradient(145deg,#25382d,#102936 70%);border:1px solid #e1ad6a66;box-shadow:0 4px 22px #06191c4f}
+.atlas-nearby__head{display:flex;align-items:center;gap:11px;margin-bottom:12px}
+.atlas-nearby__sparkle{width:45px;height:45px;display:grid;place-items:center;border-radius:16px;font-size:27px;background:#5b4d2a;color:#ffcf80;box-shadow:0 0 22px #f2b04d2a;border:1px solid #e7b65d60}
+.atlas-nearby__head strong{display:block;font-size:15px;color:#ffe7b9;line-height:1.23}
+.atlas-nearby__head small{display:block;font-size:11px;color:#adc5c8;margin-top:4px}
+.atlas-poifilters{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:10px;margin-right:-12px}
+.atlas-poifilters::-webkit-scrollbar{display:none}
+.atlas-poifilter{white-space:nowrap;border:1px solid #9cac9f4a;background:#122c32;color:#dce8e3;border-radius:99px;font-size:10px;padding:8px 10px;font-weight:800;min-height:32px}
+.atlas-poifilter.active{background:#ffc26d;border-color:#ffc26d;color:#17252b}
+.atlas-poicard{margin:9px 0;padding:12px;border-radius:15px;background:#0d2630e8;border:1px solid #ffffff22}
+.atlas-poicard__label{display:flex;align-items:center;gap:10px}.atlas-poicard__icon{background:#284149;color:#ffe2bb;border-radius:12px;width:40px;height:40px;flex:0 0 40px;display:grid;place-items:center;font-size:20px}
+.atlas-poicard__info{min-width:0;flex:1}.atlas-poicard__info strong{display:block;font-size:12px;line-height:1.3;color:#fff}.atlas-poicard__info small{display:block;font-size:10px;color:#a7bbbf;margin-top:4px;line-height:1.25}
+.atlas-poicard p{font-size:11px;color:#b7cbcd;line-height:1.4;margin:9px 0 11px}
+.atlas-poicard__buttons{display:flex;gap:7px;margin-top:10px}
+.atlas-poicard__buttons button{border-radius:10px;padding:11px 6px;font-size:11px;font-weight:800}
+.atlas-poicard__add{background:#ffb963;color:#1a292f;border:0;flex:2}
+.atlas-poicard__map{background:#294650;color:#fff;border:1px solid #ffffff20;flex:1}
+.atlas-nearby__foot,.atlas-discovery-empty{font-size:10px;color:#a5bcbd;line-height:1.5;margin:10px 2px 0}
+.atlas-discovery-empty{padding:15px;background:#ffffff08;border-radius:12px}
+.atlas-added{padding:12px;background:#234d3d;border:1px solid #68ad77;border-radius:12px;color:#d7f7df;font-size:12px}
+.atlas-discovery-pin{background:#f9d689;border:3px solid #fff0c9;color:#29352f;box-shadow:0 0 0 5px #ffd57566,0 0 18px #ffdd6daa;width:38px;height:38px;display:grid;place-items:center;border-radius:50%;font-size:25px;font-weight:900;cursor:pointer}
+.atlas-quickadd{display:block;margin-top:10px;width:100%;min-height:39px;background:#ffbd68;border:0;border-radius:12px;color:#192c33;font-weight:800;font-size:12px}
+.atlas-quickadd[hidden]{display:none}
+.atlas-step__edit{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.atlas-step__edit button{border-radius:9px;border:1px solid #ffffff24;color:#d7e8e5;background:#27404a;padding:6px 10px;font-size:10px;font-weight:800;min-height:30px}
+.atlas-step__edit .atlas-step__move{width:31px;font-size:14px;padding:3px}
+.atlas-step__edit .atlas-step__skip{color:#e8bf7d}
+.atlas-step.is-skipped{opacity:.58}.atlas-step.is-skipped .atlas-step__main strong{text-decoration:line-through}
