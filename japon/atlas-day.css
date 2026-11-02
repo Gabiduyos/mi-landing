@@ -62,3 +62,13 @@
 .atlas-route-details{display:block}.atlas-route-details summary{font-size:12px;font-weight:800;color:#ffd38c;cursor:pointer;margin:1px 0 8px}.atlas-route-details:not([open])>*:not(summary){display:none}
 
 .atlas-poicard__official{display:block;margin-top:9px;color:#ffd18d;font-size:11px;font-weight:800;text-decoration:underline;text-underline-offset:3px}
+
+/* Indicaciones por tramo: útiles para Osaka, Kioto, Tokio y traslados interurbanos */
+.atlas-leg__recommendation{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap}
+.atlas-leg__recommendation strong{font-size:13px;color:#ffe5b6}
+.atlas-leg__pill{display:inline-flex;align-items:center;padding:4px 7px;background:#2d644e;color:#d8ffdf;font-size:9px;text-transform:uppercase;letter-spacing:.45px;border-radius:99px;font-weight:850}
+.atlas-leg__choices{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.atlas-leg__choice{background:#304750;color:#e0ecec;border:1px solid #ffffff25;font-weight:750;text-align:center;text-decoration:none;font-size:10px;line-height:1.3;border-radius:10px;padding:9px 8px;flex:1 1 auto;min-width:84px}
+.atlas-leg__choice.recommended{background:#f4c886;color:#172732;border-color:#ffdfae}
+.atlas-leg__caution{font-size:10px;color:#f1c982;line-height:1.45;margin-top:6px;padding-top:6px;border-top:1px solid #ffffff22}
+@media(max-width:390px){.atlas-leg__choices{gap:5px}.atlas-leg__choice{min-width:73px;padding:8px 5px;font-size:9px}}
