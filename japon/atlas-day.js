@@ -353,6 +353,9 @@ function dayDetail(n){
   lodging.innerHTML='<span class="atlas-lodging__icon">'+(origin.key==='airport'?'✈️':'🏠')+'</span><div><strong>Salida: '+esc(origin.name)+'</strong><p>'+esc(origin.addr)+'</p></div>';
  }
  root.appendChild(lodging);
+ var departure=document.createElement('div');departure.className='atlas-departure';
+ departure.innerHTML='<span>🕒</span><div><strong>'+esc(itineraryStartLabel(d))+'</strong><small>Las horas de cada parada son las de tu itinerario, no tiempos calculados por Google Maps. Si modificas el día, comprueba los desplazamientos.</small></div>';
+ root.appendChild(departure);
  if(d.n===12){
   var opts=document.createElement('div');opts.className='atlas-dayoptions';opts.innerHTML='<label><input id="atlas-fuji" type="checkbox"'+(storage('atlas-fuji-12',false)?' checked':'')+'> Salgo desde Kawaguchiko (solo si finalmente duermo allí)</label>';
   root.appendChild(opts);opts.querySelector('input').onchange=function(){localStorage.setItem('jp26:atlas-fuji-12',JSON.stringify(this.checked));dayDetail(12)};
@@ -363,8 +366,12 @@ function dayDetail(n){
  act.appendChild(button('🗺 Ver ruta en mapa','atlas-primary',function(){showDayMap(n)}));
  var original=document.createElement('a');original.className='atlas-secondary';original.textContent='Plan original ↗';original.href='./#dia-'+n;act.appendChild(original);
  root.appendChild(act);
- var links=dayRouteLinks(d);if(links.length){var box=document.createElement('div');box.className='atlas-routebox';var p=document.createElement('small');p.textContent=(d.n===1&&arrivalMode())?'Ruta en tres partes: traslado desde el aeropuerto, paseo cercano al Airbnb y salida nocturna. Sin recorrer Osaka de punta a punta.':'Navegación por tramos desde el alojamiento. Google Maps calcula el trayecto; no se inventan tiempos.';box.appendChild(p);
- links.forEach(function(l){var a=document.createElement('a');a.href=l.url;a.textContent='📍 '+l.name;a.target='_blank';a.rel='noopener';box.appendChild(a)});root.appendChild(box);}
+ var links=dayRouteLinks(d);if(links.length){
+  var box=document.createElement('details');box.className='atlas-routebox atlas-route-details';
+  var summary=document.createElement('summary');summary.textContent='🧭 Ver '+links.length+' trayectos del día';box.appendChild(summary);
+  var p=document.createElement('small');p.textContent=(d.n===1&&arrivalMode())?'Desde KIX al entorno del alojamiento, y después los paseos locales.':'Primer enlace desde vuestro alojamiento; después, de una parada a la siguiente. Google Maps comprueba los desplazamientos y el transporte.';box.appendChild(p);
+  links.forEach(function(l){var a=document.createElement('a');a.href=l.url;a.textContent='📍 '+l.name;a.target='_blank';a.rel='noopener';box.appendChild(a)});root.appendChild(box);
+ }
  var completed=effectiveStops(d).filter(function(s){return doneSet().has(s.id)}).length;var title=document.createElement('p');title.className='atlas-daycount';title.textContent='✓ '+completed+' visitas marcadas · Seguimiento compartido con tu app original en este dispositivo';root.appendChild(title);
  if(!(d.n===1&&arrivalMode()))renderDiscoveries(d,root);renderTimeline(d,root);$('screen').classList.remove('hidden');
 }
