@@ -15,7 +15,7 @@ function rendered(){return atlas.state.tab==='asistente'||atlas.state.tab==='con
 function preparePanel(){var el=$('screen');el.classList.add('atlas-tools-open');$('screenbody').innerHTML='';return $('screenbody')}
 function addMsg(role,content,store){var entry={role:role,text:String(content||'').slice(0,1600)};messages.push(entry);if(messages.length>45)messages=messages.slice(-45);if(store!==false)saveJSON(CHAT_KEY,messages);return entry}
 function addBubble(parent,role,content){parent.appendChild(node('div','atlas-bubble atlas-bubble--'+role,content))}
-function chatHistory(){var target=$('atlas-chat-messages');if(!target)return;target.innerHTML='';messages.forEach(function(m){addBubble(target,m.role,m.text)});target.scrollTop=target.scrollHeight}
+function chatHistory(){var target=$('atlas-chat-messages');if(!target)return;var pending=Array.from(target.querySelectorAll('.atlas-proposal'));target.innerHTML='';messages.forEach(function(m){addBubble(target,m.role,m.text)});pending.forEach(function(el){target.appendChild(el)});target.scrollTop=target.scrollHeight}
 function updateStatus(){var e=$('atlas-chat-status');if(!e)return;e.innerHTML='';e.appendChild(node('span','',mode==='api'?'🟢 ChatGPT conectado':'🧭 Guía del itinerario activa'));e.appendChild(node('strong','',mode==='api'?'IA privada':'Sin API de OpenAI'))}
 function renderChat(){
  $('screentitle').textContent='Asistente de viaje';var b=preparePanel(),wrap=node('div','atlas-tools');b.appendChild(wrap);
@@ -47,7 +47,7 @@ function renderFx(){
  [1000,5000,10000,30000].forEach(function(amt){quick.appendChild(button(amt.toLocaleString('es-ES')+' ¥','',function(){jpy.value=String(amt);convert('jpy')}))});
  wrap.appendChild(button('↻ Actualizar tipo de cambio','atlas-fx__refresh',function(){fetchRate(true)}));
  var foot=node('p','atlas-fx__warning');foot.innerHTML='Fuente: <a target="_blank" rel="noopener" href="https://frankfurter.dev/">Frankfurter</a> (tipos de bancos centrales, actualizados normalmente cada día laborable). Los bancos aplican su propio cambio y comisiones.';wrap.appendChild(foot);
- updateRateUI();if(!rate)fetchRate(false);
+ updateRateUI();if(!rate||rateCached)fetchRate(false);
 }
 function updateRateUI(){var val=$('atlas-fx-rate'),date=$('atlas-fx-date');if(!val||!date)return;if(rate){val.textContent='1 € = '+rate.toLocaleString('es-ES',{maximumFractionDigits:3})+' ¥';date.textContent='Cotización: '+rateDate+(rateCached?' · guardada (puede no estar actualizada)':' · última publicada');var a=$('atlas-eur'),b=$('atlas-jpy');if(a&&b&&a.value!==''&&!b.value)b.value=(Number(a.value)*rate).toFixed(0)}else{val.textContent='No hay cotización disponible';date.textContent='Conéctate a Internet para obtener una tasa real. No se usará un valor inventado.'}}
 function fetchRate(force){if(!force&&rate&&!rateCached)return Promise.resolve();var b=document.querySelector('.atlas-fx__refresh');if(b)b.disabled=true;return fetch('https://api.frankfurter.dev/v2/rate/EUR/JPY',{cache:'no-store'}).then(function(r){if(!r.ok)throw Error('FX '+r.status);return r.json()}).then(function(d){if(!Number.isFinite(Number(d.rate))||Number(d.rate)<=0||!/^20\d\d-\d\d-\d\d$/.test(d.date))throw Error('Tasa inválida');rate=Number(d.rate);rateDate=d.date;rateCached=false;saveJSON(FX_KEY,{rate:rate,date:rateDate,savedAt:Date.now()});updateRateUI()}).catch(function(){rateCached=true;updateRateUI()}).finally(function(){if(b)b.disabled=false})}
@@ -85,6 +85,7 @@ function apiCall(question){var context={days:trip.days.map(function(d){return {d
 function send(q){
  q=String(q||'').trim().slice(0,700);if(!q||isSending)return;addMsg('user',q);chatHistory();var done=function(answer){addMsg('assistant',answer);chatHistory()};if(mode!=='api'){done(localReply(q));return}
  isSending=true;var b=$('atlas-chat-send');if(b)b.disabled=true;
+ if(/anade|agrega|pon|añade|quita|elimina|salta/.test(norm(q))&&getDayNumber(q)){done(localReply(q));isSending=false;if(b)b.disabled=false;return}
  apiCall(q).then(done).catch(function(e){mode='local';updateStatus();done('No pude usar la conexión de OpenAI ('+String(e.message||'error')+'). Vuelvo a la guía local.\n\n'+localReply(q))}).finally(function(){isSending=false;if(b)b.disabled=false});
 }
 messages=getJSON(CHAT_KEY,[]);if(!Array.isArray(messages))messages=[];
