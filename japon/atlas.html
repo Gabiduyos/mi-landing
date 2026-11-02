@@ -123,8 +123,29 @@ else{title.textContent='Explorar lugares';filtered().slice(0,80).forEach(functio
 function addItem(to,p){var e=document.createElement('div');e.className='item';e.innerHTML='<span class="itememoji">'+emoji(p)+'</span><div><strong>'+safe(p.name)+'</strong><small>'+safe(p.raw.area||p.area)+' · '+(p.day?'Día '+p.day:'Idea')+'</small></div><button>Ver</button>';e.querySelector('button').onclick=function(){$('screen').classList.add('hidden');st.city='all';$('city').value='all';map.setView(p.ll,14);select(p);setTab('mapa')};to.appendChild(e)}
 function setTab(tab){st.tab=tab;document.querySelectorAll('.tab').forEach(function(e){e.classList.toggle('active',e.dataset.tab===tab)});if(tab==='mapa'){$('screen').classList.add('hidden');setTimeout(function(){map.invalidateSize()},80)}else{$('screen').classList.remove('hidden');renderScreen()}}
 function openDetail(){var p=selected();if(!p)return;$('detailname').textContent=p.name;$('detailarea').textContent=catInfo(p.cat)[1].toUpperCase()+' · '+p.area;$('detaildesc').textContent=p.note||'Una de las localizaciones seleccionadas para tu viaje a Japón.';$('detailtime').textContent=p.day?'Día '+p.day+' del itinerario'+(p.time?' · '+p.time:''):'Lugar opcional. Comprueba horarios antes de viajar.';$('detailfavorite').textContent=favorites.indexOf(p.id)>=0?'♥ Guardado':'♡ Guardar';$('detaildirections').href=mapsSearch(p);$('detailphoto').style.backgroundImage='linear-gradient(transparent 25%,#081b29),linear-gradient(125deg,#245368,#b56b35)';loadPhoto(p,function(url){if(st.selected===p.id&&url)$('detailphoto').style.backgroundImage='linear-gradient(transparent 25%,#081b29),url("'+url.replace(/"/g,'%22')+'")'});$('detail').classList.remove('hidden')}
-function createRoute(){var id=st.cat==='all'?'foto':st.cat;$('routecat').innerHTML=categories.slice(1).map(function(c){return '<option value="'+c[0]+'"'+(id===c[0]?' selected':'')+'>'+c[2]+' '+c[1]+'</option>'}).join('');renderRoute();$('routebox').classList.remove('hidden')}
-function renderRoute(){var id=$('routecat').value;var p=all.filter(function(x){return x.cat===id&&(st.city==='all'||x.area===st.city)});var result=ordered(p);var ol=document.createElement('ol');result.forEach(function(x){var li=document.createElement('li');li.textContent=x.name;ol.appendChild(li)});var el=$('routelist');el.innerHTML='';if(!result.length){el.innerHTML='<p class="empty">No hay suficientes lugares en esta zona. Cambia de ciudad o categoría.</p>';$('routelink').style.display='none'}else{el.appendChild(ol);$('routelink').style.display='block';$('routelink').href=routeLink(result)}}
+
+function createRoute(){var id=st.cat==='all'?'foto':st.cat;$('routecat').innerHTML=categories.slice(1).map(function(c){return '<option value="'+c[0]+'"'+(id===c[0]?' selected':'')+'>'+c[2]+' '+c[1]+'</option>'}).join('');$('routecity').value=routeLimits[st.city]?st.city:'';$('routemode').value='transit';$('routebox').classList.remove('hidden');renderRoute()}
+function renderRoute(){
+ var id=$('routecat').value,city=$('routecity').value,mode=$('routemode').value,el=$('routelist'),link=$('routelink');el.innerHTML='';link.style.display='none';
+ if(!routeLimits[city]){el.innerHTML='<p class="empty">Elige una ciudad para crear la ruta. Nunca mezclaremos tiendas de Kioto y Tokio.</p>';return;}
+ var candidates=all.filter(function(x){return x.cat===id&&x.area===city&&dist(x.ll,routeLimits[city].center)<=routeLimits[city].radius});
+ var result=ordered(candidates,city);
+ if(!result.length){el.innerHTML='<p class="empty">No hay lugares guardados de esta categoría dentro de la zona elegida. Cambia de filtro o explora el mapa.</p>';return;}
+ var names={kyoto:'Kioto',osaka:'Osaka',tokyo:'Tokio',fuji:'Fuji'};
+ var intro=document.createElement('p');intro.className='tiny';intro.textContent=result.length+' paradas en '+names[city]+' · desde tu alojamiento · '+(mode==='transit'?'transporte público por tramos':mode==='walking'?'a pie':'en coche');el.appendChild(intro);
+ var list=document.createElement('ol'),previous=routeOrigin(city);
+ result.forEach(function(p){
+   var li=document.createElement('li');li.textContent=p.name+' (≈'+dist(previous,p.ll).toFixed(1)+' km desde la anterior)';
+   if(mode==='transit'){
+      var a=document.createElement('a');a.textContent=' · Ver trayecto ↗';a.href='https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(previous.join(','))+'&destination='+encodeURIComponent(p.ll.join(','))+'&travelmode=transit';a.target='_blank';a.rel='noopener';a.style.color='#ffbf72';li.appendChild(a);
+   }
+   list.appendChild(li);previous=p.ll;
+ });el.appendChild(list);
+ var url=routeLink(result,city,mode);
+ if(url){link.href=url;link.style.display='block';link.textContent=mode==='transit'?'Abrir el primer trayecto en Google Maps ↗':'Abrir la ruta local en Google Maps ↗';}
+ if(mode==='transit'){var note=document.createElement('p');note.className='warning';note.textContent='En transporte público, abre los enlaces de cada tramo por separado. Google Maps no garantiza una ruta con múltiples destinos en ese modo.';el.appendChild(note);}
+}
+
 function wire(){
 $('chips').addEventListener('click',function(){});$('searchtoggle').onclick=function(){$('searchbox').classList.toggle('open');if($('searchbox').classList.contains('open'))$('search').focus()};$('clearsearch').onclick=function(){$('search').value='';st.q='';renderMarkers();$('searchbox').classList.remove('open')};$('search').oninput=function(){st.q=this.value;renderMarkers()};
 $('city').onchange=function(){st.city=this.value;map.setView(centers[st.city][0],centers[st.city][1],{animate:true});renderMarkers();};
@@ -133,7 +154,7 @@ $('savebtn').onclick=function(){var p=selected();if(p)toggleFavorite(p)};
 $('directionsbtn').onclick=function(){var p=selected();if(p)window.open(mapsSearch(p),'_blank','noopener')};
 $('listbtn').onclick=function(){st.tab='lista';$('screen').classList.remove('hidden');renderScreen()};
 $('locate').onclick=function(){if(!navigator.geolocation){alert('Ubicación no disponible');return}navigator.geolocation.getCurrentPosition(function(pos){map.setView([pos.coords.latitude,pos.coords.longitude],13) },function(){alert('Activa el permiso de ubicación del navegador si quieres usar esta función.')},{enableHighAccuracy:true,timeout:12000})};
-$('routebtn').onclick=createRoute;$('routeclose').onclick=function(){$('routebox').classList.add('hidden')};$('routecat').onchange=renderRoute;
+$('routebtn').onclick=createRoute;$('routeclose').onclick=function(){$('routebox').classList.add('hidden')};$('routecat').onchange=renderRoute;$('routecity').onchange=renderRoute;$('routemode').onchange=renderRoute;
 document.querySelectorAll('.tab').forEach(function(e){e.onclick=function(){setTab(e.dataset.tab)}});
 $('screenclose').onclick=function(){setTab('mapa')};$('back').onclick=function(){$('detail').classList.add('hidden')};
 $('detailfavorite').onclick=function(){var p=selected();if(p){toggleFavorite(p);$('detailfavorite').textContent=favorites.indexOf(p.id)>=0?'♥ Guardado':'♡ Guardar'}};
