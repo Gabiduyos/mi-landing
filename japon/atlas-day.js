@@ -344,13 +344,30 @@ function renderTimeline(d,root){
   }
   box.appendChild(top);
   if(entry.leg){
+    var advice=legSuggestion(d,s,entry.leg.from,entry.leg.to);
     var travel=document.createElement('div');travel.className='atlas-leg';
     var label=document.createElement('div');label.className='atlas-leg__title';
-    var loc=entry.leg.from.name||'punto anterior';
-    label.textContent=(d.mode==='car'?'🚗':'🚉')+' Desde '+loc;
+    label.textContent='📍 Desde '+(entry.leg.from.name||'el punto anterior');
     travel.appendChild(label);
-    if(entry.leg.how){var how=document.createElement('div');how.className='atlas-leg__hint';how.textContent=entry.leg.how+' · indicación del plan';travel.appendChild(how);}
-    var g=document.createElement('a');g.href=legLink(entry.leg.from,entry.leg.to,d.mode);g.textContent='🧭 Cómo llegar desde aquí ↗';g.target='_blank';g.rel='noopener';g.className='atlas-leg__link';travel.appendChild(g);
+    var recommended=document.createElement('div');recommended.className='atlas-leg__recommendation';
+    recommended.innerHTML='<span class="atlas-leg__pill">Recomendado</span><strong>'+esc(advice.label)+'</strong>';
+    travel.appendChild(recommended);
+    var explanation=document.createElement('div');explanation.className='atlas-leg__hint';
+    explanation.textContent=advice.detail+(advice.km!==null?' · ≈'+advice.km.toFixed(1)+' km en línea recta':'');
+    travel.appendChild(explanation);
+    if(entry.leg.how){var how=document.createElement('div');how.className='atlas-leg__hint';how.textContent='📝 Tu plan original: '+entry.leg.how;travel.appendChild(how);}
+    var choices=document.createElement('div');choices.className='atlas-leg__choices';
+    transportAlternatives(d,advice).forEach(function(option){
+      var a=document.createElement('a');a.href=legLink(entry.leg.from,entry.leg.to,option.mode);
+      a.target='_blank';a.rel='noopener';a.className='atlas-leg__choice'+(option.best?' recommended':'');
+      a.textContent=option.name+' ↗';a.setAttribute('aria-label',option.name+' desde '+entry.leg.from.name+' hasta '+s.name);
+      choices.appendChild(a);
+    });travel.appendChild(choices);
+    if(advice.km!==null&&advice.km>=35&&d.mode!=='car'){
+      var intercity=document.createElement('div');intercity.className='atlas-leg__caution';
+      intercity.textContent='🚄 Cambio de zona: confirma estaciones, billetes y salida. No lo trates como un trayecto de metro urbano.';
+      travel.appendChild(intercity);
+    }
     box.appendChild(travel);
   }
   if(s.kind!=='move'&&s.kind!=='home'&&s.kind!=='task'&&!isFixed(s)&&!(d.n===1&&arrivalMode())){
