@@ -128,7 +128,7 @@ function renderTimeline(d,root){
  });root.appendChild(list);
 }
 function dayDetail(n){
- var d=DAYS[n-1];if(!d)return;dayPanel=n;atlas.setTab('dias');$('screentitle').textContent='Día '+n+' · '+dateLabel(d);
+ var d=DAYS[n-1];if(!d)return;dayPanel=n;if(atlas.state.tab!=='dias')atlas.setTab('dias');$('screentitle').textContent='Día '+n+' · '+dateLabel(d);
  var root=$('screenbody');root.innerHTML='';
  var head=document.createElement('div');head.className='atlas-dayhead';
  head.appendChild(button('← Volver a los 15 días','atlas-dayhead__back',function(){dayPanel=null;renderDays();$('screentitle').textContent='Mi viaje · 15 días';}));
