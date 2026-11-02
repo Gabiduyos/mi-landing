@@ -54,29 +54,32 @@ function hasCoords(s){return Array.isArray(s.ll)&&s.ll.length===2&&Number.isFini
 function pointFor(s){if(s.lodge){return lodge(s.lodge)}return {name:s.name,q:s.q||s.name,ll:s.ll};}
 function mapStops(d){return effectiveStops(d).filter(function(s){return hasCoords(pointFor(s))&&!s.far&&s.kind!=='move'&&s.kind!=='task'&&s.kind!=='home'&&!isSkipped(d,s.id)&&(showOptions||!s.opt);});}
 function directions(dest,orig,mode){var u='https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(dest.q||dest.name);if(orig)u+='&origin='+encodeURIComponent(orig.q||orig.name);return u+'&travelmode='+(mode==='car'?'driving':'transit');}
+function readableClock(s){var m=String(s||'').match(/^([01]?\d|2[0-3]):([0-5]\d)(?!\d)/);return m?m[1].padStart(2,'0')+':'+m[2]:null;}
+function journeyStop(s){if(s.lodge)return lodge(s.lodge);return {name:s.name||'Parada',q:s.q||s.name||'',ll:s.ll||null,far:!!s.far};}
+function travelSequence(d){
+  var prev=originFor(d),list=effectiveStops(d),result=[],omissions=routeOmissions();
+  list.forEach(function(s){
+    if(s.opt&&!showOptions)return;
+    var skipped=!!(omissions[d.n]&&omissions[d.n].indexOf(s.id)>=0);
+    var now=journeyStop(s),canGo=hasCoords(now);
+    var same=canGo&&hasCoords(prev)&&Math.abs(now.ll[0]-prev.ll[0])<.00015&&Math.abs(now.ll[1]-prev.ll[1])<.00015;
+    var leg=canGo&&!same&&!skipped?{from:prev,to:now,how:s.how||'',mode:d.mode}:null;
+    result.push({stop:s,leg:leg,skipped:skipped,clock:readableClock(s.t)});
+    if(canGo&&!skipped)prev=now;
+  });
+  return result;
+}
+function legLink(from,to,mode){var u='https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(from.q||from.name)+'&destination='+encodeURIComponent(to.q||to.name);
+  return u+'&travelmode='+(mode==='car'?'driving':'transit');
+}
+function itineraryStartLabel(d){
+  var list=effectiveStops(d),start=list.find(function(s){return s.kind==='home'&&readableClock(s.t);});
+  return d.n===1?'Llegada del vuelo: 12:10 (KIX)':start?'Salida prevista: '+readableClock(start.t):'Salida flexible · consultar el primer horario';
+}
 function dayRouteLinks(d){
-  if(d.n===1&&arrivalMode()){
-    var airport=originFor(d),house=lodge('osaka');
-    function leg(from,to,mode){return 'https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(from)+'&destination='+encodeURIComponent(to)+'&travelmode='+mode;}
-    return [
-      {name:'1. KIX → zona del Airbnb',url:leg(airport.q,house.q,'transit')},
-      {name:'2. Antes del check-in: paseo cerca del Airbnb',url:leg(house.q,'Kuromon Ichiba Market Osaka','walking')},
-      {name:'3. Airbnb → Fitness Shop Namba',url:leg(house.q,'Fitness Shop Namba Cross Hotel Osaka','walking')},
-      {name:'4. Fitness Shop → Guf Dōtonbori',url:leg('Fitness Shop Namba Cross Hotel Osaka','Guf Dotonbori 1-7-5','walking')},
-      {name:'5. Guf → Tombori River Cruise (20:00)',url:leg('Guf Dotonbori 1-7-5','Tombori River Cruise Tazaemonbashi Osaka','walking')}
-    ];
-  }
-  var route=mapStops(d),from=originFor(d),mode=d.mode,sections=[];
-  if(!route.length)return [];
-  for(var i=0;i<route.length;i+=3){
-    var ss=route.slice(i,i+3),end=pointFor(ss[ss.length-1]),start=i===0?from:pointFor(route[i-1]);
-    var mid=ss.slice(0,-1).map(function(s){return pointFor(s).q;});
-    var url='https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(start.q)+'&destination='+encodeURIComponent(end.q);
-    if(mid.length&&mode==='car')url+='&waypoints='+encodeURIComponent(mid.join('|'));
-    url+='&travelmode='+(mode==='car'?'driving':'transit');
-    sections.push({name:'Tramo '+(sections.length+1)+' · '+start.name+' → '+end.name,url:url});
-  }
-  return sections;
+  return travelSequence(d).filter(function(x){return !!x.leg;}).map(function(x){
+    return {name:x.leg.from.name+' → '+x.leg.to.name,url:legLink(x.leg.from,x.leg.to,d.mode),note:x.leg.how||''};
+  });
 }
 function dateLabel(d){return ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][new Date(d.date+'T12:00:00').getDay()]+' '+d.date.substring(8)+' nov';}
 function button(text,clazz,click){var b=document.createElement('button');b.type='button';b.className=clazz;b.textContent=text;b.addEventListener('click',click);return b;}
@@ -286,33 +289,45 @@ function renderDays(){
 }
 function renderTimeline(d,root){
  var list=document.createElement('div');list.className='atlas-timeline';var count=0;
- effectiveStops(d).forEach(function(s){
-  if(s.opt&&!showOptions)return;count++;var stepNumber=count;
-  var completed=doneSet().has(s.id);
-  var item=document.createElement('div');item.className='atlas-step'+(completed?' is-completed':'')+(isSkipped(d,s.id)?' is-skipped':'');
+ travelSequence(d).forEach(function(entry){
+  var s=entry.stop;count++;var stepNumber=count,completed=doneSet().has(s.id);
+  var item=document.createElement('div');item.className='atlas-step'+(completed?' is-completed':'')+(entry.skipped?' is-skipped':'');
   var rail=document.createElement('div');rail.className='atlas-rail';rail.innerHTML='<span class="atlas-dot">'+(completed?'✓':count)+'</span>';item.appendChild(rail);
   var box=document.createElement('div');box.className='atlas-step__box';
   var top=document.createElement('div');top.className='atlas-step__row';
   var body=document.createElement('div');body.className='atlas-step__main';
-  body.innerHTML='<strong>'+esc(s.name||'Parada')+'</strong><span>'+esc(s.t||'Horario libre')+(s.dur?' · '+s.dur+' min':'')+'</span>';
+  var when=s.t||'Sin horario fijo';
+  body.innerHTML='<strong>'+esc(s.name||'Parada')+'</strong><span>'+esc(when)+(s.dur?' · '+s.dur+' min de visita':'')+'</span>';
   top.appendChild(body);
-  if(s.kind!=='move'&&s.kind!=='task'&&s.kind!=='home'){var check=document.createElement('input');check.type='checkbox';check.className='atlas-step__check';check.checked=completed;check.setAttribute('aria-label','Marcar como visitado: '+s.name);check.onchange=function(){setDone(s.id,check.checked);item.classList.toggle('is-completed',check.checked);rail.querySelector('.atlas-dot').textContent=check.checked?'✓':stepNumber};top.appendChild(check);}
+  if(s.kind!=='move'&&s.kind!=='task'&&s.kind!=='home'){
+    var check=document.createElement('input');check.type='checkbox';check.className='atlas-step__check';check.checked=completed;check.setAttribute('aria-label','Marcar como visitado: '+s.name);check.onchange=function(){setDone(s.id,check.checked);item.classList.toggle('is-completed',check.checked);rail.querySelector('.atlas-dot').textContent=check.checked?'✓':stepNumber};top.appendChild(check);
+  }
   box.appendChild(top);
+  if(entry.leg){
+    var travel=document.createElement('div');travel.className='atlas-leg';
+    var label=document.createElement('div');label.className='atlas-leg__title';
+    var loc=entry.leg.from.name||'punto anterior';
+    label.textContent=(d.mode==='car'?'🚗':'🚉')+' Desde '+loc;
+    travel.appendChild(label);
+    if(entry.leg.how){var how=document.createElement('div');how.className='atlas-leg__hint';how.textContent=entry.leg.how+' · indicación del plan';travel.appendChild(how);}
+    var g=document.createElement('a');g.href=legLink(entry.leg.from,entry.leg.to,d.mode);g.textContent='🧭 Cómo llegar desde aquí ↗';g.target='_blank';g.rel='noopener';g.className='atlas-leg__link';travel.appendChild(g);
+    box.appendChild(travel);
+  }
   if(s.kind!=='move'&&s.kind!=='home'&&s.kind!=='task'&&!isFixed(s)&&!(d.n===1&&arrivalMode())){
     var editRow=document.createElement('div');editRow.className='atlas-step__edit';
-    editRow.appendChild(button('↑','atlas-step__move',function(){if(moveStop(d,s.id,-1))dayDetail(d.n);else alert('No puedo mover esta parada por encima de una reserva o traslado fijo.')})); 
-    editRow.appendChild(button('↓','atlas-step__move',function(){if(moveStop(d,s.id,1))dayDetail(d.n);else alert('No puedo mover esta parada a través de una reserva o traslado fijo.')})); 
-    editRow.appendChild(button(isSkipped(d,s.id)?'↩ Recuperar':'⏭ Saltar hoy','atlas-step__skip',function(){toggleSkipped(d,s.id);dayDetail(d.n)}));
+    editRow.appendChild(button('↑','atlas-step__move',function(){if(moveStop(d,s.id,-1))dayDetail(d.n);else alert('Esta parada no puede moverse a través de una reserva o traslado fijo.')}));
+    editRow.appendChild(button('↓','atlas-step__move',function(){if(moveStop(d,s.id,1))dayDetail(d.n);else alert('Esta parada no puede moverse a través de una reserva o traslado fijo.')}));
+    editRow.appendChild(button(entry.skipped?'↩ Recuperar':'⏭ Saltar hoy','atlas-step__skip',function(){toggleSkipped(d,s.id);dayDetail(d.n)}));
     if(s.id.indexOf('c:')===0){editRow.appendChild(button('✕ Quitar extra','atlas-step__remove',function(){if(confirm('Quitar esta parada añadida del día '+d.n+'?')){removeAdded(d,s.id);dayDetail(d.n)}}));}
     box.appendChild(editRow);
   }
   if(s.opt||s.optionalDay1){var optional=document.createElement('p');optional.className='atlas-step__opt';optional.textContent=s.optionalDay1?'Tienda opcional · sin compromiso':'Parada opcional';box.appendChild(optional);}
   if(s.mine||s.note){var note=document.createElement('p');note.className='atlas-step__note';note.textContent=s.mine||s.note;box.appendChild(note);}
   if(s.ticketUrl){var ticket=document.createElement('a');ticket.href=s.ticketUrl;ticket.target='_blank';ticket.rel='noopener';ticket.className='atlas-ticket-link';ticket.textContent='🎫 Consultar entradas y plazas';box.appendChild(ticket);}
-  var pt=pointFor(s);if(hasCoords(pt)){
+  var pt=journeyStop(s);if(hasCoords(pt)){
    var buttons=document.createElement('div');buttons.className='atlas-step__buttons';
-   buttons.appendChild(button('Ver en mapa','',function(){showDayMap(d.n);atlas.map.setView(pt.ll,14);var p=atlas.all.find(function(p){return p.id==='plan:'+s.id||p.id==='idea:'+s.id.replace(/^c:/,'')});if(p)atlas.select(p);}));
-   var a=document.createElement('a');a.textContent='Cómo llegar ↗';a.href=directions(pt,originFor(d),d.mode);a.target='_blank';a.rel='noopener';buttons.appendChild(a);box.appendChild(buttons);
+   buttons.appendChild(button('Ver en mapa','',function(){showDayMap(d.n);atlas.map.setView(pt.ll,14);var p=atlas.all.find(function(p){return p.id==='plan:'+s.id||p.id==='idea:'+s.id.replace(/^c:/,'')});if(p)atlas.select(p)}));
+   box.appendChild(buttons);
   }
   item.appendChild(box);list.appendChild(item);
  });root.appendChild(list);
