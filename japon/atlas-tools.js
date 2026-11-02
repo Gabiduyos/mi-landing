@@ -1,0 +1,94 @@
+(function(){
+'use strict';
+var atlas=window.JP_ATLAS, trip=window.TRIP, places=window.PLACES||[];
+if(!atlas||!trip)return;
+var $=function(id){return document.getElementById(id)};
+var CHAT_KEY='jp26:atlas-chat-v1', FX_KEY='jp26:fx-eur-jpy';
+var messages=[],mode='local',accessCode='',rate=null,rateDate='',rateCached=false,isSending=false,chatReady=false;
+function esc(x){return String(x==null?'':x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;':'&quot;',"'":'&#39;'}[c]})}
+function norm(x){return String(x||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
+function getJSON(key,fb){try{var v=JSON.parse(localStorage.getItem(key)||'null');return v===null?fb:v}catch(e){return fb}}
+function saveJSON(key,v){try{localStorage.setItem(key,JSON.stringify(v));return true}catch(e){return false}}
+function node(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e}
+function button(txt,cls,action){var e=node('button',cls,txt);e.type='button';e.onclick=action;return e}
+function rendered(){return atlas.state.tab==='asistente'||atlas.state.tab==='conversor'}
+function preparePanel(){var el=$('screen');el.classList.add('atlas-tools-open');$('screenbody').innerHTML='';return $('screenbody')}
+function addMsg(role,content,store){var entry={role:role,text:String(content||'').slice(0,1600)};messages.push(entry);if(messages.length>45)messages=messages.slice(-45);if(store!==false)saveJSON(CHAT_KEY,messages);return entry}
+function addBubble(parent,role,content){parent.appendChild(node('div','atlas-bubble atlas-bubble--'+role,content))}
+function chatHistory(){var target=$('atlas-chat-messages');if(!target)return;target.innerHTML='';messages.forEach(function(m){addBubble(target,m.role,m.text)});target.scrollTop=target.scrollHeight}
+function updateStatus(){var e=$('atlas-chat-status');if(!e)return;e.innerHTML='';e.appendChild(node('span','',mode==='api'?'🟢 ChatGPT conectado':'🧭 Guía del itinerario activa'));e.appendChild(node('strong','',mode==='api'?'IA privada':'Sin API de OpenAI'))}
+function renderChat(){
+ $('screentitle').textContent='Asistente de viaje';var b=preparePanel(),wrap=node('div','atlas-tools');b.appendChild(wrap);
+ wrap.appendChild(node('p','atlas-tools__intro','Escribe aquí sin salir de la app. Puedes explorar tus 15 días, buscar tiendas por ciudad y proponer cambios que solo se guardan cuando tú los confirmas.'));
+ var status=node('div','atlas-chat-status');status.id='atlas-chat-status';wrap.appendChild(status);updateStatus();
+ var setup=node('details','atlas-chat-setup');setup.innerHTML='<summary>¿Cómo activo ChatGPT de OpenAI?</summary><p>Necesita una clave de API guardada en el servidor de Vercel y un código privado de acceso. ChatGPT Plus no incluye esa API. Mientras tanto, puedes usar esta guía local dentro de la app.</p><label for="atlas-access-code">Código privado (solo si has configurado el servidor)</label><input id="atlas-access-code" type="password" autocomplete="off" placeholder="Código de acceso"><button id="atlas-access-connect" type="button">Conectar ChatGPT</button><p>El código no se guarda en este dispositivo; la clave de OpenAI nunca debe escribirse aquí.</p>';wrap.appendChild(setup);
+ setup.querySelector('#atlas-access-connect').onclick=function(){accessCode=$('atlas-access-code').value.trim();if(!accessCode)return;checkApi(true)};
+ var feed=node('div','atlas-chat-messages');feed.id='atlas-chat-messages';feed.setAttribute('aria-live','polite');wrap.appendChild(feed);
+ if(!messages.length)addMsg('assistant','¡Hola! 👋 Soy la guía de tu viaje. Puedo buscar lugares en Osaka, Kioto o Tokio, mostrarte tus días y proponerte añadir o saltar paradas. Para preguntas abiertas con ChatGPT hay que activar la conexión privada.');chatHistory();
+ var suggestions=node('div','atlas-chat-suggestions');wrap.appendChild(suggestions);
+ ['¿Qué tengo el 17 de noviembre?','Anillos con monedas en Kioto','Tiendas Sony en Tokio','¿Cómo voy desde mi Airbnb?'].forEach(function(t){suggestions.appendChild(button(t,'',function(){send(t)}))});
+ var form=node('form','atlas-chat-form');form.innerHTML='<textarea id="atlas-chat-input" rows="2" maxlength="700" aria-label="Pregunta sobre tu viaje" placeholder="Ej.: añade Guf Kyoto al día 5..."></textarea><button id="atlas-chat-send" type="submit">Enviar</button>';form.onsubmit=function(e){e.preventDefault();var field=$('atlas-chat-input'),v=field.value.trim();field.value='';send(v)};wrap.appendChild(form);
+ var bottom=node('p','atlas-fx__warning','Los cambios se guardan en este móvil. Las reservas se mantienen protegidas; consulta horarios y transporte real antes de salir.');wrap.appendChild(bottom);
+ checkApi(false);
+}
+function renderFx(){
+ $('screentitle').textContent='Conversor € / ¥';var target=preparePanel(),wrap=node('div','atlas-tools');target.appendChild(wrap);
+ wrap.appendChild(node('p','atlas-tools__intro','Consulta cuánto cuesta una compra en yenes o euros. Cotización oficial de referencia, no precio garantizado en cajero o tarjeta.'));
+ var headline=node('div','atlas-fx__rate');
+ headline.innerHTML='<span class="atlas-fx__headline">CAMBIO DE REFERENCIA</span><strong class="atlas-fx__value" id="atlas-fx-rate">Sin cotización</strong><span class="atlas-fx__date" id="atlas-fx-date">Buscando la tasa publicada más reciente...</span>';wrap.appendChild(headline);
+ function pair(title,currency,id,initial){var r=node('div','atlas-fx__pair'),left=node('div');left.appendChild(node('span','',title));var inp=node('input');inp.type='number';inp.id=id;inp.inputMode='decimal';inp.min='0';inp.step='any';inp.value=initial;inp.setAttribute('aria-label',title);left.appendChild(inp);r.appendChild(left);r.appendChild(node('strong','atlas-fx__badge',currency));return r}
+ wrap.appendChild(pair('EUR · Euros','€','atlas-eur','100'));
+ wrap.appendChild(node('div','', '⇅ Cambia cualquiera de las dos cantidades'));
+ wrap.appendChild(pair('JPY · Yenes','¥','atlas-jpy',''));
+ var eur=$('atlas-eur'),jpy=$('atlas-jpy');
+ function convert(side){if(!rate||!Number.isFinite(rate))return;var n=Number(side==='eur'?eur.value:jpy.value);if(!Number.isFinite(n)||n<0)return;if(side==='eur')jpy.value=(n*rate).toFixed(0);else eur.value=(n/rate).toFixed(2)}
+ eur.oninput=function(){convert('eur')};jpy.oninput=function(){convert('jpy')};
+ var quick=node('div','atlas-fx__quick');wrap.appendChild(quick);
+ [1000,5000,10000,30000].forEach(function(amt){quick.appendChild(button(amt.toLocaleString('es-ES')+' ¥','',function(){jpy.value=String(amt);convert('jpy')}))});
+ wrap.appendChild(button('↻ Actualizar tipo de cambio','atlas-fx__refresh',function(){fetchRate(true)}));
+ var foot=node('p','atlas-fx__warning');foot.innerHTML='Fuente: <a target="_blank" rel="noopener" href="https://frankfurter.dev/">Frankfurter</a> (tipos de bancos centrales, actualizados normalmente cada día laborable). Los bancos aplican su propio cambio y comisiones.';wrap.appendChild(foot);
+ updateRateUI();if(!rate)fetchRate(false);
+}
+function updateRateUI(){var val=$('atlas-fx-rate'),date=$('atlas-fx-date');if(!val||!date)return;if(rate){val.textContent='1 € = '+rate.toLocaleString('es-ES',{maximumFractionDigits:3})+' ¥';date.textContent='Cotización: '+rateDate+(rateCached?' · guardada (puede no estar actualizada)':' · última publicada');var a=$('atlas-eur'),b=$('atlas-jpy');if(a&&b&&a.value!==''&&!b.value)b.value=(Number(a.value)*rate).toFixed(0)}else{val.textContent='No hay cotización disponible';date.textContent='Conéctate a Internet para obtener una tasa real. No se usará un valor inventado.'}}
+function fetchRate(force){if(!force&&rate&&!rateCached)return Promise.resolve();var b=document.querySelector('.atlas-fx__refresh');if(b)b.disabled=true;return fetch('https://api.frankfurter.dev/v2/rate/EUR/JPY',{cache:'no-store'}).then(function(r){if(!r.ok)throw Error('FX '+r.status);return r.json()}).then(function(d){if(!Number.isFinite(Number(d.rate))||Number(d.rate)<=0||!/^20\d\d-\d\d-\d\d$/.test(d.date))throw Error('Tasa inválida');rate=Number(d.rate);rateDate=d.date;rateCached=false;saveJSON(FX_KEY,{rate:rate,date:rateDate,savedAt:Date.now()});updateRateUI()}).catch(function(){rateCached=true;updateRateUI()}).finally(function(){if(b)b.disabled=false})}
+function initRate(){var x=getJSON(FX_KEY,null);if(x&&Number.isFinite(Number(x.rate))&&Number(x.rate)>0){rate=Number(x.rate);rateDate=x.date;rateCached=true}}
+function getDayNumber(q){var n=norm(q),m=n.match(/\bdia\s*(\d{1,2})\b/);if(m)return +m[1]>=1&&+m[1]<=15?+m[1]:null;var date=n.match(/\b(\d{1,2})\s*(?:de\s*)?(?:noviembre|nov)\b/);if(date){var actual=trip.days.find(function(d){return Number(d.date.slice(8))===Number(date[1])});return actual&&actual.n||null}return null}
+function getCity(q){var n=norm(q);if(/kioto|kyoto/.test(n))return 'kyoto';if(/osaka|namba|dotonbori/.test(n))return 'osaka';if(/tokio|tokyo|shinjuku|asakusa|akihabara|harajuku/.test(n))return 'tokyo';return null}
+function getCategory(q){var n=norm(q);if(/anillo|moneda|hiseki|ragtime|taptap|enne/.test(n))return 'anillos';if(/gimnasio|gym|fitness|lyft|cronos|guf|graniph/.test(n))return 'gym';if(/fotograf|objetiv|sony|camara|lente/.test(n))return 'foto';if(/reloj|seiko|casio|citizen/.test(n))return 'relojes';if(/ropa|vintage|segunda mano|2nd street/.test(n))return 'ropa';if(/pokemon|anime|figura|bookoff|retro|mandarake/.test(n))return 'figuras';if(/templo|santuario|shrine/.test(n))return 'templos';if(/jdm|coches/.test(n))return 'jdm';return null}
+function zone(p){var ll=p.ll;if(!ll)return null;if(ll[0]>35.25&&ll[1]>139.25)return 'tokyo';if(ll[0]>34.89&&ll[0]<35.35&&ll[1]>135.4&&ll[1]<136.2)return 'kyoto';if(ll[0]>34.4&&ll[0]<34.91&&ll[1]>135&&ll[1]<135.75)return 'osaka';return null}
+function getMatches(query,day){var city=getCity(query),cat=getCategory(query),n=norm(query);var words=n.replace(/(?:anade|agrega|pon|añade|al|dia|me|un|una|por|para|cerca|en|de|los|las|el|tienda|tiendas|ruta|quiero|ir|ver|visitar|noviembre)\b/g,'').split(/\s+/).filter(function(x){return x.length>=3});
+ var ps=places.filter(function(p){if(city&&zone(p)!==city)return false;if(cat&&p.cat!==cat&&!(cat==='templos'&&p.cat==='cultura'))return false;if(day&&p.fit&&p.fit.length&&p.fit.indexOf(day)<0)return false;return true});
+ return ps.map(function(p){var hay=norm(p.name+' '+(p.q||'')),sc=(p.priority?2:0)+(p.fit&&day&&p.fit.indexOf(day)>=0?4:0);words.forEach(function(w){if(hay.indexOf(w)>=0)sc+=3});return {place:p,score:sc}}).sort(function(a,b){return b.score-a.score}).map(function(x){return x.place}).slice(0,6)}
+function secureStop(stop){return stop.kind==='home'||stop.kind==='move'||stop.kind==='task'||!!stop.lodge||/reserva|vuelo|shinkansen|check.?in|check.?out|aeropuerto|devolv|alojamiento/i.test(stop.name||'')}
+function offerProposal(text,details,action){
+ var feed=$('atlas-chat-messages');if(!feed)return;var box=node('div','atlas-proposal'),h=node('strong','',text);box.appendChild(h);box.appendChild(node('p','',details));
+ var btns=node('div','atlas-proposal__actions');btns.appendChild(button('✓ Confirmar cambio','',function(){if(!action()){addMsg('assistant','No se pudo guardar el cambio. He dejado el itinerario intacto.');chatHistory();box.remove();return}addMsg('assistant','✓ Cambio guardado en este móvil. Revisa Mi viaje para ver el itinerario actualizado.');chatHistory();box.remove()}));btns.appendChild(button('Cancelar','secondary',function(){box.remove()}));box.appendChild(btns);feed.appendChild(box);feed.scrollTop=feed.scrollHeight;
+}
+function addPlace(day,p){var d=trip.days[day-1];if(!d)return false;if(p.fit&&p.fit.length&&p.fit.indexOf(day)<0)return false;var plan=getJSON('jp26:plan',{});if(!plan.order)plan.order={};var ids=Array.isArray(plan.order[day])?plan.order[day].slice():d.stops.map(function(s){return s.id});if(ids.indexOf('c:'+p.id)>=0)return false;
+ var near=0,best=Infinity;if(p.ll){ids.forEach(function(id,i){var s=d.stops.find(function(s){return s.id===id})||places.find(function(x){return id==='c:'+x.id});if(s&&s.ll){var dis=Math.hypot((p.ll[0]-s.ll[0])*111,(p.ll[1]-s.ll[1])*90);if(dis<best){best=dis;near=i+1}}})}
+ if(best>20)return false;ids.splice(near,0,'c:'+p.id);plan.order[day]=ids;return saveJSON('jp26:plan',plan)}
+function skipStop(day,stop){if(secureStop(stop))return false;var o=getJSON('jp26:atlas-omit',{});var ids=o[day]||[];if(ids.indexOf(stop.id)<0)ids.push(stop.id);o[day]=ids;return saveJSON('jp26:atlas-omit',o)}
+function localReply(q){
+ var n=norm(q),day=getDayNumber(q),cat=getCategory(q),city=getCity(q);
+ if(/cuanto|cuesta|yen|euros|cambio/.test(n)&&(/\byen\b|\beuro\b|moneda|convert/.test(n))){atlas.setTab('conversor');return 'He abierto el conversor EUR ↔ JPY. Puedes introducir yenes o euros y ver la cotización de referencia.'}
+ if((/quita|elimina|salta|no quiero/.test(n))&&day){var d=trip.days[day-1],candidates=d.stops.filter(function(s){return !secureStop(s)&&norm(q).includes(norm(s.name).slice(0,9))});if(candidates.length===1){var stop=candidates[0];offerProposal('Saltar «'+stop.name+'» del día '+day,'Se conservará el plan original. Esta parada no aparecerá en la ruta activa.',function(){return skipStop(day,stop)});return 'Te he preparado el cambio para confirmarlo. No tocaré reservas ni traslados.'}return 'Para quitar una visita del día '+day+', escríbeme el nombre exacto de la parada: por ejemplo, «saltar [nombre del lugar] del día '+day+'». Las reservas están protegidas.'}
+ if(/anade|agrega|pon|añade/.test(n)&&day){var found=getMatches(q,day);if(found.length===1||found.length&&/hiseki|guf|lyft|ragtime|enne|taptap|bookoff|graniph/.test(n)){var p=found[0];offerProposal('Añadir «'+p.name+'» al día '+day,'Parada opcional; se insertará cerca de otra visita del día. Comprueba tiempo y horarios.',function(){return addPlace(day,p)});return 'He preparado esta propuesta. Confirma el cambio si te interesa.'}if(found.length){showChoices(found,day);return 'Estas son las opciones que encuentro para el día '+day+'. Elige la que quieras añadir.'}return 'No he encontrado una opción compatible con el día '+day+'. No mezclaré ciudades ni cambiaré reservas.'}
+ if(day){var d=trip.days[day-1],orig=d.stops.find(function(s){return s.kind==='home'&&s.lodge});var stops=d.stops.filter(function(s){return !s.opt&&s.kind!=='task'}).slice(0,7);return 'Día '+day+' · '+d.date+' · '+d.title+'.\nSalida: '+(orig?(trip.lodging[orig.lodge]||{}).label:'consulta el traslado previsto')+'.\n'+stops.map(function(s){return (s.t?s.t+' ':'')+s.name}).join('\n')+'\n\nEn Mi viaje puedes abrir el día completo y cada ruta en Google Maps.'}
+ if(cat||city){var list=getMatches(q,null);if(!list.length)return 'No encuentro lugares de esa categoría en esa ciudad con los datos actuales. Prueba otro filtro o ciudad.';showChoices(list,null);return 'He encontrado estas ideas '+(city?('en '+({tokyo:'Tokio',kyoto:'Kioto',osaka:'Osaka'}[city])):'para tu viaje')+'. Puedes abrir la ficha o proponer añadirlas a un día compatible.'}
+ return 'Puedo consultar los 15 días, buscar anillos, templos, ropa de anime, cámaras, relojes y BOOKOFF por ciudad, y preparar cambios con confirmación. Prueba «¿Qué tengo el 17 de noviembre?» o «añade Guf Kyoto al día 5». Para preguntas abiertas con ChatGPT, hay que configurar su API privada.';
+}
+function showChoices(items,day){
+ var feed=$('atlas-chat-messages');if(!feed)return;var wrap=node('div','atlas-proposal');wrap.appendChild(node('strong','','Opciones del itinerario'));items.slice(0,5).forEach(function(p){var row=node('div','atlas-proposal__actions');row.appendChild(button('📍 '+p.name,'secondary',function(){atlas.state.city='all';$('city').value='all';var pick=atlas.all.find(function(x){return x.id==='idea:'+p.id});if(pick){atlas.map.setView(p.ll,15);atlas.select(pick);atlas.setTab('mapa')}}));if(day){row.appendChild(button('＋ Día '+day,'',function(){offerProposal('Añadir '+p.name,'Día '+day+', en tu itinerario local.',function(){return addPlace(day,p)})}))}wrap.appendChild(row)});feed.appendChild(wrap);feed.scrollTop=feed.scrollHeight
+}
+function checkApi(userInitiated){return fetch('/api/japan-assistant',{method:'GET',cache:'no-store'}).then(function(r){if(!r.ok)throw Error('No API');return r.json()}).then(function(j){if(!j.configured){mode='local';if(userInitiated)addMsg('assistant','ChatGPT aún no está configurado en el servidor. Puedes seguir utilizando la guía local.');}else if(accessCode){mode='api';if(userInitiated)addMsg('assistant','Código introducido. Se comprobará al enviar la próxima pregunta.')}else{mode='local'}updateStatus();if(userInitiated)chatHistory()}).catch(function(){mode='local';updateStatus();if(userInitiated){addMsg('assistant','El servidor de ChatGPT no está disponible. La guía local sigue funcionando.');chatHistory()}})}
+function apiCall(question){var context={days:trip.days.map(function(d){return {day:d.n,date:d.date,city:d.phase,title:d.title,stops:d.stops.filter(function(s){return s.kind!=='home'&&s.kind!=='task'&&s.kind!=='move'&&!s.far}).slice(0,18).map(function(s){return {name:s.name,time:s.t,optional:!!s.opt}})}}),places:places.slice(0,130).map(function(p){return {id:p.id,name:p.name,cat:p.cat,area:p.area,fit:p.fit}})};var history=messages.slice(-8).map(function(m){return {role:m.role,content:m.text}});return fetch('/api/japan-assistant',{method:'POST',headers:{'Content-Type':'application/json','X-Atlas-Code':accessCode},body:JSON.stringify({message:question,history:history,context:context})}).then(function(r){return r.json().then(function(j){if(!r.ok)throw Error(j.error||'Error del chat');return j})}).then(function(j){if(!j.reply)throw Error('Respuesta vacía');return j.reply})}
+function send(q){
+ q=String(q||'').trim().slice(0,700);if(!q||isSending)return;addMsg('user',q);chatHistory();var done=function(answer){addMsg('assistant',answer);chatHistory()};if(mode!=='api'){done(localReply(q));return}
+ isSending=true;var b=$('atlas-chat-send');if(b)b.disabled=true;
+ apiCall(q).then(done).catch(function(e){mode='local';updateStatus();done('No pude usar la conexión de OpenAI ('+String(e.message||'error')+'). Vuelvo a la guía local.\n\n'+localReply(q))}).finally(function(){isSending=false;if(b)b.disabled=false});
+}
+messages=getJSON(CHAT_KEY,[]);if(!Array.isArray(messages))messages=[];
+messages=messages.filter(function(m){return m&&['user','assistant'].includes(m.role)&&typeof m.text==='string'}).slice(-45);
+initRate();window.jpAtlasToolsRender=function(){if(atlas.state.tab==='asistente')renderChat();else if(atlas.state.tab==='conversor')renderFx()};
+window.jpAtlasToolsTest={getDayNumber:getDayNumber,getCity:getCity,getCategory:getCategory,zone:zone,getMatches:getMatches,localReply:localReply,addPlace:addPlace,skipStop:skipStop,getRate:function(){return rate},saveCurrency:function(r,date){rate=r;rateDate=date;rateCached=true;saveJSON(FX_KEY,{rate:r,date:date})}};
+})();
