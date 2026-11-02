@@ -91,10 +91,16 @@ window.TRIP = {
           note: 'Cartel de Glico desde el puente Ebisubashi, cangrejo gigante y takoyaki.',
           tips: ['Al lado: Hōzenji Yokochō, callejón empedrado con farolillos y una estatua cubierta de musgo.'],
           photo: { when: 'hora azul, 16:50–17:30', tip: 'Desde el puente Ebisubashi, con el cartel de Glico y su reflejo en el canal. Luego, Hōzenji Yokochō: farolillos y piedra mojada.', lens: '24–35 mm; ISO 1600–3200 a mano con el estabilizador. Para Hōzenji, un fijo luminoso (35 mm f/1.8).' }
-        },        {
-          id: 'gm-bookoff-super-bazaar-25gou-y', t: '', kind: 'shop', dur: 45, opt: true, name: 'BOOKOFF SUPER BAZAAR 25gou Yao Nagahata Store',
-          q: 'BOOKOFF SUPER BAZAAR 25gou Yao Nagahata Store', ll: [34.61217, 135.59657], how: 'Tren · ≈11 km (lejos del centro)',
-          note: 'De tu lista «Compras · Segunda mano Osaka». Extra en las afueras (a 9 km de Shinsekai y torre Tsūtenkaku). Solo si os sobra tiempo al final del día.'
+        },
+        {
+          id: 'gm-gl-nta-osaka-shinsaibashi-an', t: '', kind: 'shop', dur: 30, name: 'glänta osaka shinsaibashi (anillos)',
+          q: 'glänta osaka shinsaibashi (anillos)', ll: [34.66972, 135.50138], how: 'A pie · ≈2 min',
+          note: '★ De tu lista «Quiero ir». Cerca de Dōtonbori de noche (103 m).'
+        },
+        {
+          id: 'gm-bookoff-plus-namba-ebisubash', t: '', kind: 'shop', dur: 30, opt: true, name: 'BOOKOFF PLUS Namba Ebisubashi Store',
+          q: 'BOOKOFF PLUS Namba Ebisubashi Store', ll: [34.66781, 135.50141], how: 'A pie · ≈3 min',
+          note: 'De tu lista «Compras». Cerca de Dōtonbori de noche (110 m).'
         },
         {
           id: 'tombori', t: '20:00', kind: 'sight', dur: 30, name: 'Barco por el canal de Dōtonbori', ja: 'とんぼりリバークルーズ（太左衛門橋船着場）',
@@ -102,6 +108,11 @@ window.TRIP = {
           note: 'Tombori River Cruise: 20 min bajo los puentes, con el cartel de Glico y los neones. 2.000 ¥ por persona. Salidas cada media hora; las de noche, de 17:00 a 21:00. Embarque en el muelle Tazaemonbashi, delante del Don Quijote con la noria.',
           tips: ['Las entradas son con hora y por la noche se agotan: comprarlas al pasar por la taquilla del muelle después del check-in, o antes online (Klook y similares, ≈10 % más barato).', 'Si el jet lag pesa, se puede hacer el día 2 por la noche: el muelle está a 5 min de casa.'],
           photo: { when: '20:00, de noche', tip: 'Desde el barco, los carteles reflejados en el agua y la gente saludando desde el puente Ebisubashi.', lens: '24–35 mm con el diafragma abierto e ISO 3200–6400: el barco se mueve, mejor 1/125 s o más rápido.' }
+        },
+        {
+          id: 'gm-bookoff-super-bazaar-25gou-y', t: '', kind: 'shop', dur: 45, opt: true, name: 'BOOKOFF SUPER BAZAAR 25gou Yao Nagahata Store',
+          q: 'BOOKOFF SUPER BAZAAR 25gou Yao Nagahata Store', ll: [34.61217, 135.59657], how: 'Tren · ≈11 km (lejos del centro)',
+          note: 'De tu lista «Compras · Segunda mano Osaka». Extra en las afueras (a 9 km de Shinsekai y torre Tsūtenkaku). Solo si os sobra tiempo al final del día.'
         },
         {
           id: 'gm-hard-off-yaominami-store', t: '', kind: 'shop', dur: 45, opt: true, name: 'Hard Off Yaominami store',
@@ -117,18 +128,7 @@ window.TRIP = {
           id: 'gm-hard-off-sakai-shinkanaoka', t: '', kind: 'shop', dur: 45, opt: true, name: 'Hard Off Sakai Shinkanaoka',
           q: 'Hard Off Sakai Shinkanaoka', ll: [34.56381, 135.51373], how: 'Tren · ≈3 km (lejos del centro)',
           note: 'De tu lista «Segunda mano Osaka». Extra en las afueras (a 10 km de Shinsekai y torre Tsūtenkaku). Solo si os sobra tiempo al final del día.'
-        },
-
-        {
-          id: 'gm-gl-nta-osaka-shinsaibashi-an', t: '', kind: 'shop', dur: 30, name: 'glänta osaka shinsaibashi (anillos)',
-          q: 'glänta osaka shinsaibashi (anillos)', ll: [34.66972, 135.50138], how: 'A pie · ≈2 min',
-          note: '★ De tu lista «Quiero ir». Cerca de Dōtonbori de noche (103 m).'
-        },
-        {
-          id: 'gm-bookoff-plus-namba-ebisubash', t: '', kind: 'shop', dur: 30, opt: true, name: 'BOOKOFF PLUS Namba Ebisubashi Store',
-          q: 'BOOKOFF PLUS Namba Ebisubashi Store', ll: [34.66781, 135.50141], how: 'A pie · ≈3 min',
-          note: 'De tu lista «Compras». Cerca de Dōtonbori de noche (110 m).'
-        },
+        }
       ]
     },
 
@@ -347,7 +347,8 @@ window.TRIP = {
           id: 'shinumeda', t: '18:30', kind: 'food', dur: 75, name: 'Shin-Umeda Shokudōgai', ja: '新梅田食道街',
           q: 'Shin Umeda Shokudogai', ll: [34.7024, 135.4987], approx: true, how: 'A pie · ≈10 min',
           note: 'Galería de bares y restaurantes bajo las vías del tren. Okonomiyaki, kushikatsu, izakayas.'
-        },        {
+        },
+        {
           id: 'gm-matsumoto-camera', t: '', kind: 'shop', dur: 30, opt: true, name: 'Matsumoto Camera',
           q: 'Matsumoto Camera', ll: [34.69915, 135.49769], how: 'A pie · ≈5 min',
           note: 'De tu lista «Foto vintage». Cerca de Shin-Umeda Shokudōgai (372 m).'
