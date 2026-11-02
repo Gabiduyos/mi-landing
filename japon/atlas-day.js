@@ -28,11 +28,13 @@ function effectiveStops(d){
     if(stop.id==='d1-home'){
       out.push(around);
       out.push(Object.assign({},stop,{t:'16:00',note:'Check-in desde las 16:00. Hasta entonces podéis pasear cerca con vuestro equipaje ligero; no se presupone acceso anticipado al apartamento.'}));
-      out.push({id:'atlas-rest-arrival',kind:'task',t:'16:30',dur:60,name:'Instalarse, ducha y descanso',note:'Tiempo libre para recuperar fuerzas. Sin otras visitas obligatorias.'});
+      out.push({id:'atlas-arrival-refresh',kind:'task',t:'16:00–16:40 · orientativo',dur:30,name:'Dejar maletas y refrescarse',note:'No es una siesta obligatoria: procurad manteneros activos hasta la noche para adaptaros al horario local.'});
+      out.push({id:'atlas-fitness-namba-day1',kind:'shop',t:'17:00 · opcional',dur:25,name:'Fitness Shop Namba · accesorios gym',q:'Fitness Shop Namba Cross Hotel Osaka 2-5-15 Shinsaibashisuji',ll:[34.6698,135.5011],approx:true,optionalDay1:true,note:'Tienda de entrenamiento en Cross Hotel Osaka, 2F. Para correas, cinturones y otros accesorios (stock variable); no es tienda de anime. Los domingos cierra a las 19:00, por eso va antes de la cena.'});
+      out.push({id:'atlas-guf-dotonbori-day1',kind:'shop',t:'17:40 · opcional',dur:25,name:'Guf Dōtonbori · ropa de anime',q:'Guf Dotonbori 1-7-5 Dotonbori Osaka',ll:[34.6680,135.5028],approx:true,optionalDay1:true,note:'Camisetas y ropa de anime, no necesariamente tejido técnico de gimnasio. Abre hasta tarde según el comercio; muy cerca del canal, se visita si os apetece.'});
     }else if(stop.id==='dotonbori'){
-      out.push(Object.assign({},stop,{t:'18:30',dur:75,note:'Paseo por los neones y cena a vuestro ritmo. Si vais cansados, podéis regresar al alojamiento.'}));
+      out.push(Object.assign({},stop,{t:'18:15',dur:95,note:'Paseo, luz de neones y cena a vuestro ritmo por Dōtonbori y Hōzenji. Si tenéis el barco a las 20:00, terminad la cena con margen para llegar al muelle.'}));
     }else if(stop.id==='tombori'){
-      out.push(Object.assign({},stop,{t:'19:30–20:30 · según plazas',dur:20,arrivalExtra:true,note:'Crucero opcional de unos 20 minutos por Dōtonbori. Se pueden comprar entradas para el mismo día si hay plazas: adultos 2.000 ¥ (precio publicado). Salidas anunciadas hasta las 21:00, revisad el horario y disponibilidad.',ticketUrl:'https://cloud-pass.jp/project/BOAT'}));
+      out.push(Object.assign({},stop,{t:'20:00 aprox. · si hay plazas',dur:20,arrivalExtra:true,note:'Crucero opcional de unos 20 minutos por Dōtonbori. Se pueden comprar entradas para el mismo día si hay plazas: adultos 2.000 ¥ (precio publicado). Salidas anunciadas hasta las 21:00, revisad el horario y disponibilidad.',ticketUrl:'https://cloud-pass.jp/get/tombori-rivercruise'}));
     }else out.push(stop);
     return out;
   },[]);
