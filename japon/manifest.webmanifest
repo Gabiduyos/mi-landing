@@ -1,16 +1,25 @@
 {
-  "name": "Ruta Japón 2026",
+  "name": "旅 · Japón 2026",
   "short_name": "Japón 2026",
   "description": "Itinerario del viaje a Japón (15–29 nov 2026) con mapas, rutas y reservas.",
   "lang": "es",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#eceef2",
-  "theme_color": "#1b2233",
+  "background_color": "#18243A",
+  "theme_color": "#18243A",
   "icons": [
-    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" },
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }

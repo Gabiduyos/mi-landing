@@ -1,5 +1,5 @@
 // Service worker: la app funciona sin conexión y guarda los mapas ya vistos.
-var VERSION = 'ruta-japon-v18';
+var VERSION = 'ruta-japon-v21-icono-tabi';
 var SHELL = [
   './',
   'index.html',
@@ -11,6 +11,7 @@ var SHELL = [
   'manifest.webmanifest',
   'icon.svg',
   'icon-192.png',
+  'icon-512.png',
   'vendor/leaflet/leaflet.js',
   'vendor/leaflet/leaflet.css'
 ];

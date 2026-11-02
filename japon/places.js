@@ -3,6 +3,9 @@
 // approx:true = pin aproximado (la navegación usa el nombre en Google Maps).
 window.PLACE_CATS = {
   foto: { name: 'Fotografía', kind: 'shop' },
+  relojes: { name: 'Relojes japoneses', kind: 'shop' },
+  jdm: { name: 'Coches JDM', kind: 'sight' },
+  amuletos: { name: 'Santuarios y amuletos', kind: 'sight' },
   ropa: { name: 'Ropa de 2ª mano', kind: 'shop' },
   figuras: { name: 'Figuras y anime', kind: 'shop' },
   retro: { name: 'Retro y videojuegos', kind: 'shop' },
@@ -22,6 +25,9 @@ window.NEARBY = [
   { n: 'Mandarake', q: 'まんだらけ' },
   { n: 'Surugaya', q: '駿河屋' },
   { n: 'Cámaras usadas', q: '中古カメラ店' },
+  { n: 'Seiko y Citizen usados', q: 'セイコー シチズン 中古時計' },
+  { n: 'Cámaras analógicas', q: 'フィルムカメラ 中古' },
+  { n: 'Ropa de marca usada', q: 'ブランド古着' },
   { n: 'Gasolinera', q: 'ガソリンスタンド', car: true },
   { n: 'Parking', q: 'コインパーキング', car: true },
   { n: 'Onsen', q: '日帰り温泉' },
@@ -29,6 +35,18 @@ window.NEARBY = [
 ];
 
 window.PLACES = [
+  // ── Selección personalizada 2.0 (opcionales, nunca altera reservas) ──
+  {"id": "v2-mapcamera", "cat": "foto", "area": "Tokio · Shinjuku", "name": "Map Camera · Sony E y cámaras usadas", "q": "Map Camera Shinjuku", "ll": [35.6908, 139.6987], "approx": true, "fit": [9], "note": "★ Recomendado para tus intereses. Especialista en objetivos Sony E nuevos y usados; llevar la A7 IV para probar compatibilidad. Revisar precios y garantía. Mejor antes de las 19:00.", "priority": true},
+  {"id": "v2-fujiya", "cat": "foto", "area": "Tokio · Nakano", "name": "Fujiya Camera · Sony y analógicas", "q": "Fujiya Camera Nakano Tokyo", "ll": [35.7068, 139.6652], "approx": true, "fit": [14], "note": "★ Recomendado para tus intereses. Objetivos Sony E, cámaras analógicas y artículos usados. Combinar con Nakano Broadway y comparar estado y garantía.", "priority": true},
+  {"id": "v2-watch-machida", "cat": "relojes", "area": "Tokio · Machida", "name": "BOOKOFF SUPER BAZAAR Machida · relojes y ropa", "q": "BOOKOFF SUPER BAZAAR Machida Chuo-dori apparel", "ll": [35.5445, 139.4482], "approx": true, "fit": [12], "note": "★ Recomendado para tus intereses. Prioridad: Seiko, Casio y Citizen económicos, ropa de marca y accesorios. Inventario cambiante, no se garantiza stock. Hay varios locales/secciones; comprobar dirección.", "priority": true, "car": true},
+  {"id": "v2-watch-akasaka", "cat": "relojes", "area": "Tokio · Akasaka", "name": "Tokyo Watch Market · relojes usados", "q": "TOKYO WATCH MARKET Akasaka", "ll": [35.6748, 139.7367], "approx": true, "fit": [9], "note": "★ Recomendado para tus intereses. Relojería de ocasión. Interesa especialmente para Seiko/Citizen/Casio; comprobar horario en la web o redes oficiales antes de desplazarse.", "priority": true},
+  {"id": "v2-nakano-watch", "cat": "relojes", "area": "Tokio · Nakano", "name": "Nakano Broadway · galerías de relojes", "q": "Nakano Broadway", "ll": [35.709, 139.6658], "approx": true, "fit": [14], "note": "★ Recomendado para tus intereses. Comparar relojes de varias tiendas; algunas se centran en lujo y no encajan con presupuesto económico. Se combina con Fujiya.", "priority": true},
+  {"id": "v2-koenji-ropa", "cat": "ropa", "area": "Tokio · Kōenji", "name": "Kōenji · ropa vintage de marca", "q": "Koenji Shopping Street Tokyo", "ll": [35.704, 139.65], "approx": true, "fit": [14], "note": "★ Recomendado para tus intereses. Tiendas de ropa vintage y marcas usadas; comparar estado y precio con 2nd Street/TreFacStyle. Visita solo si queda margen tras Nakano.", "priority": true},
+  {"id": "v2-jdm-daikoku", "cat": "jdm", "area": "Yokohama · autopista", "name": "Daikoku PA · coches JDM", "q": "Daikoku Parking Area Yokohama", "ll": [35.461, 139.678], "approx": true, "fit": [13], "note": "★ Recomendado para tus intereses. Encuentro informal: NO hay quedada garantizada; accesible únicamente desde autopista en coche y puede cerrar por seguridad/policía. Comprobar permisos de conducción y plan B.", "priority": true, "car": true},
+  {"id": "v2-amuleto-ichigaya", "cat": "amuletos", "area": "Tokio · Ichigaya", "name": "Ichigaya Kameoka Hachimangū · mascotas", "q": "市谷亀岡八幡宮", "ll": [35.693, 139.735], "approx": true, "fit": [9], "note": "★ Recomendado para tus intereses. Santuario asociado con mascotas. Comprobar días y disponibilidad de omamori para perros antes de ir; visita opcional.", "priority": true},
+  {"id": "v2-amuleto-inabado", "cat": "amuletos", "area": "Kioto · Shijō", "name": "Byōdō-ji Inaba-dō · amuletos", "q": "平等寺 因幡堂 京都", "ll": [35.0018, 135.7607], "approx": true, "fit": [5], "note": "★ Recomendado para tus intereses. Templo con amuletos de animales y plegarias de salud. Comprobar horario del puesto y disponibilidad del diseño.", "priority": true},
+  {"id": "v2-amuleto-nishiki", "cat": "amuletos", "area": "Kioto · Nishiki", "name": "Nishiki Tenmangū · santuario", "q": "錦天満宮 京都", "ll": [35.005, 135.768], "approx": true, "fit": [5], "note": "★ Recomendado para tus intereses. Santuario cerca de Nishiki y las calles comerciales; parada corta si coincide con la ruta. No se garantiza que venda amuletos de perros.", "priority": true},
+
 
   // ── De tus listas de Google Maps: los que quedan fuera de ruta ──────
   {"id": "gm-shizuoka-kanteidan-garage-ma", "cat": "mercado", "area": "Fuera de ruta", "name": "Shizuoka Kanteidan Garage Market Makinohara", "q": "Shizuoka Kanteidan Garage Market Makinohara", "ll": [34.68743, 138.19155], "fit": [], "car": true, "note": "De tu lista «Quiero ir» de Google Maps. Queda a más de 1 h de la ruta: solo si cambiáis el plan."},

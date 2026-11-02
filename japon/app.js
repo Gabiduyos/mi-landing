@@ -304,6 +304,9 @@
     target: svg('<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>')
   };
   var CAT_ICON = {
+    relojes: svg('<circle cx="12" cy="12" r="7"/><path d="M12 8v4l3 2M9 2h6M9 22h6"/>'),
+    jdm: svg('<path d="M5 16l1-5 3-4h6l3 4 1 5zM5 16H3v3h3M19 16h2v3h-3"/><circle cx="8" cy="17" r="1"/><circle cx="16" cy="17" r="1"/>'),
+    amuletos: svg('<path d="M12 3L5 9v12h14V9zM5 10h14M9 21v-7h6v7"/>'),
     foto: svg('<rect x="3.5" y="7" width="17" height="12" rx="2"/><circle cx="12" cy="13" r="3.5"/><path d="M8.5 7l1.5-2.5h4L15.5 7"/>'),
     ropa: svg('<path d="M8 4 3.5 7l2 4L8 10v10h8V10l2.5 1 2-4L16 4c-.6 1.4-2 2.4-4 2.4S8.6 5.4 8 4z"/>'),
     figuras: svg('<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>'),
@@ -975,7 +978,7 @@
       return (p.name + ' ' + (p.ja || '') + ' ' + p.area + ' ' + p.note).toLowerCase().indexOf(q) >= 0;
     }).map(function (p) {
       return { p: p, d: p.ll ? haversine(c, p.ll) : Infinity, fits: p.fit && p.fit.indexOf(addDay) >= 0 };
-    }).sort(function (a, b) { return (b.fits - a.fits) || (a.d - b.d); });
+    }).sort(function (a, b) { return (b.fits - a.fits) || (Number(!!b.p.priority) - Number(!!a.p.priority)) || (a.d - b.d); });
 
     html += '<li class="idea-group">Ideas, de más cerca a más lejos</li>';
     html += items.map(function (x) {
@@ -983,7 +986,7 @@
       return '<li class="idea"><span class="idea__icon">' + (CAT_ICON[p.cat] || ICON.pin) + '</span><div class="idea__body">' +
         '<p class="idea__name">' + esc(p.name) + '</p>' +
         '<p class="idea__meta">' + esc(CATS[p.cat].name) + ' · ' + esc(p.area) + (isFinite(x.d) ? ' · a ' + fmtDist(x.d) : '') +
-        (x.fits ? ' · <b>encaja este día</b>' : '') + (p.car ? ' · en coche' : '') +
+        (p.priority ? ' · ★ selección personalizada' : '') + (x.fits ? ' · <b>encaja este día</b>' : '') + (p.car ? ' · en coche' : '') +
         (other && !here ? ' · ya en el día ' + other.join(', ') : '') + '</p>' +
         '<p class="idea__note">' + esc(p.note) + '</p></div>' +
         (here ? '<span class="idea__in">En el día</span>' : '<button class="btn btn--sm btn--primary" type="button" data-addplace="' + esc(p.id) + '" data-day="' + addDay + '">Añadir</button>') +
