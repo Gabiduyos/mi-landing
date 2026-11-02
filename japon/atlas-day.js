@@ -23,15 +23,17 @@ function effectiveStops(d){
   // Solo modifica la presentación del primer día. El plan original y las paradas añadidas permanecen guardados.
   var keep={kix:true,'d1-home':true,dotonbori:true,tombori:true};
   var core=edited.filter(function(s){return !!keep[s.id]||(!d.stops.some(function(x){return x.id===s.id}));});
-  return core.reduce(function(out,s){
-    if(s.id==='d1-home'){
-      out.push(Object.assign({},s,{t:'16:00',note:'Check-in desde las 16:00. Si llegáis antes, consigna o consulta con el anfitrión; después, descanso sin prisas.'}));
-      out.push({id:'atlas-rest-arrival',kind:'task',t:'16:30',dur:90,name:'Descansar, ducha y acomodarse',note:'Tiempo libre. No programar más visitas: el objetivo es recuperar fuerzas después del vuelo.'});
-    }else if(s.id==='dotonbori'){
-      out.push(Object.assign({},s,{t:'18:30',dur:75,note:'Paseo cercano al Airbnb y cena sin prisas. Si hay energía, el barco se puede valorar sobre la marcha.'}));
-    }else if(s.id==='tombori'){
-      out.push(Object.assign({},s,{t:'Tras la cena · si hay plazas',dur:20,arrivalExtra:true,note:'Experiencia opcional de 20 minutos por Dōtonbori. Entradas para el mismo día en taquilla o por la web oficial según plazas; no está reservada. Precio publicado: 2.000 ¥ por adulto. Últimas salidas habituales hasta las 21:00; confirma el horario ese día.',ticketUrl:'https://cloud-pass.jp/project/BOAT'}));
-    }else out.push(s);
+  var around={id:'atlas-arrival-walk',kind:'sight',t:'Antes de las 16:00 · si llegáis pronto',dur:35,name:'Paseo libre por Nipponbashi, junto al Airbnb',q:'Nipponbashi Station Osaka',ll:[34.6678,135.5070],arrivalExtra:true,note:'Con poco equipaje podéis explorar las calles cercanas y echar un primer vistazo a Kuromon sin hacer la visita completa que tenéis el día 2. Es un paseo flexible: si el aeropuerto se retrasa, se omite sin problema.'};
+  return core.reduce(function(out,stop){
+    if(stop.id==='d1-home'){
+      out.push(around);
+      out.push(Object.assign({},stop,{t:'16:00',note:'Check-in desde las 16:00. Hasta entonces podéis pasear cerca con vuestro equipaje ligero; no se presupone acceso anticipado al apartamento.'}));
+      out.push({id:'atlas-rest-arrival',kind:'task',t:'16:30',dur:60,name:'Instalarse, ducha y descanso',note:'Tiempo libre para recuperar fuerzas. Sin otras visitas obligatorias.'});
+    }else if(stop.id==='dotonbori'){
+      out.push(Object.assign({},stop,{t:'18:30',dur:75,note:'Paseo por los neones y cena a vuestro ritmo. Si vais cansados, podéis regresar al alojamiento.'}));
+    }else if(stop.id==='tombori'){
+      out.push(Object.assign({},stop,{t:'19:30–20:30 · según plazas',dur:20,arrivalExtra:true,note:'Crucero opcional de unos 20 minutos por Dōtonbori. Se pueden comprar entradas para el mismo día si hay plazas: adultos 2.000 ¥ (precio publicado). Salidas anunciadas hasta las 21:00, revisad el horario y disponibilidad.',ticketUrl:'https://cloud-pass.jp/project/BOAT'}));
+    }else out.push(stop);
     return out;
   },[]);
 }
