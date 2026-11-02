@@ -78,7 +78,8 @@ function distanceKm(a,b){
 }
 function legSuggestion(d,s,from,to){
  var km=distanceKm(from,to),hint=String(s.how||''),h=hint.toLowerCase(),title=String((s.name||'')+' '+(from.name||'')),mode=d.mode==='car'?'driving':'transit',label=d.mode==='car'?'Coche':'Metro / tren',detail='';
- if(mode==='driving'){detail='Día con coche: consulta la carretera, aparcamiento y peajes.';}
+ if(mode==='driving'&&km!==null&&km<=.65){mode='walking';label='A pie';detail='Tramo corto incluso teniendo coche: probablemente sea más práctico caminar y dejarlo aparcado.';}
+ else if(mode==='driving'){detail='Día con coche: consulta la carretera, aparcamiento y peajes.';}
  else if(km!==null&&km>=150){mode='transit';label='Shinkansen / tren';detail='Trayecto de larga distancia: revisar estación, billete y horario.';}
  else if(km!==null&&km>=35){mode='transit';label='Tren interurbano';detail='Cambias de zona: verifica el servicio y los transbordos.';}
  else if(/taxi/i.test(h)&&(km===null||km>=1.1)){mode='driving';label='Taxi';detail='El plan original recomienda taxi en este tramo. Compara precio con transporte público.';}
@@ -99,7 +100,7 @@ function legLink(from,to,mode){
  return u+'&travelmode='+googleMode;
 }
 function transportAlternatives(d,advice){
- if(d.mode==='car')return [{mode:'driving',name:'🚗 Coche',best:true}];
+ if(d.mode==='car')return advice.mode==='walking'?[{mode:'walking',name:'🚶 A pie',best:true},{mode:'driving',name:'🚗 Coche',best:false}]:[{mode:'driving',name:'🚗 Coche',best:true},{mode:'walking',name:'🚶 A pie',best:false}];
  if(advice.km!==null&&advice.km>=35)return [{mode:'transit',name:'🚄 Tren',best:true}];
  var choices=[
   {mode:'walking',name:'🚶 A pie',best:advice.mode==='walking'},
