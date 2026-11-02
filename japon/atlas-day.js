@@ -82,7 +82,7 @@ function syncMapPlaces(d){
 }
 function showDayMap(n){
  var d=DAYS[n-1];if(!d)return;appDay=d;dayPanel=n;
- syncMapPlaces(d);routeLayer(d);
+ syncMapPlaces(d);routeLayer(d);showPoisOnMap(d);
  $('atlas-daybar-title').textContent='Día '+d.n+' · '+d.title;
  $('atlas-daybar-start').textContent='Desde: '+originFor(d).name;
  $('atlas-daybar').hidden=false;
@@ -91,7 +91,7 @@ function showDayMap(n){
  var first=mapStops(d)[0];
  if(first){var p=atlas.all.find(function(x){return x.id==='plan:'+first.id||x.id==='idea:'+first.id.replace(/^c:/,'')});if(p)atlas.select(p);}
 }
-function clearDay(){appDay=null;dayPanel=null;window.jpAtlasRouteFilter=null;homeLayer.clearLayers();$('atlas-daybar').hidden=true;atlas.renderMarkers();atlas.map.setView([35.0,137.6],6);atlas.setTab('mapa');}
+function clearDay(){appDay=null;dayPanel=null;window.jpAtlasRouteFilter=null;homeLayer.clearLayers();poiLayer.clearLayers();$('atlas-daybar').hidden=true;atlas.renderMarkers();atlas.map.setView([35.0,137.6],6);atlas.setTab('mapa');}
 
   // ── Descubrimientos de camino (distancias geométricas orientativas) ──
   var poiLayer=L.layerGroup().addTo(atlas.map),poiSuggestions=[],onRoadFilters='all';
@@ -247,7 +247,7 @@ function renderTimeline(d,root){
  effectiveStops(d).forEach(function(s){
   if(s.opt&&!showOptions)return;count++;var stepNumber=count;
   var completed=doneSet().has(s.id);
-  var item=document.createElement('div');item.className='atlas-step'+(completed?' is-completed':'');
+  var item=document.createElement('div');item.className='atlas-step'+(completed?' is-completed':'')+(isSkipped(d,s.id)?' is-skipped':'');
   var rail=document.createElement('div');rail.className='atlas-rail';rail.innerHTML='<span class="atlas-dot">'+(completed?'✓':count)+'</span>';item.appendChild(rail);
   var box=document.createElement('div');box.className='atlas-step__box';
   var top=document.createElement('div');top.className='atlas-step__row';
@@ -256,6 +256,14 @@ function renderTimeline(d,root){
   top.appendChild(body);
   if(s.kind!=='move'&&s.kind!=='task'&&s.kind!=='home'){var check=document.createElement('input');check.type='checkbox';check.className='atlas-step__check';check.checked=completed;check.setAttribute('aria-label','Marcar como visitado: '+s.name);check.onchange=function(){setDone(s.id,check.checked);item.classList.toggle('is-completed',check.checked);rail.querySelector('.atlas-dot').textContent=check.checked?'✓':stepNumber};top.appendChild(check);}
   box.appendChild(top);
+  if(s.kind!=='move'&&s.kind!=='home'&&s.kind!=='task'&&!isFixed(s)){
+    var editRow=document.createElement('div');editRow.className='atlas-step__edit';
+    editRow.appendChild(button('↑','atlas-step__move',function(){if(moveStop(d,s.id,-1))dayDetail(d.n);else alert('No puedo mover esta parada por encima de una reserva o traslado fijo.')})); 
+    editRow.appendChild(button('↓','atlas-step__move',function(){if(moveStop(d,s.id,1))dayDetail(d.n);else alert('No puedo mover esta parada a través de una reserva o traslado fijo.')})); 
+    editRow.appendChild(button(isSkipped(d,s.id)?'↩ Recuperar':'⏭ Saltar hoy','atlas-step__skip',function(){toggleSkipped(d,s.id);dayDetail(d.n)}));
+    if(s.id.indexOf('c:')===0){editRow.appendChild(button('✕ Quitar extra','atlas-step__remove',function(){if(confirm('Quitar esta parada añadida del día '+d.n+'?')){removeAdded(d,s.id);dayDetail(d.n)}}));}
+    box.appendChild(editRow);
+  }
   if(s.opt){var optional=document.createElement('p');optional.className='atlas-step__opt';optional.textContent='Parada opcional';box.appendChild(optional);}
   if(s.mine||s.note){var note=document.createElement('p');note.className='atlas-step__note';note.textContent=s.mine||s.note;box.appendChild(note);}
   var pt=pointFor(s);if(hasCoords(pt)){
@@ -271,6 +279,7 @@ function dayDetail(n){
  var root=$('screenbody');root.innerHTML='';
  var head=document.createElement('div');head.className='atlas-dayhead';
  head.appendChild(button('← Volver a los 15 días','atlas-dayhead__back',function(){dayPanel=null;renderDays();$('screentitle').textContent='Mi viaje · 15 días';}));
+ var daypick=document.createElement('select');daypick.className='atlas-day-picker';daypick.setAttribute('aria-label','Seleccionar jornada');DAYS.forEach(function(dd){var op=document.createElement('option');op.value=dd.n;op.textContent='Día '+dd.n+' · '+dateLabel(dd);if(dd.n===n)op.selected=true;daypick.appendChild(op)});daypick.onchange=function(){dayDetail(+this.value)};head.appendChild(daypick);
  var h=document.createElement('h3');h.textContent=d.title;head.appendChild(h);
  var sub=document.createElement('p');sub.textContent=d.sub||'Organiza tu jornada en Japón';head.appendChild(sub);root.appendChild(head);
  var origin=originFor(d);var lodging=document.createElement('div');lodging.className='atlas-lodging';lodging.innerHTML='<span class="atlas-lodging__icon">'+(origin.key==='airport'?'✈️':'🏠')+'</span><div><strong>Salida: '+esc(origin.name)+'</strong><p>'+esc(origin.addr)+'</p></div>';root.appendChild(lodging);
@@ -287,7 +296,7 @@ function dayDetail(n){
  var links=dayRouteLinks(d);if(links.length){var box=document.createElement('div');box.className='atlas-routebox';var p=document.createElement('small');p.textContent='Navegación real por tramos desde el alojamiento. Google Maps calcula el trayecto; no se inventan tiempos.';box.appendChild(p);
  links.forEach(function(l){var a=document.createElement('a');a.href=l.url;a.textContent='📍 '+l.name;a.target='_blank';a.rel='noopener';box.appendChild(a)});root.appendChild(box);}
  var completed=effectiveStops(d).filter(function(s){return doneSet().has(s.id)}).length;var title=document.createElement('p');title.className='atlas-daycount';title.textContent='✓ '+completed+' visitas marcadas · Seguimiento compartido con tu app original en este dispositivo';root.appendChild(title);
- renderTimeline(d,root);$('screen').classList.remove('hidden');
+ renderDiscoveries(d,root);renderTimeline(d,root);$('screen').classList.remove('hidden');
 }
 window.jpDayRender=function(){if(dayPanel)dayDetail(dayPanel);else renderDays()};
 var extClick=$('routebtn').onclick;
