@@ -5,7 +5,7 @@ if(!atlas||!trip)return;
 var $=function(id){return document.getElementById(id)};
 var CHAT_KEY='jp26:atlas-chat-v1', FX_KEY='jp26:fx-eur-jpy';
 var messages=[],mode='local',accessCode='',rate=null,rateDate='',rateCached=false,isSending=false,chatReady=false;
-function esc(x){return String(x==null?'':x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;':'&quot;',"'":'&#39;'}[c]})}
+function esc(x){return String(x==null?'':x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function norm(x){return String(x||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
 function getJSON(key,fb){try{var v=JSON.parse(localStorage.getItem(key)||'null');return v===null?fb:v}catch(e){return fb}}
 function saveJSON(key,v){try{localStorage.setItem(key,JSON.stringify(v));return true}catch(e){return false}}
