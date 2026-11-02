@@ -105,7 +105,7 @@ function transportAlternatives(d,advice){
  var choices=[
   {mode:'walking',name:'🚶 A pie',best:advice.mode==='walking'},
   {mode:'transit',name:'🚇 Metro / tren',best:advice.mode==='transit'},
-  {mode:'driving',name:'🚕 Taxi',best:advice.mode==='driving'}
+  {mode:'driving',name:'🚕 Taxi (ruta)',best:advice.mode==='driving'}
  ];
  if(advice.km!==null&&advice.km>4.5)choices=choices.filter(function(x){return x.mode!=='walking';});
  return choices;
@@ -354,7 +354,7 @@ function renderTimeline(d,root){
     recommended.innerHTML='<span class="atlas-leg__pill">Recomendado</span><strong>'+esc(advice.label)+'</strong>';
     travel.appendChild(recommended);
     var explanation=document.createElement('div');explanation.className='atlas-leg__hint';
-    explanation.textContent=advice.detail+(advice.km!==null?' · ≈'+advice.km.toFixed(1)+' km en línea recta':'');
+    explanation.textContent=advice.detail+(advice.km!==null?' · ≈'+advice.km.toFixed(1)+' km en línea recta':'')+' · El botón Taxi muestra una ruta en coche; no reserva un vehículo.';
     travel.appendChild(explanation);
     if(entry.leg.how){var how=document.createElement('div');how.className='atlas-leg__hint';how.textContent='📝 Tu plan original: '+entry.leg.how;travel.appendChild(how);}
     var choices=document.createElement('div');choices.className='atlas-leg__choices';
