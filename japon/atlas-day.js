@@ -57,9 +57,11 @@ function dayRouteLinks(d){
     var airport=originFor(d),house=lodge('osaka');
     function leg(from,to,mode){return 'https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(from)+'&destination='+encodeURIComponent(to)+'&travelmode='+mode;}
     return [
-      {name:'Aeropuerto KIX → alojamiento de Osaka',url:leg(airport.q,house.q,'transit')},
-      {name:'Paseo local: Airbnb → Nipponbashi',url:leg(house.q,'Nippombashi Station Osaka','walking')},
-      {name:'Paseo nocturno: Airbnb → Dōtonbori',url:leg(house.q,'Dotonbori Osaka','walking')}
+      {name:'1. KIX → zona del Airbnb',url:leg(airport.q,house.q,'transit')},
+      {name:'2. Antes del check-in: paseo cerca del Airbnb',url:leg(house.q,'Kuromon Ichiba Market Osaka','walking')},
+      {name:'3. Airbnb → Fitness Shop Namba',url:leg(house.q,'Fitness Shop Namba Cross Hotel Osaka','walking')},
+      {name:'4. Fitness Shop → Guf Dōtonbori',url:leg('Fitness Shop Namba Cross Hotel Osaka','Guf Dotonbori 1-7-5','walking')},
+      {name:'5. Guf → Tombori River Cruise (20:00)',url:leg('Guf Dotonbori 1-7-5','Tombori River Cruise Tazaemonbashi Osaka','walking')}
     ];
   }
   var route=mapStops(d),from=originFor(d),mode=d.mode,sections=[];
@@ -87,9 +89,9 @@ function routeLayer(d){
    var house=lodge('osaka'),stops=mapStops(d),coords=[house.ll];
    homeLayer.addLayer(L.marker(house.ll,{icon:L.divIcon({className:'',html:'<div class="atlas-homepin">🏠</div>',iconSize:[38,38],iconAnchor:[19,19]})}).bindPopup('Alojamiento de Osaka · check-in a partir de las 16:00'));
    var nearby=stops.find(function(x){return x.id==='atlas-arrival-walk'});
-   var evening=stops.find(function(x){return x.id==='dotonbori'});
    if(nearby){coords.push(pointFor(nearby).ll);homeLayer.addLayer(L.polyline([house.ll,pointFor(nearby).ll],{color:'#9fd4c4',weight:3,dashArray:'3 8',interactive:false}));}
-   if(evening){coords.push(pointFor(evening).ll);homeLayer.addLayer(L.polyline([house.ll,pointFor(evening).ll],{color:'#ffb968',weight:3,dashArray:'3 8',interactive:false}));}
+   var night=['atlas-fitness-namba-day1','atlas-guf-dotonbori-day1','dotonbori','tombori'].map(function(id){return stops.find(function(x){return x.id===id})}).filter(Boolean).map(function(x){return pointFor(x).ll});
+   if(night.length){coords.push.apply(coords,night);homeLayer.addLayer(L.polyline([house.ll].concat(night),{color:'#ffb968',weight:3,dashArray:'3 8',interactive:false}));}
    atlas.map.fitBounds(coords,{paddingTopLeft:[35,155],paddingBottomRight:[35,190],maxZoom:15,animate:true});
    return;
  }
@@ -274,7 +276,7 @@ function renderDays(){
  var intro=document.createElement('p');intro.className='tiny';intro.textContent='Tus rutas originales, con salida desde el alojamiento, horarios y visitas por completar. Selecciona una jornada.';root.appendChild(intro);
  var list=document.createElement('div');list.className='atlas-daylist';
  DAYS.forEach(function(d){
-  var items=effectiveStops(d),key=doneSet(),eligible=items.filter(function(s){return s.kind!=='move'&&s.kind!=='home'&&s.kind!=='task'&&!s.opt}),num=eligible.filter(function(s){return key.has(s.id)}).length;
+  var items=effectiveStops(d),key=doneSet(),eligible=items.filter(function(s){return s.kind!=='move'&&s.kind!=='home'&&s.kind!=='task'&&!s.opt&&!s.optionalDay1}),num=eligible.filter(function(s){return key.has(s.id)}).length;
   var row=document.createElement('button');row.className='atlas-dayrow';row.innerHTML='<span class="atlas-dayrow__n">'+d.n+'</span><span class="atlas-dayrow__main"><strong>'+esc(d.title)+'</strong><small>'+dateLabel(d)+' · '+num+'/'+eligible.length+' visitas completadas</small></span><span class="atlas-dayrow__arr">›</span>';
   row.onclick=function(){dayDetail(d.n)};list.appendChild(row);
  });root.appendChild(list);
@@ -302,7 +304,7 @@ function renderTimeline(d,root){
     if(s.id.indexOf('c:')===0){editRow.appendChild(button('✕ Quitar extra','atlas-step__remove',function(){if(confirm('Quitar esta parada añadida del día '+d.n+'?')){removeAdded(d,s.id);dayDetail(d.n)}}));}
     box.appendChild(editRow);
   }
-  if(s.opt){var optional=document.createElement('p');optional.className='atlas-step__opt';optional.textContent='Parada opcional';box.appendChild(optional);}
+  if(s.opt||s.optionalDay1){var optional=document.createElement('p');optional.className='atlas-step__opt';optional.textContent=s.optionalDay1?'Tienda opcional · sin compromiso':'Parada opcional';box.appendChild(optional);}
   if(s.mine||s.note){var note=document.createElement('p');note.className='atlas-step__note';note.textContent=s.mine||s.note;box.appendChild(note);}
   if(s.ticketUrl){var ticket=document.createElement('a');ticket.href=s.ticketUrl;ticket.target='_blank';ticket.rel='noopener';ticket.className='atlas-ticket-link';ticket.textContent='🎫 Consultar entradas y plazas';box.appendChild(ticket);}
   var pt=pointFor(s);if(hasCoords(pt)){
@@ -319,11 +321,11 @@ function dayDetail(n){
  var head=document.createElement('div');head.className='atlas-dayhead';
  head.appendChild(button('← Volver a los 15 días','atlas-dayhead__back',function(){dayPanel=null;renderDays();$('screentitle').textContent='Mi viaje · 15 días';}));
  var daypick=document.createElement('select');daypick.className='atlas-day-picker';daypick.setAttribute('aria-label','Seleccionar jornada');DAYS.forEach(function(dd){var op=document.createElement('option');op.value=dd.n;op.textContent='Día '+dd.n+' · '+dateLabel(dd);if(dd.n===n)op.selected=true;daypick.appendChild(op)});daypick.onchange=function(){dayDetail(+this.value)};head.appendChild(daypick);
- var h=document.createElement('h3');h.textContent=(d.n===1&&arrivalMode())?'Llegada a Osaka y primer paseo':d.title;head.appendChild(h);
- var sub=document.createElement('p');sub.textContent=(d.n===1&&arrivalMode())?'Si llegáis antes de las 16:00, pasead con poco equipaje por Nipponbashi, cerca del Airbnb. Después, check-in, descanso y Dōtonbori con el barco como experiencia opcional.':(d.sub||'Organiza tu jornada en Japón');head.appendChild(sub);root.appendChild(head);
+ var h=document.createElement('h3');h.textContent=(d.n===1&&arrivalMode())?'Llegada a Osaka · tiendas y barco':d.title;head.appendChild(h);
+ var sub=document.createElement('p');sub.textContent=(d.n===1&&arrivalMode())?'Si llegáis con margen, paseo alrededor del Airbnb antes de las 16:00. Después, dejar maletas y visitar opcionalmente tiendas de gimnasio y anime, cenar y disfrutar del crucero sobre las 20:00 si quedan plazas. Evitad siestas largas.':(d.sub||'Organiza tu jornada en Japón');head.appendChild(sub);root.appendChild(head);
  if(d.n===1){
   var arrivalBox=document.createElement('div');arrivalBox.className='atlas-dayoptions';
-  arrivalBox.innerHTML='<label><input id="atlas-arrivalmode" type="checkbox"'+(arrivalMode()?' checked':'')+'> <strong>Primer día ligero (recomendado)</strong></label><p class="tiny">Paseo cerca del alojamiento hasta las 16:00 si llegáis a tiempo. No bloqueamos la tarde con visitas lejanas. Puedes volver a ver el plan original desactivando esta opción.</p>';
+  arrivalBox.innerHTML='<label><input id="atlas-arrivalmode" type="checkbox"'+(arrivalMode()?' checked':'')+'> <strong>Primer día activo y flexible (recomendado)</strong></label><p class="tiny">Paseo cerca del Airbnb antes de las 16:00, dos tiendas opcionales después y crucero sobre las 20:00. Vuelve al plan original desactivando esta opción.</p>';
   root.appendChild(arrivalBox);
   arrivalBox.querySelector('input').onchange=function(){localStorage.setItem('jp26:atlas-arrival-mode',JSON.stringify(this.checked));dayDetail(1)};
  }
