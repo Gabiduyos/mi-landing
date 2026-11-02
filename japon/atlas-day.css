@@ -60,3 +60,5 @@
 .atlas-departure{display:flex;gap:10px;margin:10px 0 13px;background:#1b3b44;padding:13px;border:1px solid #fbca7952;border-radius:13px;align-items:start}
 .atlas-departure>span{font-size:22px}.atlas-departure strong{font-size:13px;color:#ffd28f;display:block}.atlas-departure small{font-size:10px;line-height:1.4;color:#c0d1d0;display:block;margin-top:4px}
 .atlas-route-details{display:block}.atlas-route-details summary{font-size:12px;font-weight:800;color:#ffd38c;cursor:pointer;margin:1px 0 8px}.atlas-route-details:not([open])>*:not(summary){display:none}
+
+.atlas-poicard__official{display:block;margin-top:9px;color:#ffd18d;font-size:11px;font-weight:800;text-decoration:underline;text-underline-offset:3px}
