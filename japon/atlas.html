@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="旅 Atlas Japón">
 <link rel="apple-touch-icon" href="./icon-192.png">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="manifest" href="./atlas.webmanifest">
 <link rel="stylesheet" href="./vendor/leaflet/leaflet.css">
 <title>旅 Atlas — Japón 2026</title>
 <style>
@@ -56,7 +57,7 @@
 @media(max-height:680px){.card{bottom:calc(80px + env(safe-area-inset-bottom));padding:9px}.carddesc{display:none}.cardtop{gap:9px}.thumb{height:63px;width:70px;flex-basis:70px}.tabbar{height:56px}.filterrow{top:calc(max(12px,env(safe-area-inset-top)) + 54px)}}
 .route-label{display:block;color:#bdd0d7;font-size:12px;font-weight:700;margin:9px 0 3px}.routebox select{margin:3px 0 9px}
 </style>
-<link rel="stylesheet" href="./atlas-day.css?v=rings-temples-v1">
+<link rel="stylesheet" href="./atlas-day.css?v=qa2">
 </head>
 <body>
 <div id="map" role="region" aria-label="Mapa interactivo de tu viaje a Japón"></div><div class="bottomshade"></div>
@@ -78,7 +79,7 @@
 <section class="screen hidden" id="screen"><div class="screentitle"><h2 id="screentitle">Mi viaje</h2><button class="close" id="screenclose">Volver al mapa</button></div><div id="screenbody"></div></section>
 <section class="routebox hidden" id="routebox"><div class="screentitle"><h2>✦ Mi ruta personalizada</h2><button class="close" id="routeclose">✕</button></div><p class="tiny">Una ruta solo con lugares que te interesen, sin alterar tus reservas.</p><label class="route-label" for="routecity">1. Ciudad</label><select id="routecity" aria-label="Ciudad de la ruta"><option value="">Selecciona una ciudad...</option><option value="osaka">Osaka</option><option value="kyoto">Kioto</option><option value="tokyo">Tokio</option><option value="fuji">Zona del Fuji</option></select><label class="route-label" for="routecat">2. Qué quieres buscar</label><select id="routecat" aria-label="Categoría de ruta"></select><label class="route-label" for="routemode">3. Transporte</label><select id="routemode" aria-label="Transporte"><option value="transit">Transporte público</option><option value="walking">A pie</option><option value="driving">En coche</option></select><div id="routelist"></div><p class="warning">Orden aproximado por proximidad. Comprueba trayectos, tráfico y horarios en Google Maps.</p><a id="routelink" href="#" target="_blank" rel="noopener">Abrir ruta en Google Maps ↗</a></section>
 <section class="detail hidden" id="detail"><div class="detailphoto" id="detailphoto"><button class="back" id="back">← Volver</button></div><div class="detailbody"><div class="eyebrow" id="detailarea"></div><h1 id="detailname"></h1><p id="detaildesc"></p><p class="tiny" id="detailtime"></p><div class="detailactions"><button id="detailfavorite">♡ Favorito</button><a id="detaildirections" target="_blank" rel="noopener">Cómo llegar ↗</a></div></div></section>
-<script src="./vendor/leaflet/leaflet.js"></script><script src="./data.js"></script><script src="./places.js?v=rings-temples-v1"></script>
+<script src="./vendor/leaflet/leaflet.js"></script><script src="./data.js?v=qa2"></script><script src="./places.js?v=qa2"></script>
 <script>
 (function(){
 'use strict';
@@ -172,5 +173,6 @@ $('detailfavorite').onclick=function(){var p=selected();if(p){toggleFavorite(p);
 initData();$('city').value=st.city;renderChips();initMap();wire();window.JP_ATLAS={map:map,all:all,state:st,select:select,closeCard:closeCard,setTab:setTab,renderChips:renderChips,renderMarkers:renderMarkers};closeCard();
 })();
 </script>
-<script src="./atlas-day.js?v=rings-temples-v1"></script>
+<script src="./atlas-day.js?v=qa2"></script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("./sw.js").catch(function(){})})}</script>
 </body></html>
