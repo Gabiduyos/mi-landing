@@ -21,14 +21,16 @@ function effectiveStops(d){
   var edited=base.map(function(s){var changes={};if(p.times&&p.times[s.id]!=null)changes.t=p.times[s.id];if(p.notes&&p.notes[s.id])changes.mine=p.notes[s.id];return Object.assign({},s,changes);});
   if(d.n!==1||!arrivalMode())return edited;
   // Solo modifica la presentación del primer día. El plan original y las paradas añadidas permanecen guardados.
-  var keep={kix:true,'d1-home':true,dotonbori:true};
+  var keep={kix:true,'d1-home':true,dotonbori:true,tombori:true};
   var core=edited.filter(function(s){return !!keep[s.id]||(!d.stops.some(function(x){return x.id===s.id}));});
   return core.reduce(function(out,s){
     if(s.id==='d1-home'){
       out.push(Object.assign({},s,{t:'16:00',note:'Check-in desde las 16:00. Si llegáis antes, consigna o consulta con el anfitrión; después, descanso sin prisas.'}));
       out.push({id:'atlas-rest-arrival',kind:'task',t:'16:30',dur:90,name:'Descansar, ducha y acomodarse',note:'Tiempo libre. No programar más visitas: el objetivo es recuperar fuerzas después del vuelo.'});
     }else if(s.id==='dotonbori'){
-      out.push(Object.assign({},s,{t:'18:30',dur:90,note:'Paseo cercano al Airbnb y cena solo si os apetece. No hay obligación de completar la visita; priorizad descansar.'}));
+      out.push(Object.assign({},s,{t:'18:30',dur:75,note:'Paseo cercano al Airbnb y cena sin prisas. Si hay energía, el barco se puede valorar sobre la marcha.'}));
+    }else if(s.id==='tombori'){
+      out.push(Object.assign({},s,{t:'Tras la cena · si hay plazas',dur:20,arrivalExtra:true,note:'Experiencia opcional de 20 minutos por Dōtonbori. Entradas para el mismo día en taquilla o por la web oficial según plazas; no está reservada. Precio publicado: 2.000 ¥ por adulto. Últimas salidas habituales hasta las 21:00; confirma el horario ese día.',ticketUrl:'https://cloud-pass.jp/project/BOAT'}));
     }else out.push(s);
     return out;
   },[]);
