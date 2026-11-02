@@ -8,16 +8,30 @@ PLACES.forEach(function(p){ideaById[p.id]=p;});
 var appDay=null,dayPanel=null,homeLayer=L.layerGroup().addTo(atlas.map),showOptions=false;
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
-function storage(name,fallback){try{return JSON.parse(localStorage.getItem('jp26:'+name)||'null')||fallback;}catch(e){return fallback;}}
+function storage(name,fallback){try{var raw=localStorage.getItem('jp26:'+name);if(raw===null)return fallback;var value=JSON.parse(raw);return value===null||value===undefined?fallback:value;}catch(e){return fallback;}}
 function getPlan(){return storage('plan',{});}
 function lookupStop(id,plan){
   if(planById[id])return planById[id];
   if(id.indexOf('c:')===0){var p=ideaById[id.slice(2)];return p?{id:id,kind:(window.PLACE_CATS[p.cat]||{}).kind||'sight',cat:p.cat,name:p.name,ja:p.ja,q:p.q,ll:p.ll,approx:p.approx,note:p.note,t:'',opt:false}:null;}
   return plan.custom&&plan.custom[id]||null;
 }
+function arrivalMode(){return storage('atlas-arrival-mode',true);}
 function effectiveStops(d){
-  var p=getPlan(), ids=p.order&&p.order[d.n],base=Array.isArray(ids)?ids.map(function(id){return lookupStop(id,p);}).filter(Boolean):d.stops.slice();
-  return base.map(function(s){var changes={};if(p.times&&p.times[s.id]!=null)changes.t=p.times[s.id];if(p.notes&&p.notes[s.id])changes.mine=p.notes[s.id];return Object.assign({},s,changes);});
+  var p=getPlan(),ids=p.order&&p.order[d.n],base=Array.isArray(ids)?ids.map(function(id){return lookupStop(id,p);}).filter(Boolean):d.stops.slice();
+  var edited=base.map(function(s){var changes={};if(p.times&&p.times[s.id]!=null)changes.t=p.times[s.id];if(p.notes&&p.notes[s.id])changes.mine=p.notes[s.id];return Object.assign({},s,changes);});
+  if(d.n!==1||!arrivalMode())return edited;
+  // Solo modifica la presentación del primer día. El plan original y las paradas añadidas permanecen guardados.
+  var keep={kix:true,'d1-home':true,dotonbori:true};
+  var core=edited.filter(function(s){return !!keep[s.id]||(!d.stops.some(function(x){return x.id===s.id}));});
+  return core.reduce(function(out,s){
+    if(s.id==='d1-home'){
+      out.push(Object.assign({},s,{t:'16:00',note:'Check-in desde las 16:00. Si llegáis antes, consigna o consulta con el anfitrión; después, descanso sin prisas.'}));
+      out.push({id:'atlas-rest-arrival',kind:'task',t:'16:30',dur:90,name:'Descansar, ducha y acomodarse',note:'Tiempo libre. No programar más visitas: el objetivo es recuperar fuerzas después del vuelo.'});
+    }else if(s.id==='dotonbori'){
+      out.push(Object.assign({},s,{t:'18:30',dur:90,note:'Paseo cercano al Airbnb y cena solo si os apetece. No hay obligación de completar la visita; priorizad descansar.'}));
+    }else out.push(s);
+    return out;
+  },[]);
 }
 function doneSet(){return new Set(storage('done',[]));}
 function setDone(id,yes){var arr=doneSet();if(yes)arr.add(id);else arr.delete(id);localStorage.setItem('jp26:done',JSON.stringify(Array.from(arr)));}
