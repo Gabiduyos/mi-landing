@@ -16,7 +16,7 @@ window.TRIP = {
   lodging: {
     osaka: {
       label: 'Alojamiento Osaka · 15–19 nov',
-      name: '白樺の宿 Dōtonbori (Airbnb · HMM8X4YS4N)',
+      name: '白樺の宿 Dōtonbori (Airbnb · [consultar en Airbnb])',
       addr: '道頓堀1丁目東4-13, Chūō-ku, Osaka 542-0071',
       q: '道頓堀1丁目東4-13 大阪市中央区',
       ll: [34.66868, 135.50924],
@@ -24,7 +24,7 @@ window.TRIP = {
     },
     kyoto: {
       label: 'Alojamiento Kioto · 19–21 nov',
-      name: 'K-style Nishijin Backpackers (Airbnb · HMWACK2EFF)',
+      name: 'K-style Nishijin Backpackers (Airbnb · [consultar en Airbnb])',
       addr: '769 Makurachō, Kamigyō-ku, Kioto 602-8488',
       q: '769 Makurachō, Kamigyo Ward, Kyoto 602-8488',
       ll: [35.0290, 135.7430],
@@ -33,7 +33,7 @@ window.TRIP = {
     },
     tokyo: {
       label: 'Alojamiento Tokio · 21–29 nov',
-      name: 'Peter Pan · Allcomein (Airbnb · HMSNFHTNEK)',
+      name: 'Peter Pan · Allcomein (Airbnb · [consultar en Airbnb])',
       addr: '2-31-10 Taitō (Peter Pan), Taitō-ku, Tokio 110-0016',
       q: '2-chōme-31-10 Taitō, Taito City, Tokyo 110-0016',
       ll: [35.7062, 139.7818],
@@ -1587,19 +1587,19 @@ window.TRIP = {
 
   // Reservas y trámites. due = fecha límite recomendada (o fecha de apertura si opens:true).
   bookings: [
-    { id: 'cancel-tokyo', due: '2026-10-22', crit: true, title: 'Airbnb Tokio: fin de la cancelación gratis', who: 'Airbnb · HMSNFHTNEK',
+    { id: 'cancel-tokyo', due: '2026-10-22', crit: true, title: 'Airbnb Tokio: fin de la cancelación gratis', who: 'Airbnb · [consultar en Airbnb]',
       body: 'Hasta el 22 oct a las 15:00 se puede cancelar gratis el alojamiento de Taitō (21–29 nov). Después, solo reembolso parcial hasta el 14 nov. Si estáis contentos con él, no hay que hacer nada.' },
     { id: 'tombori-bk', due: '2026-11-15', title: 'Barco de Dōtonbori · 15 nov 20:00', who: 'Taquilla del muelle Tazaemonbashi o Klook',
       body: 'Entradas con hora (2.000 ¥ por persona). Se venden el mismo día en el muelle; por la noche se agotan. Comprarlas por la tarde o antes online.' },
     { id: 'kimono-bk', due: '2026-11-05', title: 'Kimono en Kioto · 19 nov', who: 'Web de Okamoto, Yumeyakata o Maiko-ya',
       body: 'Reservar plan para 2 a las 12:30 en la tienda de Kiyomizu. Reservando con antelación suele haber 10–20 % de descuento; añadir peinado si se quiere (≈1.500 ¥).' },
-    { id: 'flights', due: '2026-11-14', done: true, title: 'Vuelos China Eastern · 2 pasajeros', who: 'Trip.com · reserva 1598740088554566',
+    { id: 'flights', due: '2026-11-14', done: true, title: 'Vuelos China Eastern · 2 pasajeros', who: 'Trip.com · reserva [consultar en Trip.com]',
       body: 'Ida: MU250 BCN 14 nov 10:20 → Shanghái 15 nov 5:30 · MU225 Shanghái 8:55 → Osaka KIX 12:10. Vuelta: MU522 Tokio NRT 29 nov 16:55 → Shanghái 19:35 · MU249 Shanghái 1 dic 1:20 → BCN 7:40. Seguro incluido.' },
-    { id: 'airbnb-osaka', due: '2026-11-15', done: true, title: 'Airbnb Osaka · 15–19 nov', who: 'Airbnb · HMM8X4YS4N',
+    { id: 'airbnb-osaka', due: '2026-11-15', done: true, title: 'Airbnb Osaka · 15–19 nov', who: 'Airbnb · [consultar en Airbnb]',
       body: '道頓堀1丁目東4-13. Llegada 16:00, salida 11:00. Cancelación gratis hasta el 10 nov.' },
-    { id: 'airbnb-kyoto', due: '2026-11-19', done: true, title: 'Airbnb Kioto · 19–21 nov', who: 'Airbnb · HMWACK2EFF',
+    { id: 'airbnb-kyoto', due: '2026-11-19', done: true, title: 'Airbnb Kioto · 19–21 nov', who: 'Airbnb · [consultar en Airbnb]',
       body: '769 Makurachō, Kamigyō. Llegada 16:00, salida 10:00. Escribir al anfitrión para la llegada.' },
-    { id: 'airbnb-tokyo', due: '2026-11-21', done: true, title: 'Airbnb Tokio · 21–29 nov', who: 'Airbnb · HMSNFHTNEK',
+    { id: 'airbnb-tokyo', due: '2026-11-21', done: true, title: 'Airbnb Tokio · 21–29 nov', who: 'Airbnb · [consultar en Airbnb]',
       body: '2-31-10 Taitō. Llegada 15:00, salida 10:00. Cerradura inteligente.' },
     { id: 'idp', due: '2026-10-23', crit: true, title: 'Permiso Internacional de Conducción', who: 'DGT · cita previa',
       body: 'Imprescindible para alquilar el coche (25–29 nov). España está en la Convención de Ginebra de 1949, así que es válido en Japón durante un año. Llevar también el carné español.' },
