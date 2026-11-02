@@ -49,3 +49,6 @@
 .atlas-step__edit .atlas-step__move{width:31px;font-size:14px;padding:3px}
 .atlas-step__edit .atlas-step__skip{color:#e8bf7d}
 .atlas-step.is-skipped{opacity:.58}.atlas-step.is-skipped .atlas-step__main strong{text-decoration:line-through}
+
+.atlas-ticket-link{display:block;margin-top:10px;padding:10px 12px;border-radius:11px;background:#e9ad51;color:#182532;text-decoration:none;text-align:center;font-size:12px;font-weight:800}
+.atlas-arrival{background:#2b413f;border-color:#e9ba6d77}
