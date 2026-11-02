@@ -30,7 +30,7 @@ function originFor(d){
 }
 function hasCoords(s){return Array.isArray(s.ll)&&s.ll.length===2&&Number.isFinite(+s.ll[0])&&Number.isFinite(+s.ll[1]);}
 function pointFor(s){if(s.lodge){return lodge(s.lodge)}return {name:s.name,q:s.q||s.name,ll:s.ll};}
-function mapStops(d){return effectiveStops(d).filter(function(s){return hasCoords(pointFor(s))&&!s.far&&s.kind!=='move'&&s.kind!=='task'&&s.kind!=='home'&&(showOptions||!s.opt);});}
+function mapStops(d){return effectiveStops(d).filter(function(s){return hasCoords(pointFor(s))&&!s.far&&s.kind!=='move'&&s.kind!=='task'&&s.kind!=='home'&&!isSkipped(d,s.id)&&(showOptions||!s.opt);});}
 function directions(dest,orig,mode){var u='https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(dest.q||dest.name);if(orig)u+='&origin='+encodeURIComponent(orig.q||orig.name);return u+'&travelmode='+(mode==='car'?'driving':'transit');}
 function dayRouteLinks(d){
   var route=mapStops(d),from=originFor(d),mode=d.mode,sections=[];
@@ -92,6 +92,145 @@ function showDayMap(n){
  if(first){var p=atlas.all.find(function(x){return x.id==='plan:'+first.id||x.id==='idea:'+first.id.replace(/^c:/,'')});if(p)atlas.select(p);}
 }
 function clearDay(){appDay=null;dayPanel=null;window.jpAtlasRouteFilter=null;homeLayer.clearLayers();$('atlas-daybar').hidden=true;atlas.renderMarkers();atlas.map.setView([35.0,137.6],6);atlas.setTab('mapa');}
+
+  // ── Descubrimientos de camino (distancias geométricas orientativas) ──
+  var poiLayer=L.layerGroup().addTo(atlas.map),poiSuggestions=[],onRoadFilters='all';
+  function routeOmissions(){return storage('atlas-omit',{});}
+  function isSkipped(d,id){var entries=routeOmissions();return !!(entries[d.n]&&entries[d.n].indexOf(id)>=0);}
+  function toggleSkipped(d,id){
+    var o=routeOmissions(),a=o[d.n]||[],i=a.indexOf(id);
+    if(i>=0)a.splice(i,1);else a.push(id);
+    o[d.n]=a;localStorage.setItem('jp26:atlas-omit',JSON.stringify(o));
+  }
+  function normText(x){return String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
+  function segmentDistance(point,a,b){
+    var k=Math.cos((a[0]+b[0])*Math.PI/360),dx=(b[1]-a[1])*111.19*k,dy=(b[0]-a[0])*111.19;
+    var px=(point[1]-a[1])*111.19*k,py=(point[0]-a[0])*111.19;
+    var len=dx*dx+dy*dy,t=len?Math.max(0,Math.min(1,(px*dx+py*dy)/len)):0;
+    return {km:Math.hypot(px-t*dx,py-t*dy),t:t,segmentKm:Math.sqrt(len)};
+  }
+  function dayCorridor(d){
+    var stops=mapStops(d),origin=originFor(d),legs=[],last=origin;
+    stops.forEach(function(s){var next=pointFor(s);if(hasCoords(last)&&hasCoords(next)){
+      legs.push({a:last,b:next,before:s.id});
+    }last=next;});
+    return legs;
+  }
+  function scorePoi(p){
+    var score=({foto:3,relojes:3,ropa:3,figuras:3,retro:3,mercado:2,jdm:2,cultura:0,vistas:0})[p.cat]||0;
+    var name=normText(p.name);
+    if(/book.?off|hard.?off|off house|2nd street|surugaya|mandarake|fujiya|camera|second|hobby/.test(name))score+=3;
+    if(onRoadFilters!=='all'&&p.cat===onRoadFilters)score+=12;
+    return score;
+  }
+  function discover(d){
+    var legs=dayCorridor(d),ids=new Set(effectiveStops(d).map(function(s){return s.id;})),existing=new Set(effectiveStops(d).map(function(s){return normText(s.q||s.name);}));
+    var results=[];
+    PLACES.forEach(function(p){
+      if(!hasCoords(p)||ids.has('c:'+p.id)||existing.has(normText(p.q||p.name)))return;
+      if(onRoadFilters!=='all'&&p.cat!==onRoadFilters)return;
+      var near=null;
+      legs.forEach(function(leg){
+        var x=segmentDistance(p.ll,leg.a.ll,leg.b.ll);
+        var limit=d.mode==='car'?1.7:.65;
+        if(x.segmentKm>(d.mode==='car'?25:8)||x.km>limit)return;
+        if(!near||x.km<near.km)near={km:x.km,before:leg.before,a:leg.a.name,b:leg.b.name,t:x.t};
+      });
+      if(!near)return;
+      results.push({p:p,near:near,score:scorePoi(p)-near.km*3});
+    });
+    results.sort(function(a,b){return b.score-a.score||a.near.km-b.near.km;});
+    return results.slice(0,8);
+  }
+  function savePoi(d,p,before){
+    var plan=getPlan();if(!plan.order||typeof plan.order!=='object')plan.order={};
+    var ids=Array.isArray(plan.order[d.n])?plan.order[d.n].slice():d.stops.map(function(s){return s.id;});
+    var id='c:'+p.id;if(ids.indexOf(id)>=0)return false;
+    var i=ids.indexOf(before);if(i<0)i=ids.length;
+    ids.splice(i,0,id);
+    plan.order[d.n]=ids;
+    try{localStorage.setItem('jp26:plan',JSON.stringify(plan));return true}
+    catch(e){alert('No se pudo guardar el cambio en este dispositivo.');return false}
+  }
+  function removeAdded(d,id){
+    var p=getPlan(),ids=p.order&&p.order[d.n];
+    if(!Array.isArray(ids)||id.indexOf('c:')!==0)return false;
+    var i=ids.indexOf(id);if(i<0)return false;ids.splice(i,1);
+    localStorage.setItem('jp26:plan',JSON.stringify(p));return true;
+  }
+  function showPoisOnMap(d){
+    poiSuggestions=discover(d);poiLayer.clearLayers();
+    var used=[];
+    poiSuggestions.slice(0,6).forEach(function(item){
+      var pt=item.p,ll=pt.ll;
+      if(used.some(function(x){return segmentDistance(ll,x,x).km<.1}))return;
+      used.push(ll);
+      var ico=L.divIcon({className:'',html:'<div class="atlas-discovery-pin" title="Punto de interés cerca del trayecto">✦</div>',iconSize:[38,38],iconAnchor:[19,19]});
+      var marker=L.marker(ll,{icon:ico,zIndexOffset:800});marker.addTo(poiLayer);
+      marker.on('click',function(){
+        atlas.select({id:'idea:'+pt.id,name:pt.name,q:pt.q||pt.name,note:pt.note,ll:pt.ll,raw:pt,cat:pt.cat||'cultura',area:'all',source:'idea'});
+        var btn=document.getElementById('atlas-quickadd');
+        if(!btn){btn=button('＋ Añadir POI al día','atlas-quickadd',function(){
+          var chosen=btn._place;if(chosen&&savePoi(d,chosen.p,chosen.near.before)){showDayMap(d.n);dayDetail(d.n)}});
+          document.getElementById('card').appendChild(btn);}
+        btn._place=item;btn.hidden=false;
+        btn.textContent='＋ Añadir '+pt.name+' a este día';
+      });
+    });
+  }
+  function renderDiscoveries(d,root){
+    var wrap=document.createElement('section');wrap.id='atlas-nearby';wrap.className='atlas-nearby';
+    var title=document.createElement('div');title.className='atlas-nearby__head';
+    title.innerHTML='<span class="atlas-nearby__sparkle">✦</span><div><strong>Descubrimientos en el camino</strong><small>Paradas extra que podrían pillarte de paso</small></div>';
+    wrap.appendChild(title);
+    var filters=document.createElement('div');filters.className='atlas-poifilters';
+    [['all','Todos'],['figuras','🎮 Coleccionismo'],['foto','📷 Cámaras'],['ropa','👕 Ropa'],['relojes','⌚ Relojes'],['mercado','🛍️ Mercados']].forEach(function(c){
+      var b=button(c[1],'atlas-poifilter'+(onRoadFilters===c[0]?' active':''),function(){onRoadFilters=c[0];dayDetail(d.n);});
+      filters.appendChild(b);
+    });
+    wrap.appendChild(filters);
+    var found=discover(d),base=effectiveStops(d);
+    if(!found.length){
+      var empty=document.createElement('p');empty.className='atlas-discovery-empty';
+      empty.textContent='No hay puntos guardados dentro del corredor aproximado de esta ruta. Puedes cambiar de categoría o buscar en el mapa general.';
+      wrap.appendChild(empty);
+    }else{
+      found.slice(0,5).forEach(function(item){
+        var p=item.p,n=item.near,box=document.createElement('div');box.className='atlas-poicard';
+        var label=document.createElement('div');label.className='atlas-poicard__label';
+        label.innerHTML='<span class="atlas-poicard__icon">'+esc(({foto:'📷',ropa:'👕',relojes:'⌚',figuras:'🎮',retro:'🎮',mercado:'🛍️',jdm:'🏎️'})[p.cat]||'📍')+'</span><span class="atlas-poicard__info"><strong>'+esc(p.name)+'</strong><small>✦ aprox. '+Math.round(n.km*1000)+' m de la línea entre paradas</small><small>Entre '+esc(n.a)+' y '+esc(n.b)+'</small></span>';
+        box.appendChild(label);
+        if(p.note){var note=document.createElement('p');note.textContent=p.note;box.appendChild(note);}
+        var actions=document.createElement('div');actions.className='atlas-poicard__buttons';
+        actions.appendChild(button('＋ Añadir entre paradas','atlas-poicard__add',function(){
+          if(savePoi(d,p,n.before)){dayDetail(d.n);var message=document.createElement('p');message.className='atlas-added';message.textContent='✓ '+p.name+' añadido al día '+d.n+'. Se han respetado todos los horarios originales.';document.querySelector('.atlas-dayhead').after(message)}
+          else{alert('Este lugar ya está incluido o no se pudo guardar.')}
+        }));
+        actions.appendChild(button('Ver en mapa','atlas-poicard__map',function(){
+          showDayMap(d.n);atlas.map.setView(p.ll,14);var point=atlas.all.find(function(x){return x.id==='idea:'+p.id});
+          if(point)atlas.select(point);
+        }));
+        box.appendChild(actions);wrap.appendChild(box);
+      });
+    }
+    var foot=document.createElement('p');foot.className='atlas-nearby__foot';
+    foot.textContent='Distancias en línea recta al trazado aproximado, no desvíos ni tiempos reales. Revisa la ruta en Google Maps antes de decidir.';
+    wrap.appendChild(foot);root.appendChild(wrap);
+  }
+  function isFixed(s){
+    return s.kind==='home'||s.kind==='move'||s.kind==='task'||s.lodge||/\b(?:reserva|vuelo|tren nozomi|shinkansen|disneysea|billete|check.in)\b/i.test(s.name||'');
+  }
+  function moveStop(d,id,dir){
+    var p=getPlan();if(!p.order||typeof p.order!=='object')p.order={};
+    var arr=Array.isArray(p.order[d.n])?p.order[d.n].slice():d.stops.map(function(x){return x.id});
+    var index=arr.indexOf(id),next=index+dir;
+    if(index<0||next<0||next>=arr.length)return false;
+    var src=lookupStop(arr[index],p),dest=lookupStop(arr[next],p);
+    if(!src||!dest||isFixed(src)||isFixed(dest))return false;
+    var tmp=arr[index];arr[index]=arr[next];arr[next]=tmp;
+    p.order[d.n]=arr;localStorage.setItem('jp26:plan',JSON.stringify(p));return true;
+  }
+
 function renderDays(){
  var root=$('screenbody');root.innerHTML='';
  var intro=document.createElement('p');intro.className='tiny';intro.textContent='Tus rutas originales, con salida desde el alojamiento, horarios y visitas por completar. Selecciona una jornada.';root.appendChild(intro);
