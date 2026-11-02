@@ -1,8 +1,12 @@
 // Service worker: la app funciona sin conexión y guarda los mapas ya vistos.
-var VERSION = 'ruta-japon-v21-icono-tabi';
+var VERSION = 'ruta-japon-atlas-qa-20261102';
 var SHELL = [
   './',
   'index.html',
+  'atlas.html',
+  'atlas-day.js',
+  'atlas-day.css',
+  'atlas.webmanifest',
   'styles.css',
   'app.js',
   'data.js',
