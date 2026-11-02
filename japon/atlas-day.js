@@ -51,6 +51,15 @@ function pointFor(s){if(s.lodge){return lodge(s.lodge)}return {name:s.name,q:s.q
 function mapStops(d){return effectiveStops(d).filter(function(s){return hasCoords(pointFor(s))&&!s.far&&s.kind!=='move'&&s.kind!=='task'&&s.kind!=='home'&&!isSkipped(d,s.id)&&(showOptions||!s.opt);});}
 function directions(dest,orig,mode){var u='https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(dest.q||dest.name);if(orig)u+='&origin='+encodeURIComponent(orig.q||orig.name);return u+'&travelmode='+(mode==='car'?'driving':'transit');}
 function dayRouteLinks(d){
+  if(d.n===1&&arrivalMode()){
+    var airport=originFor(d),house=lodge('osaka');
+    function leg(from,to,mode){return 'https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(from)+'&destination='+encodeURIComponent(to)+'&travelmode='+mode;}
+    return [
+      {name:'Aeropuerto KIX → alojamiento de Osaka',url:leg(airport.q,house.q,'transit')},
+      {name:'Paseo local: Airbnb → Nipponbashi',url:leg(house.q,'Nippombashi Station Osaka','walking')},
+      {name:'Paseo nocturno: Airbnb → Dōtonbori',url:leg(house.q,'Dotonbori Osaka','walking')}
+    ];
+  }
   var route=mapStops(d),from=originFor(d),mode=d.mode,sections=[];
   if(!route.length)return [];
   for(var i=0;i<route.length;i+=3){
@@ -72,6 +81,16 @@ function createBar(){
 }
 function routeLayer(d){
  homeLayer.clearLayers();
+ if(d.n===1&&arrivalMode()){
+   var house=lodge('osaka'),stops=mapStops(d),coords=[house.ll];
+   homeLayer.addLayer(L.marker(house.ll,{icon:L.divIcon({className:'',html:'<div class="atlas-homepin">🏠</div>',iconSize:[38,38],iconAnchor:[19,19]})}).bindPopup('Alojamiento de Osaka · check-in a partir de las 16:00'));
+   var nearby=stops.find(function(x){return x.id==='atlas-arrival-walk'});
+   var evening=stops.find(function(x){return x.id==='dotonbori'});
+   if(nearby){coords.push(pointFor(nearby).ll);homeLayer.addLayer(L.polyline([house.ll,pointFor(nearby).ll],{color:'#9fd4c4',weight:3,dashArray:'3 8',interactive:false}));}
+   if(evening){coords.push(pointFor(evening).ll);homeLayer.addLayer(L.polyline([house.ll,pointFor(evening).ll],{color:'#ffb968',weight:3,dashArray:'3 8',interactive:false}));}
+   atlas.map.fitBounds(coords,{paddingTopLeft:[35,155],paddingBottomRight:[35,190],maxZoom:15,animate:true});
+   return;
+ }
  var orig=originFor(d),stops=mapStops(d),points=[];
  if(orig&&hasCoords(orig)){
   var marker=L.marker(orig.ll,{icon:L.divIcon({className:'',html:'<div class="atlas-homepin">'+(orig.key==='airport'?'✈️':'🏠')+'</div>',iconSize:[38,38],iconAnchor:[19,19]})});
@@ -100,7 +119,7 @@ function syncMapPlaces(d){
 }
 function showDayMap(n){
  var d=DAYS[n-1];if(!d)return;appDay=d;dayPanel=n;
- syncMapPlaces(d);routeLayer(d);showPoisOnMap(d);
+ syncMapPlaces(d);routeLayer(d);if(d.n===1&&arrivalMode())poiLayer.clearLayers();else showPoisOnMap(d);
  $('atlas-daybar-title').textContent='Día '+d.n+' · '+d.title;
  $('atlas-daybar-start').textContent='Desde: '+originFor(d).name;
  $('atlas-daybar').hidden=false;
@@ -313,7 +332,7 @@ function dayDetail(n){
  var links=dayRouteLinks(d);if(links.length){var box=document.createElement('div');box.className='atlas-routebox';var p=document.createElement('small');p.textContent='Navegación real por tramos desde el alojamiento. Google Maps calcula el trayecto; no se inventan tiempos.';box.appendChild(p);
  links.forEach(function(l){var a=document.createElement('a');a.href=l.url;a.textContent='📍 '+l.name;a.target='_blank';a.rel='noopener';box.appendChild(a)});root.appendChild(box);}
  var completed=effectiveStops(d).filter(function(s){return doneSet().has(s.id)}).length;var title=document.createElement('p');title.className='atlas-daycount';title.textContent='✓ '+completed+' visitas marcadas · Seguimiento compartido con tu app original en este dispositivo';root.appendChild(title);
- renderDiscoveries(d,root);renderTimeline(d,root);$('screen').classList.remove('hidden');
+ if(!(d.n===1&&arrivalMode()))renderDiscoveries(d,root);renderTimeline(d,root);$('screen').classList.remove('hidden');
 }
 window.jpDayRender=function(){if(dayPanel)dayDetail(dayPanel);else renderDays()};
 var extClick=$('routebtn').onclick;
