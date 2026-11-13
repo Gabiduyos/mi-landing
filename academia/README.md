@@ -5,7 +5,8 @@ Academia audiovisual interactiva, en español y **100 % offline**, pensada para 
 ## Qué incluye
 
 - **13 módulos** de ≈ 60 min (62 lecciones) + **2 módulos extra** (equipo DJI y filtros; rodar en Japón). Cada módulo: lecciones, casos reales, errores habituales, ejercicio, checklist, resumen descargable y examen.
-- **8 simuladores funcionales** con 23 retos verificados sobre el estado real del simulador:
+- **8 simuladores funcionales** con 23 retos **guiados**: «Empezar reto» prepara la escena, una lista en vivo marca cada condición (con el valor actual y, en la cámara virtual, el menú donde está cada ajuste), hay pistas progresivas y solución, y al terminar se explica lo aprendido. Una barra fija muestra el siguiente paso cuando el reto queda fuera de pantalla. Cada módulo enlaza en su pestaña «Ejercicio» los retos que puedes hacer en el avión.
+  Simuladores:
   A Exposición · B S-Log3 · C Cámara virtual A7 IV · D Iluminación · E Ópticas · F Montaje · G Color (con scopes) · H Rodajes bajo presión.
   Cada uno declara qué es cálculo real y qué es modelo didáctico.
 - **19 escenarios de luz** con 11 apartados cada uno.
@@ -69,7 +70,7 @@ python3 -m http.server 8765      # desde la raíz del repositorio
 Verificado con Chromium (emulación de iPhone 13 y escritorio):
 
 - 247 rutas sin errores de consola ni pantallas vacías.
-- Los 23 retos de simulador son alcanzables; evaluadores de montaje y examen final.
+- Los 22 retos de los simuladores A–G se superan aplicando su solución publicada (el H se supera respondiendo bien la tanda), y ninguno se supera solo con abrir el simulador.
 - Exámenes, repaso espaciado, conversaciones, memorias y persistencia tras recargar.
 - Service worker: 44/44 recursos en caché; con la red cortada, recarga, navegación y apertura en pestaña nueva.
 

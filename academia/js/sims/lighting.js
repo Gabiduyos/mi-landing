@@ -1,31 +1,57 @@
 // SIMULADOR D — Iluminación. Sombreado difuso real sobre una esfera (Lambert + cuadrado inverso);
 // la «suavidad» es una aproximación (wrap lighting), no un cálculo de fuente extensa.
-import { $, $$, slider, goalsHTML, toast, clamp } from '../ui.js';
-import { state, markGoal } from '../store.js';
+import { $, $$, slider, clamp } from '../ui.js';
+import { coach } from './coach.js';
 
-const GOALS = [
-  { id: 'D1', text: 'Retrato suave clásico: principal entre 30° y 60°, suavidad alta (≥ 60 %), relleno encendido y contraste entre los dos lados de la cara de 1 a 2 stops.' },
-  { id: 'D2', text: 'Videoclip dramático: relleno apagado, principal lateral (60°–100°), contra encendida en el lado opuesto y contraste de 3 stops o más.' },
-  { id: 'D3', text: 'Separación por color: balance de cámara a 3200–3600 K, principal a 3200 K y contra a 5600 K o más fría (se verá azulada). Fondo por debajo del 20 %.' }
+const deg = v => Math.round(v) + '°';
+const BASE = { key: { on: true, a: 45, d: 2, i: 70, s: 0.3, k: 5600 }, fill: { on: true, a: -40, d: 2.5, i: 12, s: 0.9, k: 5600 }, back: { on: true, a: -150, d: 2, i: 55, s: 0.2, k: 5600 } };
+export const GOALS = [
+  { id: 'D1', title: 'Arregla un retrato plano',
+    story: 'La principal está pegada a la cámara y es dura: la cara queda plana y sin volumen. Conviértelo en un retrato suave clásico.',
+    setup: { L: { ...BASE, key: { on: true, a: 0, d: 2, i: 70, s: 0.15, k: 5600 } }, wb: 5600, bg: 15 },
+    checks: [['Principal desplazada entre 30° y 60° (arrastra el punto naranja)', s => s.ka >= 30 && s.ka <= 60, s => 'ahora ' + deg(s.ka)],
+      ['Principal suave: «Suavidad» al 60 % o más', s => s.key.s >= 0.6, s => 'ahora ' + Math.round(s.key.s * 100) + ' %'], ['Relleno encendido', s => s.fill.on],
+      ['Contraste entre los dos lados de la cara de 1 a 2 stops', s => s.stops >= 1 && s.stops <= 2, s => 'ahora ' + s.stops.toFixed(1) + ' stops'], ['Piel sin quemar', s => s.lvl < 92]],
+    hints: ['En la planta, la cámara está abajo. Arrastra el punto naranja (principal) hacia un lado, en diagonal.', 'Selecciona «Principal» y sube «Suavidad»: así simulas una fuente más grande, como una ventana o un softbox.', 'Si el contraste no llega a 1 stop, el relleno está demasiado fuerte: selecciónalo y baja su intensidad.'],
+    solution: 'Principal a unos 45° y suavidad al 60 %; relleno encendido a intensidad baja (≈ 12 %, como viene).',
+    learn: 'Mover la luz fuera del eje de cámara crea sombra, y la sombra crea volumen. La suavidad la da el tamaño aparente de la fuente; el relleno decide lo oscura que queda esa sombra.' },
+  { id: 'D2', title: 'Look de videoclip dramático',
+    story: 'El artista quiere un plano duro y oscuro, con media cara en sombra y un borde de luz que lo separe del fondo negro.',
+    setup: { L: BASE, wb: 5600, bg: 15 },
+    checks: [['Relleno apagado (casilla «Encendida»)', s => !s.fill.on], ['Principal lateral, entre 60° y 100°', s => s.ka >= 60 && s.ka <= 100, s => 'ahora ' + deg(s.ka)],
+      ['Contra encendida, detrás y en el lado opuesto a la principal', s => s.back.on && Math.abs(s.ba) > 110 && Math.sign(s.ba) !== Math.sign(s.kaS), s => s.back.on ? (Math.abs(s.ba) <= 110 ? 'la contra no está detrás del sujeto' : Math.sign(s.ba) === Math.sign(s.kaS) ? 'está en el mismo lado que la principal' : '') : 'contra apagada'],
+      ['Contraste de 3 stops o más', s => s.stops >= 3, s => 'ahora ' + s.stops.toFixed(1) + ' stops']],
+    hints: ['Selecciona «Relleno» y desmarca «Encendida».', 'Arrastra la principal hacia el lateral del sujeto, casi a 90°.', 'La contra (azul) va detrás, en el lado contrario a la principal: dibuja el borde del lado en sombra.'],
+    solution: 'Relleno apagado, principal a ≈ 80° por un lado y contra detrás por el lado contrario (≈ −150°).',
+    learn: 'Quitar luz es tan importante como ponerla. Con 3 stops o más entre lados, la cara gana dramatismo; la contra evita que el lado oscuro se funda con el fondo.' },
+  { id: 'D3', title: 'Separación por color, sin geles',
+    story: 'Truco clásico con poco equipo: piel neutra-cálida y un borde frío. Tu LED principal va a 3200 K y la contra, a luz día.',
+    setup: { L: BASE, wb: 5600, bg: 15 },
+    checks: [['Balance de cámara entre 3200 y 3600 K', s => s.wb >= 3200 && s.wb <= 3600, s => 'ahora ' + s.wb + ' K'], ['Principal a 3300 K o menos', s => s.key.on && s.key.k <= 3300, s => 'ahora ' + s.key.k + ' K'],
+      ['Contra a 5600 K o más, detrás del sujeto', s => s.back.on && s.back.k >= 5600 && Math.abs(s.ba) > 110, s => 'ahora ' + s.back.k + ' K'], ['Fondo por debajo del 20 %', s => s.bg < 20, s => 'ahora ' + s.bg + ' %']],
+    hints: ['El balance de cámara está bajo la línea, en el mismo panel.', 'Selecciona «Principal» y baja su temperatura a 3200 K.', 'Con la cámara a 3200–3600 K, la contra a luz día se verá azul: esa es la separación.'],
+    solution: 'Balance 3400 K, principal a 3200 K, contra a 5600 K detrás y fondo al 15 %.',
+    learn: 'El balance es global: lo que coincide con él se ve neutro y lo que es más frío se ve azul. Así consigues el contraste cálido–frío del cine sin filtros de color.' }
 ];
 const kel = k => { const t = (k - 5600) / 2400; return [1 - 0.28 * t, 1 - 0.04 * Math.abs(t), 1 + 0.42 * t].map(v => Math.max(0.3, v)); };
 const S = 150;
 
-export function mount(el) {
+export function mount(el, opts = {}) {
   const L = {
-    key: { n: 'Principal', c: '#ff8a1f', on: true, a: 45, d: 2, i: 70, s: 0.6, k: 5600, e: 25 },
-    fill: { n: 'Relleno', c: '#35c98a', on: true, a: -40, d: 2.5, i: 25, s: 0.9, k: 5600, e: 10 },
+    key: { n: 'Principal', c: '#ff8a1f', on: true, a: 45, d: 2, i: 70, s: 0.3, k: 5600, e: 25 },
+    fill: { n: 'Relleno', c: '#35c98a', on: true, a: -40, d: 2.5, i: 12, s: 0.9, k: 5600, e: 10 },
     back: { n: 'Contra', c: '#2f7bff', on: true, a: -150, d: 2, i: 55, s: 0.2, k: 5600, e: 40 }
   };
-  let sel = 'key', wb = 5600, bg = 15;
+  let sel = 'key', wb = 5600, bg = 15, co = null;
   el.innerHTML = `<div class="sim"><div>
     <div class="grid" style="grid-template-columns:1fr 1fr;gap:10px">
       <div><span class="lbl">Planta (arrastra las luces)</span><svg class="stage" viewBox="0 0 300 300" id="sd-top" aria-label="Planta del set"></svg></div>
       <div><span class="lbl">Lo que ve la cámara</span><div class="screen"><canvas width="${S}" height="${S}" id="sd-c" aria-label="Sujeto iluminado"></canvas></div></div>
     </div>
     <div class="readout"><div><b id="sd-r">–</b><span>Contraste cara</span></div><div><b id="sd-kf">–</b><span>Principal:relleno</span></div><div><b id="sd-p">–</b><span>Esquema</span></div><div><b id="sd-x">–</b><span>Nivel piel</span></div></div>
-    <div id="sd-goals">${goalsHTML(GOALS, state().goals)}</div>
   </div><div>
+    <div id="sd-coach"></div>
+    <span class="lbl">Luz seleccionada</span>
     <div class="seg" id="sd-sel">${Object.entries(L).map(([k, l]) => `<button type="button" data-l="${k}" style="border-color:${l.c}">${l.n}</button>`).join('')}</div>
     <label class="row small" style="margin:10px 0"><input type="checkbox" id="sd-on"> Encendida</label>
     ${slider('sd-i', 'Intensidad', 0, 100, 1, 70)}
@@ -49,7 +75,7 @@ export function mount(el) {
   function render() {
     const w = kel(wb), d = img.data, lights = Object.values(L).filter(l => l.on && l.i > 0).map(l => {
       const a = l.a * Math.PI / 180, e = l.e * Math.PI / 180, c = kel(l.k);
-      return { v: [Math.sin(a) * Math.cos(e), Math.sin(e), Math.cos(a) * Math.cos(e)], E: (l.i / 70) * 4 / (l.d * l.d), w: l.s * 0.5, c: [c[0] / w[0], c[1] / w[1], c[2] / w[2]] };
+      return { v: [Math.sin(a) * Math.cos(e), Math.sin(e), Math.cos(a) * Math.cos(e)], E: (l.i / 70) * 4 / (l.d * l.d), w: l.s * 0.35, c: [c[0] / w[0], c[1] / w[1], c[2] / w[2]] };
     });
     let sl = 0, sr = 0, nl = 0, nr = 0, sm = 0, nm = 0;
     const R = 46, cx = S / 2, cy = 62;
@@ -76,12 +102,7 @@ export function mount(el) {
     $('#sd-r', el).textContent = stops.toFixed(1) + ' stops'; $('#sd-kf', el).textContent = ef > 0 && ek > 0 ? `${((ek + ef) / ef).toFixed(1)}:1` : ek > 0 ? 'sin relleno' : '–';
     $('#sd-p', el).textContent = patt; $('#sd-x', el).innerHTML = lvl > 92 ? '<span style="color:#ff5263">quemada</span>' : lvl < 20 ? '<span style="color:#ff8a1f">muy oscura</span>' : lvl.toFixed(0) + ' %';
     const bk = L.back, ba = ((bk.a + 540) % 360) - 180, kaS = ((k.a + 540) % 360) - 180;
-    const ok = {
-      D1: k.on && f.on && ka >= 30 && ka <= 60 && k.s >= 0.6 && stops >= 1 && stops <= 2 && lvl < 92,
-      D2: k.on && !f.on && bk.on && ka >= 60 && ka <= 100 && Math.abs(ba) > 110 && Math.sign(ba) !== Math.sign(kaS) && stops >= 3,
-      D3: wb <= 3600 && k.on && bk.on && k.k <= 3300 && bk.k >= 5600 && Math.abs(ba) > 110 && bg < 20
-    };
-    for (const gl of GOALS) if (ok[gl.id] && markGoal(gl.id)) { $('#sd-goals', el).innerHTML = goalsHTML(GOALS, state().goals); toast('Reto superado · +30 XP'); }
+    if (co) co.update({ key: k, fill: f, back: bk, ka, kaS, ba, stops, lvl, wb, bg });
   }
   function panel() {
     const l = L[sel];
@@ -105,5 +126,10 @@ export function mount(el) {
   $('#sd-k', el).oninput = e => { L[sel].k = +e.target.value; all(); };
   $('#sd-wb', el).oninput = e => { wb = +e.target.value; all(); };
   $('#sd-bg', el).oninput = e => { bg = +e.target.value; all(); };
+  co = coach($('#sd-coach', el), el, { goals: GOALS, start: opts.goal,
+    apply: st => { for (const k in st.L) Object.assign(L[k], st.L[k]); wb = st.wb; bg = st.bg; $('#sd-wb', el).value = wb; $('#sd-bg', el).value = bg; sel = 'key'; all(); },
+    intro: ['La planta es el plató visto desde arriba: el sujeto en el centro y la cámara abajo. Arrastra los puntos de color para mover cada luz.',
+      'Toca una luz (o sus botones) para seleccionarla y cambiar intensidad, suavidad, temperatura o apagarla.',
+      'A la derecha ves el resultado en la cara. Elige un reto y sigue la lista: se marca en verde.'] });
   all();
 }

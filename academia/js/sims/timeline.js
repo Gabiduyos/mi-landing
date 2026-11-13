@@ -1,7 +1,8 @@
 // SIMULADOR F — Montaje. Línea de tiempo simplificada con evaluación por reglas explícitas.
 // Las reglas son convenciones de montaje útiles, no leyes: el informe explica cada una.
-import { $, $$, esc, goalsHTML, toast } from '../ui.js';
-import { state, markGoal } from '../store.js';
+import { $, $$, esc, toast } from '../ui.js';
+import { coach } from './coach.js';
+import { markGoal } from '../store.js';
 
 const COL = { PG: '#2a5d8f', PM: '#3d7a5a', PP: '#a8552a', PD: '#7a4a9c' };
 const SZ = { PG: 'General', PM: 'Medio', PP: 'Primer plano', PD: 'Detalle' };
@@ -57,10 +58,27 @@ const PROJECTS = {
     rules: ['dur', 'close', 'jump', 'beat', 'accel', 'alternate', 'sizes']
   }
 };
-const GOALS = [
-  { id: 'F1', text: 'Reel HYROX: consigue al menos un 85 % en la evaluación.' },
-  { id: 'F2', text: 'Testimonio: ordena la historia y cubre los cortes (85 % o más).' },
-  { id: 'F3', text: 'Estribillo: ritmo creciente y cortes a tiempo (85 % o más).' }
+const live = id => s => {
+  if (s.pid !== id) return [['Abre el proyecto «' + PROJECTS[id].name + '» (pestañas de arriba)', false, '']];
+  if (!s.tl.length) return [['Añade planos tocando el material', false, 'la línea de tiempo está vacía']];
+  return PROJECTS[id].rules.map(k => { const r = RULES[k](s.tl, s.P, s.tot); return [r[1], r[0], r[0] ? '' : r[2]]; });
+};
+export const GOALS = [
+  { id: 'F1', title: 'Reel de HYROX que enganche', story: 'Monta 15–20 s para Instagram: gancho en el primer segundo, contexto, acción con ritmo, clímax al final y un cierre.',
+    setup: [['click:[data-p="F1"]']], checks: live('F1'),
+    hints: ['Empieza por el plano marcado como gancho: la cara de esfuerzo.', 'Después, el plano general de la nave para situar. Luego la acción variando tamaños de plano.', 'La meta casi al final y el abrazo como último plano. Ajusta duraciones con − / + hasta que los cortes caigan en las marcas naranjas.'],
+    solution: 'Orden: cara de esfuerzo → nave → empuje lateral → manos en el trineo → wall balls → zapatillas → público → cronómetro → meta → abrazo.',
+    learn: 'Un reel funciona como una historia mínima: gancho, contexto, desarrollo con variedad de planos y un clímax que llega tarde. Cortar sobre el pulso de la música da sensación de control.' },
+  { id: 'F2', title: 'Testimonio con historia', story: 'Ordena las frases del socio para que haya un antes y un después, y tapa los saltos de la entrevista con planos de recurso.',
+    setup: [['click:[data-p="F2"]']], checks: live('F2'),
+    hints: ['Las frases entre comillas son la columna vertebral. Ordénalas: gancho, problema, método, resultado, llamada.', 'Nunca pongas dos frases seguidas con el mismo encuadre: intercala un recurso.', 'Usa al menos dos recursos y vigila la duración total.'],
+    solution: '«Perdí 20 kilos» → recurso sonriendo → «No subía una escalera» → entra al gimnasio → «Plan a medida» → entrenadora corrige → «Entreno cuatro días» → manos con magnesio → «Ven a probar».',
+    learn: 'En entrevistas la estructura la manda lo que se dice; los recursos ilustran y tapan los cortes. Un gancho que adelanta el resultado y después un relato en orden es la estructura más usada en testimonios.' },
+  { id: 'F3', title: 'Estribillo que acelera', story: 'Último estribillo de un videoclip a 140 BPM: alterna interpretación y narrativa, acorta los planos hacia el final y corta a tiempo.',
+    setup: [['click:[data-p="F3"]']], checks: live('F3'),
+    hints: ['No pongas más de dos planos seguidos del mismo tipo (playback o narrativa).', 'Planos largos al principio y cortos al final; el cierre largo, para respirar.', 'Las marcas de la regla son pulsos. Usa − / + para que cada plano dure un número entero de pulsos (lo ves en cada plano).'],
+    solution: 'Playback medio (7 pulsos) → corre en callejón (6) → playback PP (4) → se gira (4) → boca al micro (2) → mano suelta el móvil (2) → destello (1) → se aleja (6).',
+    learn: 'El ritmo es la relación entre duraciones: si los planos se acortan, la energía sube. Alternar interpretación y narrativa mantiene el diálogo entre ambas líneas del videoclip.' }
 ];
 
 const RULES = {
@@ -79,10 +97,10 @@ const RULES = {
   alternate: t => { let run = 1, mx = 1; t.forEach((c, i) => { if (i && c.r === t[i - 1].r && (c.r === 'playback' || c.r === 'narrativa')) { run++; mx = Math.max(mx, run); } else run = 1; }); const both = t.some(c => c.r === 'playback') && t.some(c => c.r === 'narrativa'); return [both && mx <= 2, 'Interpretación y narrativa se alternan (máximo dos seguidos del mismo tipo).', 'Un videoclip con ambas líneas funciona por el diálogo entre ellas; bloques largos de una sola rompen el ritmo del estribillo.']; }
 };
 
-export function mount(el) {
-  let pid = 'F1', tl = [], sel = -1, playing = null, actx = null, snd = false;
+export function mount(el, opts = {}) {
+  let pid = 'F1', tl = [], sel = -1, playing = null, actx = null, snd = false, co = null;
   const P = () => PROJECTS[pid];
-  el.innerHTML = `<div class="tabsbar" id="sf-p" style="margin-top:0">${Object.entries(PROJECTS).map(([k, v]) => `<button type="button" data-p="${k}">${esc(v.name)}</button>`).join('')}</div>
+  el.innerHTML = `<div id="sf-coach"></div><div class="tabsbar" id="sf-p" style="margin-top:0">${Object.entries(PROJECTS).map(([k, v]) => `<button type="button" data-p="${k}">${esc(v.name)}</button>`).join('')}</div>
     <p id="sf-brief" class="muted"></p>
     <div class="grid g2"><div><span class="lbl">Monitor</span><div class="screen" id="sf-mon" style="aspect-ratio:16/9;display:grid;place-items:center;text-align:center;padding:14px;font-weight:700"></div>
       <div class="row mt" style="margin-top:8px"><button class="btn sm" id="sf-play">▶ Reproducir</button><label class="row small"><input type="checkbox" id="sf-snd"> Claqueta de pulso (sonido)</label><span class="mono small" id="sf-tot"></span></div></div>
@@ -92,7 +110,6 @@ export function mount(el) {
     <canvas id="sf-ruler" class="scope" height="18" style="height:18px;margin-top:2px"></canvas>
     <div class="row mt" style="margin-top:10px"><button class="btn sm ghost" data-a="l">← Mover</button><button class="btn sm ghost" data-a="r">Mover →</button><button class="btn sm ghost" data-a="-">− Acortar</button><button class="btn sm ghost" data-a="+">+ Alargar</button><button class="btn sm ghost" data-a="x">Quitar</button><button class="btn sm ghost" data-a="c">Vaciar</button><button class="btn sm warn" id="sf-eval">Evaluar montaje</button></div>
     <div id="sf-out" class="mt"></div>
-    <div id="sf-goals" class="mt">${goalsHTML(GOALS, state().goals)}</div>
     <p class="note"><strong>Límite del modelo:</strong> evalúa estructura (orden, duración, variedad, sincronía con el pulso), no la calidad real de las imágenes ni el corte exacto dentro del movimiento. Las reglas son convenciones que conviene dominar antes de romperlas a propósito.</p>`;
   const PX = 46; // px por segundo
   const total = () => tl.reduce((s, c) => s + c.d, 0);
@@ -106,6 +123,7 @@ export function mount(el) {
     $('#sf-tot', el).textContent = `${total().toFixed(1)} s / ${p.min}–${p.max} s`;
     const r = $('#sf-ruler', el); r.width = Math.max(300, total() * PX + 20); r.style.width = r.width + 'px'; const x = r.getContext('2d'); x.clearRect(0, 0, r.width, 18);
     for (let b = 0, k = 0; b <= total() + 0.01; b += p.beat, k++) { x.fillStyle = k % 4 === 0 ? '#ff8a1f' : '#3a404b'; x.fillRect(8 + b * PX, k % 4 === 0 ? 2 : 8, 1.5, 16); }
+    if (co) co.update({ pid, tl, P: p, tot: total() });
   }
   function stop() { if (playing) { cancelAnimationFrame(playing); playing = null; $('#sf-play', el).textContent = '▶ Reproducir'; } }
   function click() { if (!snd) return; try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); const o = actx.createOscillator(), g = actx.createGain(); o.frequency.value = 880; g.gain.value = 0.08; o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime + 0.04); } catch { } }
@@ -126,7 +144,6 @@ export function mount(el) {
     const res = p.rules.map(k => RULES[k](tl, p, tot)), ok = res.filter(r => r[0]).length, pct = Math.round(100 * ok / res.length);
     $('#sf-out', el).innerHTML = `<div class="card"><div class="row sp"><strong>Evaluación: ${ok}/${res.length} criterios · ${pct} %</strong><span class="chip ${pct >= 85 ? 'g' : 'o'}">${pct >= 85 ? 'Superado' : 'Revisar'}</span></div>` +
       res.map(r => `<div class="fb ${r[0] ? 'ok' : 'ko'}"><b>${r[0] ? '✓' : '✕'} ${esc(r[1])}</b>${r[0] ? '' : esc(r[2])}</div>`).join('') + '</div>';
-    if (pct >= 85 && markGoal(pid)) { $('#sf-goals', el).innerHTML = goalsHTML(GOALS, state().goals); toast('Reto superado · +30 XP'); }
   }
   el.addEventListener('click', e => {
     const pb = e.target.closest('[data-p]'), add = e.target.closest('[data-add]'), ci = e.target.closest('[data-i]'), a = e.target.closest('[data-a]');
@@ -148,5 +165,9 @@ export function mount(el) {
     if (e.target.id === 'sf-eval') evaluate();
   });
   $('#sf-snd', el).onchange = e => { snd = e.target.checked; };
+  co = coach($('#sf-coach', el), el, { goals: GOALS, start: opts.goal, intro: [
+    'Arriba eliges el proyecto. A la derecha está el material: toca un plano para añadirlo al final de la línea de tiempo.',
+    'Toca un plano de la línea de tiempo para seleccionarlo; muévelo con ← →, cambia su duración con − / + o quítalo. Las marcas de la regla son los pulsos de la música.',
+    'Elige un reto: los criterios de montaje se marcan en verde mientras montas. «Reproducir» te enseña el ritmo resultante.'] });
   draw();
 }

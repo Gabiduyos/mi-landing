@@ -188,3 +188,39 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--blue);flex:none}
 .badge-lvl{display:inline-flex;align-items:center;gap:8px;font:600 .8rem var(--mono);color:var(--orange);border:1px solid #7a4a1c;border-radius:999px;padding:5px 12px}
 @media print{#side,#tabs,.btn,.tabsbar{display:none!important}body{background:#fff;color:#000}.card{border:0}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* práctica guiada */
+.coach{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
+.coach.on{border-color:var(--blue);box-shadow:0 0 0 1px rgba(47,123,255,.25)}
+.coach.win{border-color:var(--green);background:#0f2219}
+.coach-how summary{cursor:pointer;font-weight:600;color:var(--blue2)}
+.coach-how ol{margin:8px 0 0;padding-left:1.2em;font-size:.9rem;color:var(--tx2)}
+.coach-how li{margin:4px 0}
+.coach-goal{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin:6px 0;cursor:pointer;line-height:1.35}
+.coach-goal:hover{border-color:var(--blue)}
+.coach-goal.done{border-color:#1f6b4c}
+.coach-n{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--panel2);font:700 .8rem var(--mono);color:var(--orange)}
+.coach-goal.done .coach-n{background:#12281f;color:var(--green)}
+.coach-go{flex:none;font:600 .78rem var(--mono);color:var(--blue2)}
+.coach-list{list-style:none;margin:0;padding:0}
+.coach-list li{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px dashed var(--line);font-size:.92rem;line-height:1.35}
+.coach-list li:last-child{border:0}
+.coach-tick{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--orange);color:var(--orange);font-size:.8rem;font-weight:700;transition:.2s}
+.coach-list li.ok .coach-tick{background:var(--green);border-color:var(--green);color:#03140c}
+.coach-list li.ok>span:last-child{color:var(--tx2)}
+.coach-det{display:block;font-size:.8rem;color:var(--tx3);margin-top:2px;line-height:1.35}
+.coach-list li:not(.ok) .coach-det{color:var(--orange)}
+.coach-hint,.coach-sol{background:#1f1a10;border:1px solid #7a4a1c;border-radius:8px;padding:9px 11px;margin-top:8px;font-size:.88rem}
+.coach-hint b,.coach-sol b{display:block;color:var(--orange);font:600 .7rem var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+.coach-sol{background:#17243d;border-color:#254a8f}.coach-sol b{color:var(--blue2)}
+.ctl .hint{font-size:.74rem;color:var(--tx3);line-height:1.3}
+.coach-goal .muted{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.coach-mini{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + var(--sab));z-index:45;display:flex;gap:10px;align-items:center;width:min(560px,calc(100% - 24px));background:#17243d;border:1px solid var(--blue);border-radius:12px;padding:10px 12px;color:var(--tx);text-align:left;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.coach-mini[hidden]{display:none}
+.coach-mini-n{flex:none;font:700 .8rem var(--mono);color:var(--orange);border:1.5px solid var(--orange);border-radius:999px;padding:3px 8px}
+.coach-mini-t{flex:1;font-size:.86rem;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.coach-mini-up{flex:none;font:600 .72rem var(--mono);color:var(--blue2)}
+@media(max-width:880px){.coach-mini{bottom:calc(64px + var(--sab))}}
+@media(max-width:600px){.coach-go{font-size:0}.coach-go::after{content:'›';font-size:1.5rem;color:var(--blue2)}}
+.coach-goal .muted{margin-top:2px}
+@media(max-width:880px){#toast{bottom:calc(150px + var(--sab))}}

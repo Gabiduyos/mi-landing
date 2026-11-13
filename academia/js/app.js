@@ -2,7 +2,7 @@
 import { $, $$, esc, md, toast, download, copyText } from './ui.js';
 import { state, save, saveNow, markLesson, lessonDone, setQuiz, level, srsDue, isMemOnly } from './store.js';
 import { MODULES, CORE, mod, modProgress, overall, nextStep, weakTags, renderProse, runQuiz, QBANK } from './core.js';
-import { SIMS, GOAL_COUNT, mountSim } from './sims/index.js';
+import { SIMS, GOAL_COUNT, mountSim, SIM_GOALS, MOD_SIMS } from './sims/index.js';
 import * as V from './views.js';
 
 const ICON = {
@@ -109,7 +109,7 @@ function moduleView(id, tab = 'lecciones') {
   if (tab === 'conversaciones') body = `<p class="muted">Conversaciones simuladas con respuestas que tienen consecuencias. Busca el mejor final en cada una.</p><div class="grid g2">${m.dialogs.map(d => `<a class="tile" href="#/m/${m.id}/d/${d.id}"><span class="n">SIMULACIÓN</span><h3>${esc(d.title)}</h3><p>${esc(d.who)}</p>${S.checks['dlg:' + d.id] ? '<span class="chip g" style="margin-top:8px">Mejor final conseguido</span>' : ''}</a>`).join('')}</div>`;
   if (tab === 'casos') body = m.cases.map(c => `<div class="card mb"><h3 style="margin-top:0">${esc(c.t)}</h3><div class="prose">${md(c.b)}</div></div>`).join('');
   if (tab === 'errores') body = `<div class="card"><ul class="list">${m.errors.map(e => `<li><div style="padding:10px 4px"><span style="color:var(--orange)">✕</span> ${esc(e)}</div></li>`).join('')}</ul></div>`;
-  if (tab === 'ejercicio') body = `<div class="card"><h3 style="margin-top:0">${esc(m.exercise.title)}</h3><ul class="list">${m.exercise.steps.map((s, i) => { const k = `ex:${m.id}:${i}`; return `<li><label><input type="checkbox" data-ck="${k}" ${S.checks[k] ? 'checked' : ''}><span>${esc(s)}</span></label></li>`; }).join('')}</ul><p class="mt"><strong>Entregable:</strong> ${esc(m.exercise.deliver)}</p>
+  if (tab === 'ejercicio') body = practiceNow(m) + `<div class="card"><span class="lbl">Con tu cámara y por escrito</span><h3 style="margin-top:0">${esc(m.exercise.title)}</h3><ul class="list">${m.exercise.steps.map((s, i) => { const k = `ex:${m.id}:${i}`; return `<li><label><input type="checkbox" data-ck="${k}" ${S.checks[k] ? 'checked' : ''}><span>${esc(s)}</span></label></li>`; }).join('')}</ul><p class="mt"><strong>Entregable:</strong> ${esc(m.exercise.deliver)}</p>
       <span class="lbl mt">Tus notas (se guardan en el dispositivo)</span><textarea data-note="ex:${m.id}" placeholder="Escribe aquí tu respuesta o tus conclusiones…">${esc(S.notes['ex:' + m.id] || '')}</textarea></div>`;
   if (tab === 'checklist') body = `<div class="card"><ul class="list">${m.checklist.map((s, i) => { const k = `cl:${m.id}:${i}`; return `<li><label><input type="checkbox" data-ck="${k}" ${S.checks[k] ? 'checked' : ''}><span>${esc(s)}</span></label></li>`; }).join('')}</ul><button class="btn sm ghost mt" id="cl-reset">Desmarcar todo (nuevo rodaje)</button></div>`;
   if (tab === 'resumen') body = `<div class="card"><ul class="prose">${m.summary.map(s => `<li>${esc(s)}</li>`).join('')}</ul><div class="row mt"><button class="btn sm" id="sm-dl">Descargar resumen (.txt)</button><button class="btn sm ghost" id="sm-cp">Copiar</button><button class="btn sm ghost" id="sm-sh">Compartir</button><button class="btn sm ghost" onclick="print()">Imprimir / PDF</button></div><p class="small muted mt">Incluye objetivo, resumen, errores habituales y checklist. Se genera en tu dispositivo, sin conexión.</p></div>`;
@@ -123,6 +123,13 @@ function moduleView(id, tab = 'lecciones') {
   const cr = $('#cl-reset'); if (cr) cr.onclick = () => { m.checklist.forEach((_, i) => delete state().checks[`cl:${m.id}:${i}`]); save(); moduleView(id, 'checklist'); };
 }
 
+function practiceNow(m) {
+  const ids = MOD_SIMS[m.id] || []; if (!ids.length) return '';
+  const G = state().goals;
+  return `<div class="card mb" style="border-color:var(--blue)"><span class="lbl">Practica ahora, en el avión</span>
+    <p class="small muted" style="margin:0 0 8px">Retos guiados: al empezar se prepara la escena y una lista te marca en verde cada paso.</p>
+    ${ids.map(id => { const s = SIMS.find(x => x.id === id); return `<div style="margin-top:10px"><strong>Simulador ${s.l} · ${esc(s.name)}</strong>${SIM_GOALS[id].map(g => `<a class="coach-goal ${G[g.id] ? 'done' : ''}" href="#/sim/${id}/${g.id}" style="text-decoration:none;color:inherit"><span class="coach-n">${G[g.id] ? '✓' : '▶'}</span><span style="flex:1"><strong>${esc(g.title)}</strong><span class="small muted">${esc(g.story)}</span></span><span class="coach-go">${G[g.id] ? 'Repetir' : 'Empezar'} →</span></a>`).join('')}</div>`; }).join('')}</div>`;
+}
 function lessonView(id, n) {
   const m = mod(id), l = m && m.lessons[n - 1]; if (!l) return notFound();
   const prev = n > 1 ? `#/m/${m.id}/l/${n - 1}` : `#/m/${m.id}`, last = n === m.lessons.length;
@@ -175,12 +182,12 @@ function dialogView(id, did) {
 function simsView() {
   const G = state().goals;
   main.innerHTML = `<span class="eyebrow">Simuladores</span><h1>Ocho simuladores funcionales</h1><p class="muted prose">Cada uno indica qué parte es cálculo real y qué parte es un modelo didáctico. Los retos se verifican con el estado real del simulador.</p>
-    <div class="grid g3 mt">${SIMS.map(s => { const n = Object.keys(G).filter(k => k[0] === s.l).length; return `<a class="tile" href="#/sim/${s.id}"><div class="row sp"><span class="n">SIMULADOR ${s.l}</span>${n ? `<span class="chip g">${n} retos</span>` : ''}</div><h3>${esc(s.name)}</h3><p>${esc(s.desc)}</p></a>`; }).join('')}</div>`;
+    <div class="grid g3 mt">${SIMS.map(s => { const n = SIM_GOALS[s.id].filter(g => G[g.id]).length, t = SIM_GOALS[s.id].length; return `<a class="tile" href="#/sim/${s.id}"><div class="row sp"><span class="n">SIMULADOR ${s.l}</span><span class="chip ${n === t ? 'g' : n ? 'b' : ''}">${n}/${t} retos</span></div><h3>${esc(s.name)}</h3><p>${esc(s.desc)}</p></a>`; }).join('')}</div>`;
 }
-function simView(id) {
+function simView(id, goal) {
   const s = SIMS.find(x => x.id === id); if (!s) return notFound();
   main.innerHTML = `<div class="crumbs"><a href="#/sims">Simuladores</a><span>/</span><span>${s.l}</span></div><span class="eyebrow">Simulador ${s.l}</span><h1>${esc(s.name)}</h1><p class="muted">${esc(s.desc)}</p><div id="sim" class="card mt"></div>`;
-  mountSim(id, $('#sim'));
+  mountSim(id, $('#sim'), { goal });
 }
 function colorLab() {
   main.innerHTML = `<span class="eyebrow">Laboratorio de color</span><h1>Corrige, iguala y crea un look</h1><p class="muted prose">Trabaja en orden: transformación técnica, corrección primaria y, solo después, el look. Mira los scopes antes que la imagen.</p>
@@ -197,7 +204,7 @@ const routes = [
   [/^#?\/?$/, dashboard], [/^#\/plan$/, plan], [/^#\/academia$/, academia],
   [/^#\/m\/(\d+)$/, id => moduleView(id)], [/^#\/m\/(\d+)\/l\/(\d+)$/, (id, n) => lessonView(id, +n)], [/^#\/m\/(\d+)\/examen$/, quizView],
   [/^#\/m\/(\d+)\/d\/(\w+)$/, dialogView], [/^#\/m\/(\d+)\/(\w+)$/, (id, t) => moduleView(id, t)],
-  [/^#\/sims$/, simsView], [/^#\/sim\/(\w+)$/, simView], [/^#\/color$/, colorLab],
+  [/^#\/sims$/, simsView], [/^#\/sim\/(\w+)(?:\/(\w+))?$/, simView], [/^#\/color$/, colorLab],
   [/^#\/final\/(\w)$/, id => V.finalView(main, id)], [/^#\/a7iv(?:\/(\w+))?$/, t => V.a7iv(main, t)],
   [/^#\/escenarios(?:\/(\w+))?$/, id => V.scenarios(main, id)], [/^#\/examenes$/, () => V.exams(main)], [/^#\/repaso$/, () => V.review(main)],
   [/^#\/biblioteca(?:\/(\w+))?$/, id => V.library(main, id)], [/^#\/fuentes$/, () => V.sources(main)], [/^#\/progreso$/, () => V.progress(main)],

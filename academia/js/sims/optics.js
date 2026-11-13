@@ -1,26 +1,46 @@
 // SIMULADOR E — Ópticas. Geometría de lente delgada: campo de visión, tamaño relativo del fondo,
 // profundidad de campo y disco de desenfoque son cálculos reales. El dibujo es esquemático.
-import { $, slider, seg, bindSeg, goalsHTML, toast, clamp } from '../ui.js';
+import { $, slider, seg, bindSeg, clamp } from '../ui.js';
+import { coach } from './coach.js';
 import { LENSES } from './expo.js';
-import { state, markGoal } from '../store.js';
 
-const GOALS = [
-  { id: 'E1', text: 'Retrato con el 50 mm f/1.8: encuadra un primer plano y consigue un disco de desenfoque del fondo de al menos el 2 % del ancho de imagen.' },
-  { id: 'E2', text: 'Compresión: activa «Mantener tamaño del sujeto» y recorre el 24–70 de 24 a 70 mm. Fíjate en cómo crece el fondo sin que cambie la persona.' },
-  { id: 'E3', text: 'Plano general de sala con todo nítido: 24 mm, sujeto a 3 m o más y profundidad de campo que llegue hasta el infinito.' }
+export const GOALS = [
+  { id: 'E1', title: 'Retrato con el fondo deshecho',
+    story: 'Retrato de una entrenadora con el gimnasio detrás a 8 m. Con el 24–70 a f/2.8 y desde lejos el fondo se lee demasiado. Usa tu objetivo más luminoso.',
+    setup: [['#so-lock', false], ['#so-lens', 'gm'], ['#so-f', 35], ['#so-N', 2], ['#so-d', 4], ['#so-bg', 8], ['seg:crop', 1], ['seg:vert', 'h']],
+    checks: [['Objetivo 50 mm f/1.8', s => s.lens === 'f50'], ['Diafragma f/2 o más abierto', s => s.N <= 2, s => 'ahora f/' + s.N],
+      ['Encuadre de primer plano (acércate)', s => s.fieldH > 0.38 && s.fieldH <= 0.75, s => 'ahora: ' + s.shot], ['Desenfoque del fondo del 2 % o más («Disco fondo»)', s => s.blurPct >= 2, s => 'ahora ' + s.blurPct.toFixed(1) + ' %']],
+    hints: ['Cambia el objetivo en el desplegable de arriba.', 'Abre el diafragma al máximo deslizando a la izquierda.', 'Acerca la cámara hasta que el tipo de plano diga «Primer plano».'],
+    solution: '50 mm a f/1.8 y a unos 1,2 m del sujeto: primer plano con el fondo cerca del 3 %.',
+    learn: 'El desenfoque depende del diafragma, de lo cerca que estés y de la distancia entre el sujeto y el fondo. Acercarte y abrir lo multiplica; separar al sujeto del fondo es gratis.' },
+  { id: 'E2', title: 'La «compresión» no la hace el zoom',
+    story: 'Se dice que el teleobjetivo comprime. Compruébalo manteniendo a la persona del mismo tamaño mientras cambias de focal.',
+    setup: [['#so-lock', false], ['#so-lens', 'gm'], ['#so-f', 35], ['#so-N', 2], ['#so-d', 2.5], ['#so-bg', 8], ['seg:crop', 1], ['seg:vert', 'h']],
+    checks: [['Activa «Mantener tamaño del sujeto»', s => s.lock], ['Lleva la focal a 24 mm', s => s.seen.lo, s => 'ahora ' + s.f + ' mm'], ['Y después a 70 mm', s => s.seen.hi, s => 'ahora ' + s.f + ' mm']],
+    hints: ['La casilla está bajo los botones de formato.', 'Mueve la focal despacio y mira el pórtico rojo del fondo y la distancia en la parte inferior de la imagen.'],
+    solution: 'Activa la casilla y lleva la focal de 24 a 70 mm.',
+    learn: 'La persona no cambia, pero el fondo crece: la cámara se ha alejado casi tres veces. La perspectiva la decide la distancia; la focal solo decide cuánto recortas.' },
+  { id: 'E3', title: 'Todo nítido para un plano general',
+    story: 'Plano general del gimnasio con 24 mm: necesitas que estén nítidos tanto el atleta como la pared del fondo. Usa la hiperfocal.',
+    setup: [['#so-lock', false], ['#so-lens', 'gm'], ['#so-f', 50], ['#so-N', 2], ['#so-d', 2], ['#so-bg', 8], ['seg:crop', 1], ['seg:vert', 'h']],
+    checks: [['24 mm en full frame', s => s.f * s.crop <= 24.5, s => 'ahora ' + s.f + ' mm' + (s.crop > 1 ? ' en Super 35' : '')], ['Sujeto a 3 m o más', s => s.d >= 3, s => 'ahora ' + s.d.toFixed(1) + ' m'],
+      ['Profundidad de campo hasta el infinito', s => s.far === Infinity, s => 'ahora llega hasta ' + (s.far === Infinity ? '∞' : (s.far / 1000).toFixed(1) + ' m')]],
+    hints: ['Pon la focal a 24 mm y comprueba que el sensor está en Full frame.', 'Fíjate en el dato «Hiperfocal»: si enfocas a esa distancia o más lejos, todo hasta el infinito queda nítido.', 'Cierra el diafragma: la hiperfocal se acerca.'],
+    solution: '24 mm a f/8, sujeto a 3 m: hiperfocal ≈ 2,4 m, nítido de ~1,2 m al infinito.',
+    learn: 'La hiperfocal es la base del enfoque por zonas: angular, diafragma cerrado y una distancia fija. Si enfocas más allá de ella, todo hasta el infinito queda nítido, sin depender del autofoco.' }
 ];
 const AP = [1.8, 2, 2.8, 4, 5.6, 8, 11, 16];
 
-export function mount(el) {
+export function mount(el, opts = {}) {
   const p = { lens: 'gm', f: 35, N: 2.8, d: 2.5, bg: 8, crop: 1, vert: false, lock: false };
-  let seen = { lo: false, hi: false };
+  let seen = { lo: false, hi: false }, co = null;
   el.innerHTML = `<div class="sim"><div>
     <div class="screen" style="max-width:${640}px;margin:auto"><svg id="so-v" viewBox="0 0 640 360" style="display:block;width:100%;background:#0a0c10" aria-label="Encuadre simulado"></svg>
       <div class="hud"><span id="so-hud"></span></div></div>
     <div class="readout"><div><b id="so-fov">–</b><span>Ángulo horiz.</span></div><div><b id="so-w">–</b><span>Ancho a sujeto</span></div><div><b id="so-shot">–</b><span>Tipo de plano</span></div><div><b id="so-dof">–</b><span>Prof. de campo</span></div><div><b id="so-blur">–</b><span>Disco fondo</span></div><div><b id="so-hyp">–</b><span>Hiperfocal</span></div></div>
     <div id="so-msg" class="small muted"></div>
-    <div id="so-goals" class="mt">${goalsHTML(GOALS, state().goals)}</div>
   </div><div>
+    <div id="so-coach"></div>
     <span class="lbl">Objetivo</span><select id="so-lens">${Object.entries(LENSES).map(([k, l]) => `<option value="${k}">${l.name}</option>`).join('')}</select>
     <div class="mt"></div>
     ${slider('so-f', 'Focal', 24, 70, 1, 35)}
@@ -73,8 +93,7 @@ export function mount(el) {
     if (far !== Infinity && (far - near) / 1000 < 0.12) msg.push('Profundidad de campo de pocos centímetros: con sujeto en movimiento el AF trabajará al límite; plantéate cerrar un paso.');
     $('#so-msg', el).innerHTML = msg.join('<br>');
     if (p.lock && p.lens === 'gm') { if (f <= 25) seen.lo = true; if (f >= 69) seen.hi = true; }
-    const ok = { E1: p.lens === 'f50' && p.N <= 2 && fieldH > 0.38 && fieldH <= 0.75 && blurPct >= 2, E2: seen.lo && seen.hi, E3: f * p.crop <= 24.5 && p.d >= 3 && far === Infinity };
-    for (const g of GOALS) if (ok[g.id] && markGoal(g.id)) { $('#so-goals', el).innerHTML = goalsHTML(GOALS, state().goals); toast('Reto superado · +30 XP'); }
+    if (co) co.update({ lens: p.lens, N: p.N, f, crop: p.crop, d: p.d, lock: p.lock, seen, fieldH, shot, blurPct, far });
   }
   $('#so-lens', el).onchange = e => { p.lens = e.target.value; draw(); };
   $('#so-f', el).oninput = e => { const nf = +e.target.value; if (p.lock) p.d = clamp(p.d * nf / p.f, 0.5, 15); p.f = nf; draw(); };
@@ -84,5 +103,9 @@ export function mount(el) {
   $('#so-lock', el).onchange = e => { p.lock = e.target.checked; seen = { lo: false, hi: false }; draw(); };
   bindSeg(el, 'crop', x => { p.crop = +x; draw(); });
   bindSeg(el, 'vert', x => { p.vert = x === 'v'; draw(); });
+  co = coach($('#so-coach', el), el, { goals: GOALS, start: opts.goal, intro: [
+    'Elige objetivo, focal, diafragma y las dos distancias: cámara–sujeto y sujeto–fondo. El encuadre se redibuja con medidas reales.',
+    'Bajo la imagen tienes el ángulo de visión, el tipo de plano, la profundidad de campo y el tamaño del desenfoque del fondo.',
+    'Elige un reto y sigue la lista: se marca en verde según lo consigues.'] });
   draw();
 }

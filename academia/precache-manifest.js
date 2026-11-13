@@ -1,5 +1,5 @@
 // Generado por tools/build-manifest.mjs — no editar a mano.
-self.FAP_VERSION = 'b5608d2d0f';
+self.FAP_VERSION = 'a3b0f54507';
 self.FAP_PRECACHE = [
  "./",
  "precache-manifest.js",
@@ -32,6 +32,7 @@ self.FAP_PRECACHE = [
  "js/core.js",
  "js/figs.js",
  "js/sims/camera.js",
+ "js/sims/coach.js",
  "js/sims/color.js",
  "js/sims/expo.js",
  "js/sims/exposure.js",

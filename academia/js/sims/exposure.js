@@ -1,7 +1,7 @@
 // SIMULADOR A — Exposición. EV, ángulo y parpadeo: cálculo real. Ruido, desenfoques y escena: modelo didáctico.
-import { $, slider, seg, bindSeg, goalsHTML, toast } from '../ui.js';
+import { $, slider, seg, bindSeg } from '../ui.js';
+import { coach } from './coach.js';
 import { APERTURES, SHUTTERS, ISOS, overStops, shutterAngle, flickerSafe } from './expo.js';
-import { state, markGoal } from '../store.js';
 
 const W = 240, H = 135;
 const SCENES = {
@@ -11,11 +11,40 @@ const SCENES = {
   gym: { name: 'Gimnasio LED (red 50 Hz)', ev: 6.5, hz: 50, hi: 3.5, sky: [0.07, 0.075, 0.085], ground: 0.06, shade: -2.5, lamps: true },
   noche: { name: 'Noche urbana con neones', ev: 3, hz: 0, hi: 6, sky: [0.012, 0.014, 0.03], ground: 0.035, shade: -3, neon: true }
 };
-const GOALS = [
-  { id: 'A1', text: 'Mediodía con sol a 25p: exposición ±0,3 stops manteniendo 1/50 y f/2.8. (Pista: el ISO ya no baja más.)' },
-  { id: 'A2', text: 'Gimnasio LED a 50p: exposición ±0,5 stops, sin riesgo de parpadeo y con ángulo de 180°.' },
-  { id: 'A3', text: 'Noche urbana a 25p: sujeto a ±0,5 stops con obturación 1/50 e ISO no superior a 6400.' },
-  { id: 'A4', text: 'Interior con ventana: expón para que la ventana NO recorte (0 % de píxeles al 100 %) y observa qué le pasa al sujeto.' }
+const f1 = v => (v >= 0 ? '+' : '') + v.toFixed(1);
+export const GOALS = [
+  { id: 'A1', title: 'Sol de mediodía sin romper la estética',
+    story: 'Retrato a 25p bajo sol fuerte. Quieres f/2.8 para desenfocar el fondo y 1/50 para un movimiento natural, pero sobra muchísima luz.',
+    setup: [['#xa-scene', 'sol'], ['seg:fps', 25], ['#xa-N', 2], ['#xa-den', 2], ['#xa-iso', 0], ['#xa-nd', 0]],
+    checks: [['Escena «Mediodía con sol»', s => s.scene === 'sol'], ['Diafragma en f/2.8', s => s.N === 2.8, s => 'ahora f/' + s.N], ['Obturación en 1/50 (180° a 25p)', s => s.den === 50, s => 'ahora 1/' + s.den],
+      ['Exposición correcta: medidor M.M. entre −0,3 y +0,3', s => Math.abs(s.over) <= 0.3, s => 'ahora ' + f1(s.over) + ' stops']],
+    hints: ['El ISO ya está en 100, el mínimo. Diafragma y obturación los fija el reto. ¿Qué control te queda?', 'Sube el filtro ND: cada stop de ND quita la mitad de la luz.', 'Mira el medidor M.M. arriba a la izquierda de la imagen y llévalo a 0.'],
+    solution: 'ND de unos 6,5 stops (≈ ND100) con f/2.8, 1/50 e ISO 100.',
+    learn: 'El ND es la única forma de quitar luz sin tocar el desenfoque (diafragma) ni el movimiento (obturación). Por eso, en vídeo de exterior, va siempre en la mochila.' },
+  { id: 'A2', title: 'Gimnasio con LED a cámara lenta',
+    story: 'Grabas HYROX a 50p para ralentizar. La nave tiene tubos LED en la red de 50 Hz. Con 1/50 la exposición es correcta, pero a 50p esa obturación no es la adecuada.',
+    setup: [['#xa-scene', 'gym'], ['seg:fps', 50], ['#xa-N', 2], ['#xa-den', 2], ['#xa-iso', 2], ['#xa-nd', 0]],
+    checks: [['Escena «Gimnasio LED»', s => s.scene === 'gym'], ['Obturación en 1/100 (180° a 50p)', s => s.den === 100, s => 'ahora 1/' + s.den + ' · ' + Math.round(s.ang) + '°'], ['Sin parpadeo de la luz (aviso verde arriba)', s => s.fl, s => s.fl ? '' : 'la obturación no encaja con la luz a 100 Hz'],
+      ['Exposición correcta: M.M. entre −0,5 y +0,5', s => Math.abs(s.over) <= 0.5, s => 'ahora ' + f1(s.over) + ' stops']],
+    hints: ['A 50 fotogramas, 180° significa 1/(2 × 50).', 'Ese mismo 1/100 coincide con el parpadeo de la luz (100 veces por segundo): matas dos problemas.', 'Al pasar de 1/50 a 1/100 pierdes un stop. Recupéralo subiendo el ISO.'],
+    solution: '1/100, f/2.8 e ISO 800 (queda a −0,1 stops).',
+    learn: 'En vídeo la obturación la deciden los fps y la luz, no la exposición. Cuando la acortas para 50p, el stop que pierdes lo pagas con ISO o con más luz.' },
+  { id: 'A3', title: 'Noche urbana: luz antes que ISO',
+    story: 'Calle de noche con escaparates. Empiezas cerrado a f/5.6 por costumbre y la imagen está muy oscura. Límite pactado con el cliente: ISO 6400.',
+    setup: [['#xa-scene', 'noche'], ['seg:fps', 25], ['#xa-N', 4], ['#xa-den', 2], ['#xa-iso', 3], ['#xa-nd', 0]],
+    checks: [['Escena «Noche urbana con neones»', s => s.scene === 'noche'], ['Obturación en 1/50', s => s.den === 50, s => 'ahora 1/' + s.den], ['ISO 6400 o menos', s => s.iso <= 6400, s => 'ahora ISO ' + s.iso],
+      ['Exposición correcta: M.M. entre −0,5 y +0,5', s => Math.abs(s.over) <= 0.5, s => 'ahora ' + f1(s.over) + ' stops']],
+    hints: ['Si solo subes el ISO, chocarás con el límite de 6400. ¿Qué otro control da luz sin ruido?', 'Abre el diafragma al máximo: f/1.8 es tu 50 mm.', 'Con f/1.8, sube el ISO hasta que el medidor marque 0.'],
+    solution: 'f/1.8, 1/50 e ISO 1600 (−0,3 stops).',
+    learn: 'De noche, primero abres el diafragma (luz gratis), luego subes el ISO. Pasar de f/5.6 a f/1.8 son más de 3 stops: la diferencia entre ISO 1600 e ISO 16000.' },
+  { id: 'A4', title: 'Ventana quemada: ¿qué pasa si la salvas?',
+    story: 'Entrevista junto a una ventana luminosa. Quieres que se vea el exterior por la ventana sin quemar. Descubre qué le ocurre al entrevistado.',
+    setup: [['#xa-scene', 'ventana'], ['seg:fps', 25], ['#xa-N', 2], ['#xa-den', 2], ['#xa-iso', 3], ['#xa-nd', 0], ['#xa-z', true]],
+    checks: [['Escena «Interior con ventana»', s => s.scene === 'ventana'], ['Cebras activadas', s => s.zebra], ['La ventana no recorta (0 % de píxeles al máximo)', s => s.winN > 0 && s.winClip === 0, s => 'ahora ' + (100 * s.winClip / Math.max(1, s.winN)).toFixed(0) + ' % de la ventana recortada'],
+      ['Ajuste posible (obturación no más lenta que el fotograma)', s => s.ang <= 360]],
+    hints: ['Las rayas diagonales (cebras) marcan lo que está recortado. Ahora mismo cubren la ventana.', 'Baja la exposición: más ND, diafragma más cerrado o ISO más bajo, hasta que desaparezcan las rayas de la ventana.', 'Cuando lo consigas, mira la cara: ¿cuántos stops ha caído? Mira el medidor.'],
+    solution: 'ISO 100, f/4 y 1/50 con unos 2,5 stops de ND: la ventana deja de recortar. La cara queda unos 5 stops por debajo: casi una silueta.',
+    learn: 'Proteger la ventana hunde al sujeto unos 5 stops: ninguna exposición resuelve ese contraste. La solución es iluminar al sujeto (relleno, LED) o aceptar que la ventana se queme.' }
 ];
 
 function gauss() { let u = 0; for (let i = 0; i < 4; i++) u += Math.random(); return (u - 2) * 1.73; }
@@ -76,7 +105,7 @@ function boxBlur(src, r) {
 }
 const oetf = v => v <= 0 ? 0 : v >= 1 ? 1 : (v < 0.018 ? 4.5 * v : 1.099 * Math.pow(v, 0.45) - 0.099);
 
-export function mount(el) {
+export function mount(el, opts = {}) {
   const p = { scene: 'nublado', N: 5.6, den: 50, iso: 100, nd: 2, fps: 25, zebra: true };
   el.innerHTML = `<div class="sim"><div>
     <div class="screen"><canvas width="${W}" height="${H}" aria-label="Vista simulada de la escena"></canvas>
@@ -84,8 +113,8 @@ export function mount(el) {
       <div class="hud"><span id="xa-set"></span></div></div>
     <canvas class="scope mt" width="256" height="70" id="xa-h" aria-label="Histograma"></canvas>
     <div class="readout"><div><b id="xa-ev">–</b><span>EV escena</span></div><div><b id="xa-over">–</b><span>Desviación</span></div><div><b id="xa-clip">–</b><span>Recortado</span></div><div><b id="xa-blk">–</b><span>Negro aplastado</span></div></div>
-    <div id="xa-goals">${goalsHTML(GOALS, state().goals)}</div>
   </div><div>
+    <div id="xa-coach"></div>
     <span class="lbl">Escena</span><select id="xa-scene" aria-label="Escena">${Object.entries(SCENES).map(([k, s]) => `<option value="${k}" ${k === 'nublado' ? 'selected' : ''}>${s.name}</option>`).join('')}</select>
     <div class="mt"></div>
     <span class="lbl">Fotogramas por segundo</span>${seg('fps', [[25, '25p'], [50, '50p'], [100, '100p']], 25)}
@@ -144,13 +173,7 @@ export function mount(el) {
     $('#xa-clip', el).textContent = pc.toFixed(1) + ' %'; $('#xa-blk', el).textContent = (100 * blk / (W * H)).toFixed(0) + ' %';
     $('#xa-N-o', el).textContent = 'f/' + p.N; $('#xa-den-o', el).textContent = '1/' + p.den + ' s'; $('#xa-iso-o', el).textContent = p.iso; $('#xa-nd-o', el).textContent = p.nd ? p.nd + ' stops (ND' + Math.round(2 ** p.nd) + ')' : 'sin filtro';
     // retos
-    const ok = {
-      A1: p.scene === 'sol' && p.fps === 25 && p.den === 50 && p.N === 2.8 && Math.abs(over) <= 0.3,
-      A2: p.scene === 'gym' && p.fps === 50 && p.den === 100 && Math.abs(over) <= 0.5,
-      A3: p.scene === 'noche' && p.fps === 25 && p.den === 50 && p.iso <= 6400 && Math.abs(over) <= 0.5,
-      A4: p.scene === 'ventana' && winN > 0 && winClip === 0 && ang <= 360
-    };
-    for (const g of GOALS) if (ok[g.id] && markGoal(g.id)) { $('#xa-goals', el).innerHTML = goalsHTML(GOALS, state().goals); toast('Reto superado · +30 XP'); }
+    co.update({ ...p, over, ang, fl, winN, winClip });
   }
   let raf = 0; const sched = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(draw); };
   $('#xa-scene', el).onchange = e => { p.scene = e.target.value; map = buildScene(SCENES[p.scene]); blurKey = ''; sched(); };
@@ -160,5 +183,10 @@ export function mount(el) {
   $('#xa-nd', el).oninput = e => { p.nd = +e.target.value; sched(); };
   $('#xa-z', el).onchange = e => { p.zebra = e.target.checked; sched(); };
   bindSeg(el, 'fps', v => { p.fps = +v; sched(); });
+  const co = coach($('#xa-coach', el), el, { goals: GOALS, start: opts.goal, intro: [
+    'Elige un reto: la escena y los ajustes de partida se preparan solos.',
+    'Mueve diafragma, obturación, ISO y ND. La imagen, el histograma y el medidor M.M. (arriba a la izquierda) cambian al instante.',
+    'La lista del reto se va marcando en verde. Si te atascas, pide una pista.'
+  ] });
   draw();
 }

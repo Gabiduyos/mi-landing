@@ -1,14 +1,37 @@
 // SIMULADOR G — Laboratorio de color. Las transformaciones (S-Log3 → lineal → Rec.709) y los scopes
 // se calculan de verdad sobre los píxeles de una escena sintética. No sustituye a Resolve ni a material real.
-import { $, slider, seg, bindSeg, goalsHTML, toast, clamp } from '../ui.js';
+import { $, slider, seg, bindSeg, clamp } from '../ui.js';
+import { coach } from './coach.js';
 import { slog3IRE, slog3Inv, r709 } from './slog.js';
-import { state, markGoal } from '../store.js';
 
 const W = 160, H = 90;
-const GOALS = [
-  { id: 'G1', text: 'Corrección técnica: carga «Dominante cálida», activa la transformación a Rec.709 y deja la carta gris neutra (diferencia entre canales < 2,5 puntos) y entre el 36 y el 48 %, sin recortar el parche blanco.' },
-  { id: 'G2', text: 'Piel natural: con «Subexpuesto y verdoso», lleva la piel a la línea de piel del vectorscopio (±7°) y a 55–72 % de luminancia, con la carta gris neutra.' },
-  { id: 'G3', text: 'Look: sombras frías sutiles. Partiendo de una imagen ya corregida, enfría las sombras (azul 2–8 puntos por encima del rojo en la pared oscura) manteniendo la piel en su línea (±8°) y contraste ≥ 1,05.' }
+const RGB = s => 'carta gris R·G·B: ' + s.g.map(x => x.toFixed(0)).join(' · ');
+const SKIN = s => 'piel a ' + s.skA.toFixed(0) + '° (línea de piel ≈ 123°) y ' + s.skY.toFixed(0) + ' %';
+export const GOALS = [
+  { id: 'G1', title: 'Quita una dominante cálida',
+    story: 'Plano grabado en S-Log3 con el balance mal puesto: todo tira a naranja. Haz primero la corrección técnica: imagen neutra y bien expuesta.',
+    setup: [['seg:src', 'B'], ['#sg-cst', false], ['#sg-prot', false], ['click:#sg-reset']],
+    checks: [['Transformación S-Log3 → Rec.709 activada (paso 1)', s => s.cst], ['Carta gris neutra: R, G y B a menos de 2,5 puntos', s => s.gdev < 2.5, RGB],
+      ['Gris entre el 36 y el 48 %', s => s.gY >= 36 && s.gY <= 48, s => 'ahora ' + s.gY.toFixed(0) + ' %'], ['Parche blanco sin recortar', s => s.whMax < 99.5, s => 'ahora ' + s.whMax.toFixed(0) + ' %']],
+    hints: ['Primero activa la casilla de transformación: sin ella estás mirando la señal log, no la imagen final.', 'Mira el RGB Parade: el rojo va alto y el azul bajo. Mueve «Temperatura» hacia azul (izquierda) hasta igualarlos.', 'Si aún no cuadra, corrige el eje verde–magenta con «Tinte» y ajusta el nivel con «Exposición».'],
+    solution: 'Transformación activada, Temperatura ≈ −0,75, Tinte ≈ +0,55 y Exposición ≈ −0,1.',
+    learn: 'El balance se juzga en el RGB Parade sobre algo que debería ser neutro: si los tres canales están a la misma altura, no hay dominante. Siempre después de transformar el log y antes de cualquier look.' },
+  { id: 'G2', title: 'Rescata una piel verdosa',
+    story: 'Material subexpuesto y bajo LED verdoso: la piel está apagada. Llévala a un tono y nivel naturales sin desequilibrar el resto.',
+    setup: [['seg:src', 'C'], ['#sg-cst', true], ['#sg-prot', false], ['click:#sg-reset']],
+    checks: [['Piel sobre la línea de piel del vectorscopio (±7°)', s => Math.abs(s.skA - 123) <= 7, SKIN], ['Piel entre el 55 y el 72 % de luminancia', s => s.skY >= 55 && s.skY <= 72, s => 'ahora ' + s.skY.toFixed(0) + ' %'],
+      ['Carta gris razonablemente neutra (< 3,5 puntos)', s => s.gdev < 3.5, RGB]],
+    hints: ['Empieza por la exposición: la imagen está oscura. Mira la forma de onda.', 'El verde se corrige con «Tinte» hacia magenta (derecha). Mira cómo gira la mancha de piel en el vectorscopio.', 'La línea naranja del vectorscopio es la referencia de piel. Cuando la mancha caiga encima, revisa la carta gris.'],
+    solution: 'Exposición ≈ +1,4 y Tinte ≈ +0,45.',
+    learn: 'Primero niveles (forma de onda), después color (parade y vectorscopio). La línea de piel es una referencia común a todos los tonos de piel con luz neutra, no una ley.' },
+  { id: 'G3', title: 'Look: sombras frías, piel natural',
+    story: 'Sobre una imagen ya correcta, crea el look que pediste: contraste controlado, sombras un punto frías y la piel intacta.',
+    setup: [['seg:src', 'A'], ['#sg-cst', true], ['#sg-prot', false], ['click:#sg-reset']],
+    checks: [['Algo más de contraste (1,05 o más)', s => s.con >= 1.05, s => 'ahora ' + s.con.toFixed(2)], ['Sombras frías y sutiles: azul 2–8 puntos sobre el rojo en la pared oscura', s => s.cool > 0 && s.shBR >= 2 && s.shBR <= 8, s => 'ahora ' + (s.shBR >= 0 ? '+' : '') + s.shBR.toFixed(1)],
+      ['La piel sigue en su línea (±8°)', s => Math.abs(s.skA - 123) <= 8, SKIN], ['Imagen todavía equilibrada (gris entre 30 y 52 %, casi neutro)', s => s.gdev < 6 && s.gY > 30 && s.gY < 52]],
+    hints: ['Sube un poco el contraste: 1,1 basta.', 'Sube «Sombras frías» poco a poco y mira el dato «Pared oscura B−R». Sutil es 2–8.', 'Si la piel se escapa de su línea, activa «Proteger piel».'],
+    solution: 'Contraste 1,1 y Sombras frías ≈ 0,5; activa «Proteger piel» si la piel se enfría.',
+    learn: 'El look va después de la corrección y en sus propios controles. Tintar por luminancia afecta también a la piel en sombra: por eso los coloristas la protegen con un cualificador.' }
 ];
 const SRC = {
   A: { n: 'S-Log3 bien expuesto', g: [1, 1, 1], e: 0 },
@@ -37,7 +60,7 @@ function scene() {
   return { m, reg };
 }
 
-export function mount(el) {
+export function mount(el, opts = {}) {
   const SC = scene();
   const p = { src: 'B', cst: false, exp: 0, temp: 0, tint: 0, lift: 0, gamma: 0, gain: 0, con: 1, sat: 1, cool: 0, warm: 0, prot: false };
   const S = (id, lab, a, b, st, v) => slider('sg-' + id, lab, a, b, st, v);
@@ -48,8 +71,8 @@ export function mount(el) {
       <div><span class="lbl">RGB Parade</span><canvas class="scope" width="160" height="110" id="sg-pa"></canvas></div>
       <div><span class="lbl">Vectorscopio</span><canvas class="scope" width="110" height="110" id="sg-ve"></canvas></div></div>
     <div class="readout"><div><b id="sg-gray">–</b><span>Carta gris R·G·B</span></div><div><b id="sg-skin">–</b><span>Piel: luma · ángulo</span></div><div><b id="sg-wh">–</b><span>Parche blanco</span></div><div><b id="sg-sh">–</b><span>Pared oscura B−R</span></div></div>
-    <div id="sg-goals">${goalsHTML(GOALS, state().goals)}</div>
   </div><div>
+    <div id="sg-coach"></div>
     <span class="lbl">Material de partida</span>${seg('src', Object.entries(SRC).map(([k, v]) => [k, v.n]), 'B')}
     <span class="lbl mt" style="margin-top:12px">1 · Transformación técnica</span>
     <label class="row small"><input type="checkbox" id="sg-cst"> Color Space Transform: S-Log3 → Rec.709</label>
@@ -106,13 +129,7 @@ export function mount(el) {
     $('#sg-gray', el).textContent = g.map(x => x.toFixed(0)).join(' · '); $('#sg-skin', el).textContent = `${skY.toFixed(0)} % · ${skA.toFixed(0)}°`;
     $('#sg-wh', el).innerHTML = whMax >= 99.5 ? '<span style="color:#ff5263">recortado</span>' : whMax.toFixed(0) + ' %'; $('#sg-sh', el).textContent = (shBR >= 0 ? '+' : '') + shBR.toFixed(1);
     for (const id of ids) { const o = $('#sg-' + id + '-o', el); if (o) o.textContent = (+p[id]).toFixed(2); }
-    const skinOK = t => Math.abs(skA - 123) <= t;
-    const ok = {
-      G1: p.src === 'B' && p.cst && gdev < 2.5 && gY >= 36 && gY <= 48 && whMax < 99.5,
-      G2: p.src === 'C' && p.cst && skinOK(7) && skY >= 55 && skY <= 72 && gdev < 3.5,
-      G3: p.cst && p.cool > 0 && shBR >= 2 && shBR <= 8 && skinOK(8) && p.con >= 1.05 && gdev < 6 && gY > 30 && gY < 52
-    };
-    for (const gl of GOALS) if (ok[gl.id] && markGoal(gl.id)) { $('#sg-goals', el).innerHTML = goalsHTML(GOALS, state().goals); toast('Reto superado · +30 XP'); }
+    co.update({ src: p.src, cst: p.cst, con: p.con, cool: p.cool, g, gdev, gY, whMax, skA, skY, shBR });
   }
   let raf = 0; const sched = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(draw); };
   for (const id of ids) $('#sg-' + id, el).oninput = e => { p[id] = +e.target.value; sched(); };
@@ -120,5 +137,9 @@ export function mount(el) {
   $('#sg-prot', el).onchange = e => { p.prot = e.target.checked; sched(); };
   $('#sg-reset', el).onclick = () => { Object.assign(p, { exp: 0, temp: 0, tint: 0, lift: 0, gamma: 0, gain: 0, con: 1, sat: 1, cool: 0, warm: 0 }); for (const id of ids) $('#sg-' + id, el).value = p[id]; sched(); };
   bindSeg(el, 'src', v => { p.src = v; sched(); });
+  const co = coach($('#sg-coach', el), el, { goals: GOALS, start: opts.goal, intro: [
+    'Trabaja en orden, de arriba abajo: 1 transformar el log, 2 corregir, 3 crear el look.',
+    'Mira los scopes antes que la imagen: forma de onda para el brillo, RGB Parade para el balance y vectorscopio para el tono de la piel.',
+    'Elige un reto: la lista te dice qué medir y se marca en verde según lo consigues.'] });
   draw();
 }

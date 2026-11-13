@@ -1,6 +1,6 @@
 // SIMULADOR B — S-Log3. La curva S-Log3 usa la fórmula publicada por Sony. S-Cinetone, ruido y recorte: modelo didáctico.
-import { $, slider, seg, bindSeg, goalsHTML, toast } from '../ui.js';
-import { state, markGoal } from '../store.js';
+import { $, slider, seg, bindSeg } from '../ui.js';
+import { coach } from './coach.js';
 
 export const slog3Code = x => x >= 0.01125 ? 420 + Math.log10((x + 0.01) / 0.19) * 261.5 : x * (171.2102946929 - 95) / 0.01125 + 95;
 export const slog3IRE = x => (slog3Code(x) - 64) / 876 * 100;
@@ -10,13 +10,33 @@ export const r709 = x => 100 * (x <= 0 ? 0 : x >= 1 ? 1 : x < 0.018 ? 4.5 * x : 
 const scine = x => { const b = r709(x * 0.92) - 1.5; if (b < 62) return Math.max(0, b); const t = (Math.log2(x / 0.18) - 1.05) / 3.6; return Math.min(104, 62 + 42 * (1 - Math.exp(-2.4 * Math.max(0, t))) / (1 - Math.exp(-2.4))); };
 const st = s => 0.18 * 2 ** s;
 const CLIP = 6; // stops sobre el gris en que satura la señal en S-Log3 (≈94 %); coherente con la fórmula
-const GOALS = [
-  { id: 'B1', text: 'Contraluz duro: pon la alta luz más brillante en +7 stops y encuentra una exposición que la conserve sin recortar.' },
-  { id: 'B2', text: 'Escena plana (alta luz máxima en +3 o menos): sobreexpón al menos +1,5 stops sin recortar nada. Observa el ruido tras normalizar.' },
-  { id: 'B3', text: 'Coloca una piel clara en 52 % ±1 en la señal S-Log3 (alta luz máxima en +5 o menos).' }
+const sg = v => (v >= 0 ? '+' : '') + v.toFixed(1);
+export const GOALS = [
+  { id: 'B1', title: '«Siempre +1,7»: ponlo a prueba',
+    story: 'Contraluz con el cielo a +7 stops sobre el gris. Un compañero te dice que S-Log3 siempre se sobreexpone +1,7. La escena ya está expuesta así.',
+    setup: [['#sb-hi', 7], ['#sb-off', 1.7], ['seg:view', 'log']],
+    checks: [['Alta luz de la escena en +7 o más', s => s.hi >= 7, s => 'ahora +' + s.hi], ['Nada recorta: la línea naranja fuera de la zona roja', s => !s.hclip, s => s.hclip ? 'recortas ' + (s.hi + s.off - 6).toFixed(1) + ' stops de cielo' : '']],
+    hints: ['En la gráfica, la zona roja es lo que el archivo no puede guardar. La línea naranja vertical es tu cielo.', 'Baja «Exposición respecto a la de referencia»: toda la escena baja por la curva y gana sitio arriba.', 'Con el cielo a +7 necesitas exponer a −1 o menos.'],
+    solution: 'Exposición a −1,0 (o algo menos). El cielo cabe justo en la señal.',
+    learn: '+1,7 fijo habría recortado 2,7 stops de cielo, y eso no se recupera. Sobreexponer S-Log3 es un intercambio: cada stop que subes es un stop de altas luces que pierdes. Primero mira qué recorta.' },
+  { id: 'B2', title: 'Escena plana: ahora sí, sube',
+    story: 'Entrevista con luz suave y sin ventanas en plano: lo más brillante está a +3. Aquí sobreexponer no cuesta nada. Compruébalo y mira qué gana la imagen.',
+    setup: [['#sb-hi', 3], ['#sb-off', 0], ['seg:view', 'log']],
+    checks: [['Escena de bajo contraste (alta luz en +3 o menos)', s => s.hi <= 3, s => 'ahora +' + s.hi], ['Exposición +1,5 o más', s => s.off >= 1.5, s => 'ahora ' + sg(s.off)],
+      ['Nada recorta', s => !s.hclip], ['Mira el resultado en la vista «Tras normalizar en posproducción»', s => s.view === 'post']],
+    hints: ['Sube «Exposición respecto a la de referencia».', 'Con la alta luz en +3 tienes margen de sobra: el recorte empieza unos 6 stops sobre el gris.', 'Pulsa «Tras normalizar en posproducción» y compara los parches oscuros con los de exposición 0.'],
+    solution: 'Exposición entre +1,5 y +3 y vista «Tras normalizar».',
+    learn: 'Al normalizar bajas la imagen, y con ella el ruido: las sombras quedan más limpias. Con poco contraste, sobreexponer es ganancia sin coste. La decisión depende de la escena, no de una cifra fija.' },
+  { id: 'B3', title: 'Coloca la piel en su nivel',
+    story: 'Retrato con cebra de rango. La guía de exposición de Sony Cine propone piel clara hacia el 52 % en S-Log3. Ahora mismo está subexpuesta.',
+    setup: [['#sb-hi', 5], ['#sb-off', -1], ['seg:view', 'log']],
+    checks: [['Alta luz en +5 o menos', s => s.hi <= 5], ['Piel clara en 52 % ±1', s => Math.abs(s.sk - 52) <= 1, s => 'ahora ' + s.sk.toFixed(0) + ' %'], ['Nada recorta', s => !s.hclip]],
+    hints: ['Mira el dato «Piel clara» bajo los parches.', 'Sube la exposición poco a poco.', 'Está justo por encima de la referencia, hacia +0,3.'],
+    solution: 'Exposición ≈ +0,3: la piel queda en 52 % y el gris en ~43 %.',
+    learn: 'En S-Log3 el gris va en 41 %, la piel clara en torno al 48–52 % y el blanco en 61 %. Son niveles de señal: con S-Cinetone la misma piel iría hacia el 60 %. Las cebras no se copian de un perfil a otro.' }
 ];
 
-export function mount(el) {
+export function mount(el, opts = {}) {
   const p = { off: 0, hi: 5, iso: 800, view: 'log' };
   el.innerHTML = `<div class="sim"><div>
     <canvas class="scope" width="640" height="360" id="sb-c" aria-label="Curvas de transferencia"></canvas>
@@ -24,8 +44,8 @@ export function mount(el) {
     ${seg('view', [['log', 'Señal S-Log3 grabada'], ['lut', 'Con asistente/LUT 709'], ['post', 'Tras normalizar en posproducción']], 'log')}
     <canvas class="scope mt" width="646" height="80" id="sb-p" style="margin-top:8px" aria-label="Carta de parches"></canvas>
     <div class="readout"><div><b id="sb-g">–</b><span>Gris 18 %</span></div><div><b id="sb-s">–</b><span>Piel clara (~+1)</span></div><div><b id="sb-w">–</b><span>Blanco 90 %</span></div><div><b id="sb-h">–</b><span>Alta luz máx.</span></div><div><b id="sb-n">–</b><span>Sombra útil hasta</span></div></div>
-    <div id="sb-goals">${goalsHTML(GOALS, state().goals)}</div>
   </div><div>
+    <div id="sb-coach"></div>
     ${slider('sb-off', 'Exposición respecto a la «de referencia»', -3, 3, 0.1, 0)}
     ${slider('sb-hi', 'Alta luz más brillante de la escena', 2, 9, 0.5, 5)}
     <span class="lbl">ISO en S-Log3</span>${seg('iso', [[800, '800'], [3200, '3200'], [12800, '12800']], 800)}
@@ -82,13 +102,17 @@ export function mount(el) {
     m += `<br><span class="muted">Rango de escena aprovechable ahora: ≈ ${usable.toFixed(1)} stops.</span>`;
     if (p.view === 'lut') m += '<br><span class="muted">La vista con asistente/LUT solo cambia lo que ves: el archivo sigue siendo la señal S-Log3. Lo que la LUT muestra quemado puede estar intacto en la grabación, y al revés.</span>';
     $('#sb-msg', el).innerHTML = m;
-    const ok = { B1: p.hi >= 7 && !hclip, B2: p.hi <= 3 && p.off >= 1.5 && !hclip, B3: p.hi <= 5 && !hclip && Math.abs(sk - 52) <= 1 };
-    for (const gl of GOALS) if (ok[gl.id] && markGoal(gl.id)) { $('#sb-goals', el).innerHTML = goalsHTML(GOALS, state().goals); toast('Reto superado · +30 XP'); }
+    co.update({ ...p, hclip, sk });
   }
   function scineLike(lin) { return Math.max(0, Math.min(1, scine(lin) / 100)); }
   $('#sb-off', el).oninput = e => { p.off = +e.target.value; draw(); };
   $('#sb-hi', el).oninput = e => { p.hi = +e.target.value; draw(); };
   bindSeg(el, 'iso', v => { p.iso = +v; draw(); });
   bindSeg(el, 'view', v => { p.view = v; draw(); });
+  const co = coach($('#sb-coach', el), el, { goals: GOALS, start: opts.goal, intro: [
+    'La gráfica muestra cómo cada stop de la escena (eje horizontal) se convierte en señal grabada (eje vertical). La línea azul es S-Log3.',
+    'Mueve la exposición: toda la escena se desliza por la curva. La zona roja es recorte y la naranja, ruido.',
+    'Elige un reto: la lista se marca en verde según lo consigues. Los parches de abajo enseñan el resultado en tres vistas.'
+  ] });
   draw();
 }

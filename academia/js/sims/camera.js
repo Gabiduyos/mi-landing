@@ -1,13 +1,43 @@
 // SIMULADOR C — Cámara virtual. Reproduce la LÓGICA de configuración (dependencias y avisos), no el firmware real.
-import { $, $$, esc, seg, bindSeg, goalsHTML, toast } from '../ui.js';
+import { $, $$, esc, seg, bindSeg, toast } from '../ui.js';
+import { coach } from './coach.js';
 import { MENU, allItems } from '../content/menumap.js';
 import { APERTURES, SHUTTERS, ISOS } from './expo.js';
-import { state, markGoal } from '../store.js';
 
-const GOALS = [
-  { id: 'C1', text: 'Videoclip para etalonar: selector en Vídeo, modo M, 4K 25p, 10 bits 4:2:2, perfil S-Log3 de fábrica, ISO 800 o más, asistente gamma activado, cebra de límite 94+ y balance de blancos NO automático.' },
-  { id: 'C2', text: 'Cámara lenta en HYROX: 4K 50p 10 bits, AF continuo con detección de humanos y sensibilidad de cambio de motivo bloqueada. Guárdalo en la memoria 2 y recupéralo desde el dial.' },
-  { id: 'C3', text: 'Foto deportiva en pabellón: selector en Foto, modo M o S, AF-C, área Seguimiento, ráfaga Hi o Hi+, RAW, obturación 1/1000 o más rápida y toma antiparpadeo activada.' }
+const now = v => 'ahora: ' + v;
+export const GOALS = [
+  { id: 'C1', title: 'Prepara la cámara para un videoclip que vas a etalonar',
+    story: 'Mañana ruedas un videoclip y habrá tiempo de color. Parte de la cámara de fábrica y déjala lista: cada línea te dice en qué menú está el ajuste.',
+    setup: [['click:#sc-reset'], ['seg:sel', 'video']],
+    checks: [['Selector inferior en Vídeo', c => c.sel === 'video'], ['Dial en M (manual)', c => c.dial === 'M', c => now(c.dial)],
+      ['Formato 4K · pestaña Toma', c => /4K/.test(c.vidFmt), c => now(c.vidFmt)], ['25p · pestaña Toma', c => c.fps === '25p', c => now(c.fps)],
+      ['10 bits 4:2:2 · Toma → Grabar ajuste', c => /4:2:2 10/.test(c.grabar), c => now(c.grabar)], ['Perfil PP8 (S-Log3) · pestaña Exposición/Color', c => c.pp === 'PP8', c => now(c.pp)],
+      ['ISO 800 o más (desplegable ISO bajo la pantalla)', c => c.iso >= 800, c => now('ISO ' + c.iso)], ['Balance de blancos fijo, no automático · Exposición/Color', c => c.wb !== 'Automático', c => now(c.wb)],
+      ['Cebra activada · Exposición/Color', c => c.cebra === 'Activar'], ['Nivel de cebra C2 94+ (aviso de recorte)', c => /94\+/.test(c.cebraNivel), c => now(c.cebraNivel)],
+      ['Asistente de visualización gamma · pestaña Ajustes', c => c.gda === 'Activar']],
+    hints: ['Ve de arriba abajo por la lista: cada línea indica la pestaña del menú donde está el ajuste.', 'Los avisos de la pantalla negra te avisan de combinaciones peligrosas, como log en 8 bits.', 'Lo más olvidado: el asistente gamma está en la pestaña Ajustes y el ISO en el desplegable bajo la pantalla.'],
+    solution: 'Dial M · Toma: 4K, 25p, 4:2:2 10 bits · Exposición/Color: PP8, balance Luz diurna (o el que toque), cebra Activar, nivel C2 94+ · Ajustes: asistente gamma Activar · ISO 800.',
+    learn: 'Esta es la base de un rodaje en S-Log3: 10 bits para no romper la imagen al etalonar, ISO 800 de base, balance fijo, cebra de recorte para proteger las luces y asistente gamma para ver bien. Compruébalo siempre dentro del perfil: PP8 solo es S-Log3 de fábrica.' },
+  { id: 'C2', title: 'Memoria para cámara lenta en HYROX',
+    story: 'En competición no hay tiempo para menús. Configura una cámara lenta con seguimiento de atletas, guárdala en la memoria 2 y recupérala desde el dial.',
+    setup: [['click:#sc-reset'], ['seg:sel', 'video']],
+    checks: [['Formato 4K · Toma', c => /4K/.test(c.vidFmt)], ['50p · Toma', c => c.fps === '50p', c => now(c.fps)], ['10 bits · Toma → Grabar ajuste', c => /10 bits/.test(c.grabar), c => now(c.grabar)],
+      ['Detección de motivo: Humano · pestaña Enfoque', c => c.motivo === 'Humano'], ['Prioridad cara/ojos activada · Enfoque', c => c.ojos === 'Activar'],
+      ['Sensibilidad de cambio de motivo en 1 (bloqueado) · Enfoque', c => /^1/.test(c.afSens), c => now(c.afSens)], ['Enfoque automático (no MF)', c => c.afModo !== 'MF'],
+      ['Guardado en M2 y recuperado girando el dial a 2', c => c._recalled === 2, c => c._recalled === 2 ? '' : 'pulsa «M2» abajo y después el botón 2 del dial']],
+    hints: ['Configura primero, guarda después: el botón «M2» guarda el estado actual.', 'Bloquear la sensibilidad evita que el foco salte a quien cruce por delante del atleta.', 'Si cambias algo después de recuperar, vuelve a guardar y recuperar.'],
+    solution: 'Toma: 4K, 50p, 10 bits · Enfoque: Humano, ojos Activar, sensibilidad 1 · botón M2 · dial 2.',
+    learn: 'Las memorias 1, 2 y 3 del dial son tres «cámaras» listas. Fíjate en el aviso: 4K 50p recorta a Super 35, tu 24 mm encuadra como 36 mm.' },
+  { id: 'C3', title: 'Foto deportiva en un pabellón',
+    story: 'Pasas a foto para la final: atletas rápidos bajo focos que parpadean. Configura la cámara para congelar la acción sin bandas.',
+    setup: [['click:#sc-reset'], ['seg:sel', 'video']],
+    checks: [['Selector inferior en Foto', c => c.sel === 'foto'], ['Dial en M o S', c => ['M', 'S'].includes(c.dial), c => now(c.dial)], ['Obturación 1/1000 o más rápida', c => c.den >= 1000, c => now('1/' + c.den)],
+      ['AF-C · Enfoque', c => c.afModo === 'AF-C', c => now(c.afModo)], ['Área Seguimiento · Enfoque', c => c.afArea === 'Seguimiento', c => now(c.afArea)],
+      ['Ráfaga Hi o Hi+ · Toma', c => /Hi/.test(c.drive), c => now(c.drive)], ['Formato RAW · Toma', c => /RAW/.test(c.fotoFmt), c => now(c.fotoFmt)],
+      ['Toma antiparpadeo activada · Toma', c => c.antiflicker === 'Activar'], ['Obturador no electrónico', c => c.obtTipo !== 'Obtur. electrónico']],
+    hints: ['Empieza por el selector inferior: Foto. Algunos ajustes solo existen en foto.', 'Para congelar un sprint necesitas al menos 1/1000.', 'El antiparpadeo solo funciona con obturador mecánico.'],
+    solution: 'Selector Foto · dial S o M · 1/1000 · Enfoque: AF-C y Seguimiento · Toma: Continua Hi, RAW, antiparpadeo Activar · obturador mecánico.',
+    learn: 'En foto de acción la obturación manda (1/1000 o más), AF-C con seguimiento sigue al atleta y el antiparpadeo dispara en el pico de luz de los focos para evitar fotos más oscuras o con bandas.' }
 ];
 const items = allItems();
 const defaults = () => { const o = { sel: 'video', dial: 'M', N: 2.8, den: 50, iso: 100 }; for (const i of items) o[i.id] = i.def; return o; };
@@ -35,8 +65,8 @@ function derive(c) {
   return w;
 }
 
-export function mount(el) {
-  let c = defaults(), tab = 'toma';
+export function mount(el, opts = {}) {
+  let c = defaults(), tab = 'toma', co = null;
   const mem = {}; // memorias virtuales de esta sesión
   el.innerHTML = `<div class="sim"><div class="cam">
       <span class="lbl">Selector inferior</span>${seg('sel', [['foto', 'Foto'], ['video', 'Vídeo'], ['sq', 'S&Q']], 'video')}
@@ -49,10 +79,9 @@ export function mount(el) {
       </div>
       <div class="row" style="margin-top:10px"><span class="small muted">Guardar estado en:</span>${[1, 2, 3].map(n => `<button class="btn sm ghost" data-save="${n}">M${n}</button>`).join('')}<button class="btn sm ghost" id="sc-reset">Restablecer</button></div>
     </div><div>
-      <div class="tabsbar" id="sc-tabs" style="margin-top:0">${MENU.map(s => `<button type="button" data-t="${s.id}" style="border-color:${s.color}55">${s.name}</button>`).join('')}</div>
+      <div id="sc-coach"></div><div class="tabsbar" id="sc-tabs" style="margin-top:0">${MENU.map(s => `<button type="button" data-t="${s.id}" style="border-color:${s.color}55">${s.name}</button>`).join('')}</div>
       <div id="sc-menu"></div>
     </div></div>
-    <div id="sc-goals" class="mt">${goalsHTML(GOALS, state().goals)}</div>
     <p class="note"><strong>Límite del modelo:</strong> es una cámara didáctica. Reproduce la estructura de menús y las dependencias importantes (recortes, tarjetas, perfiles, avisos), no todas las opciones ni el comportamiento exacto del firmware. Los valores «de fábrica» proceden de la Guía de ayuda; tu cámara puede tener otros.</p>`;
 
   function lcd() {
@@ -79,13 +108,7 @@ export function mount(el) {
     }).join('')).join('');
   }
   function check() {
-    const hiShut = c.den >= 1000;
-    const ok = {
-      C1: c.sel === 'video' && c.dial === 'M' && /4K/.test(c.vidFmt) && c.fps === '25p' && /4:2:2 10/.test(c.grabar) && c.pp === 'PP8' && c.iso >= 800 && c.gda === 'Activar' && c.cebra === 'Activar' && /94\+/.test(c.cebraNivel) && c.wb !== 'Automático',
-      C2: c.sel === 'video' && c._recalled === 2 && /4K/.test(c.vidFmt) && c.fps === '50p' && /10 bits/.test(c.grabar) && c.motivo === 'Humano' && c.ojos === 'Activar' && /^1/.test(c.afSens) && c.afModo !== 'MF',
-      C3: c.sel === 'foto' && ['M', 'S'].includes(c.dial) && c.afModo === 'AF-C' && c.afArea === 'Seguimiento' && /Hi/.test(c.drive) && /RAW/.test(c.fotoFmt) && hiShut && c.antiflicker === 'Activar' && c.obtTipo !== 'Obtur. electrónico'
-    };
-    for (const g of GOALS) if (ok[g.id] && markGoal(g.id)) { $('#sc-goals', el).innerHTML = goalsHTML(GOALS, state().goals); toast('Reto superado · +30 XP'); }
+    if (co) co.update(c);
   }
   el.addEventListener('change', e => {
     const i = e.target.dataset.i;
@@ -110,5 +133,10 @@ export function mount(el) {
     if (e.target.id === 'sc-reset') { c = defaults(); menu(); lcd(); }
   });
   bindSeg(el, 'sel', v => { c.sel = v; c._recalled = 0; menu(); lcd(); });
+  co = coach($('#sc-coach', el), el, { goals: GOALS, start: opts.goal, intro: [
+    'Arriba tienes el selector Foto/Vídeo/S&Q y el dial de modo; la pantalla negra muestra cómo está la cámara y avisa de combinaciones peligrosas.',
+    'Las pestañas de colores son los menús de la A7 IV. Cada ajuste explica para qué sirve.',
+    'Elige un reto: la lista te dice qué ajustar y en qué menú, y se marca en verde según avanzas.'
+  ] });
   menu(); lcd();
 }
