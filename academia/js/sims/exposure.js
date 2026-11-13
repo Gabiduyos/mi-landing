@@ -77,7 +77,7 @@ function boxBlur(src, r) {
 const oetf = v => v <= 0 ? 0 : v >= 1 ? 1 : (v < 0.018 ? 4.5 * v : 1.099 * Math.pow(v, 0.45) - 0.099);
 
 export function mount(el) {
-  const p = { scene: 'sol', N: 2.8, den: 50, iso: 100, nd: 0, fps: 25, zebra: true };
+  const p = { scene: 'nublado', N: 5.6, den: 50, iso: 100, nd: 2, fps: 25, zebra: true };
   el.innerHTML = `<div class="sim"><div>
     <div class="screen"><canvas width="${W}" height="${H}" aria-label="Vista simulada de la escena"></canvas>
       <div class="hud top"><span id="xa-mm"></span><span id="xa-ang"></span><span id="xa-fl"></span></div>
@@ -86,14 +86,14 @@ export function mount(el) {
     <div class="readout"><div><b id="xa-ev">–</b><span>EV escena</span></div><div><b id="xa-over">–</b><span>Desviación</span></div><div><b id="xa-clip">–</b><span>Recortado</span></div><div><b id="xa-blk">–</b><span>Negro aplastado</span></div></div>
     <div id="xa-goals">${goalsHTML(GOALS, state().goals)}</div>
   </div><div>
-    <span class="lbl">Escena</span><select id="xa-scene" aria-label="Escena">${Object.entries(SCENES).map(([k, s]) => `<option value="${k}">${s.name}</option>`).join('')}</select>
+    <span class="lbl">Escena</span><select id="xa-scene" aria-label="Escena">${Object.entries(SCENES).map(([k, s]) => `<option value="${k}" ${k === 'nublado' ? 'selected' : ''}>${s.name}</option>`).join('')}</select>
     <div class="mt"></div>
     <span class="lbl">Fotogramas por segundo</span>${seg('fps', [[25, '25p'], [50, '50p'], [100, '100p']], 25)}
     <div class="mt"></div>
-    ${slider('xa-N', 'Diafragma', 0, APERTURES.length - 1, 1, 2)}
+    ${slider('xa-N', 'Diafragma', 0, APERTURES.length - 1, 1, 4)}
     ${slider('xa-den', 'Obturación', 0, SHUTTERS.length - 1, 1, 2)}
     ${slider('xa-iso', 'ISO', 0, ISOS.length - 1, 1, 0)}
-    ${slider('xa-nd', 'Filtro ND (stops)', 0, 10, 0.5, 0)}
+    ${slider('xa-nd', 'Filtro ND (stops)', 0, 10, 0.5, 2)}
     <label class="row small"><input type="checkbox" id="xa-z" checked> Cebras 100 %+ (recorte)</label>
     <p class="note"><strong>Qué es exacto:</strong> la relación entre EV, diafragma, obturación, ISO y ND, el ángulo de obturación y la compatibilidad con la frecuencia de red.<br><strong>Qué es un modelo didáctico:</strong> la escena dibujada, la cantidad de ruido, el desenfoque de fondo y el de movimiento, y el punto exacto de recorte. No representa la respuesta real del sensor de la A7 IV.</p>
   </div></div>`;

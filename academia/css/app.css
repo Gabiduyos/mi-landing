@@ -139,7 +139,13 @@ select,input[type=text],input[type=number],textarea{background:var(--bg2);border
 textarea{min-height:90px;resize:vertical}
 input[type=checkbox]{width:20px;height:20px;accent-color:var(--blue);flex:none}
 .sim{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(250px,1fr);gap:16px;align-items:start}
-@media(max-width:780px){.sim{grid-template-columns:1fr}}
+@media(max-width:780px){
+  .sim{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+  .sim>div:not(.cam){display:contents}
+  .sim [id$="-goals"]{order:8}.sim .note{order:9}
+  .sim>div:first-child>.screen,.sim>div:first-child>canvas.scope:first-child,.sim>div:first-child>.grid:first-child{position:sticky;top:calc(var(--sat) + 4px);z-index:6;box-shadow:0 10px 18px rgba(0,0,0,.55)}
+  .sim>div:first-child>.grid:first-child{background:var(--panel)}
+}
 .screen{position:relative;background:#000;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
 .screen canvas{display:block;width:100%;height:auto;image-rendering:auto}
 .hud{position:absolute;left:0;right:0;bottom:0;display:flex;gap:10px;flex-wrap:wrap;padding:6px 10px;background:linear-gradient(transparent,rgba(0,0,0,.75));font:600 .72rem var(--mono);color:#fff}

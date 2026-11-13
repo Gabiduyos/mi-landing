@@ -49,7 +49,7 @@ export function mount(el) {
   function render() {
     const w = kel(wb), d = img.data, lights = Object.values(L).filter(l => l.on && l.i > 0).map(l => {
       const a = l.a * Math.PI / 180, e = l.e * Math.PI / 180, c = kel(l.k);
-      return { v: [Math.sin(a) * Math.cos(e), Math.sin(e), Math.cos(a) * Math.cos(e)], E: (l.i / 70) * 4 / (l.d * l.d), w: l.s * 0.75, c: [c[0] / w[0], c[1] / w[1], c[2] / w[2]] };
+      return { v: [Math.sin(a) * Math.cos(e), Math.sin(e), Math.cos(a) * Math.cos(e)], E: (l.i / 70) * 4 / (l.d * l.d), w: l.s * 0.5, c: [c[0] / w[0], c[1] / w[1], c[2] / w[2]] };
     });
     let sl = 0, sr = 0, nl = 0, nr = 0, sm = 0, nm = 0;
     const R = 46, cx = S / 2, cy = 62;
@@ -63,7 +63,7 @@ export function mount(el) {
         r = g = b = 0.004;
         for (const l of lights) { const nd = n[0] * l.v[0] + n[1] * l.v[1] + n[2] * l.v[2], df = Math.max(0, (nd + l.w) / (1 + l.w)) * l.E; r += df * l.c[0]; g += df * l.c[1]; b += df * l.c[2]; }
         const lum = (r + g + b) / 3;
-        if (r2 <= 0.8) { if (dx < -0.25) { sl += lum; nl++; } else if (dx > 0.25) { sr += lum; nr++; } sm += lum * 0.45; nm++; }
+        if (r2 <= 0.55) { if (dx < -0.35) { sl += lum; nl++; } else if (dx > 0.35) { sr += lum; nr++; } sm += lum * 0.45; nm++; }
         r *= alb[0]; g *= alb[1]; b *= alb[2];
       } else { const v = (bg / 100) ** 2 * 0.9 * (1 - Math.hypot(x - cx, y - 60) / 260); r = v / w[0] * 0.9; g = v; b = v / w[2] * 1.05; }
       d[i] = 255 * Math.pow(clamp(r, 0, 1), 0.45); d[i + 1] = 255 * Math.pow(clamp(g, 0, 1), 0.45); d[i + 2] = 255 * Math.pow(clamp(b, 0, 1), 0.45); d[i + 3] = 255;

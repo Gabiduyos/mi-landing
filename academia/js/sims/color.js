@@ -24,7 +24,7 @@ function scene() {
     set(i, sh, sh, sh, x < 60 && y < 50 ? 4 : 0);
     if (x > 120 && x < 152 && y > 6 && y < 40) set(i, 2.6, 2.7, 2.9);                                  // ventana
     const dx = (x - 80) / 17, dy = (y - 40) / 22;
-    if (dx * dx + dy * dy < 1) { const s = 1 - 0.35 * (dx < 0 ? -dx : 0); set(i, 0.46 * s, 0.305 * s, 0.225 * s, Math.abs(dx) < 0.6 && Math.abs(dy) < 0.6 ? 2 : 0); }
+    if (dx * dx + dy * dy < 1) { const s = 1 - 0.35 * (dx < 0 ? -dx : 0); set(i, 0.46 * s, 0.295 * s, 0.232 * s, Math.abs(dx) < 0.6 && Math.abs(dy) < 0.6 ? 2 : 0); }
     else if (((x - 80) / 19) ** 2 + ((y - 30) / 22) ** 2 < 1 && y < 36) set(i, 0.02, 0.016, 0.014);       // pelo
     else if (y > 60 && Math.abs(x - 80) < 20 + (y - 60) * 0.9) set(i, 0.09, 0.1, 0.13);                 // ropa
     if (y > 66 && y < 84) {
@@ -69,7 +69,7 @@ export function mount(el) {
 
   function draw() {
     const s = SRC[p.src], d = img.data, ex = 2 ** p.exp;
-    const gr = (1 + 0.35 * p.temp) * (1 + 0.12 * p.tint), gg = 1 - 0.22 * p.tint, gb = (1 - 0.35 * p.temp) * (1 + 0.12 * p.tint);
+    const gr = (1 + 0.5 * p.temp) * (1 + 0.12 * p.tint), gg = 1 - 0.22 * p.tint, gb = (1 - 0.5 * p.temp) * (1 + 0.12 * p.tint);
     const acc = { 1: [0, 0, 0, 0], 2: [0, 0, 0, 0], 3: [0, 0, 0, 0], 4: [0, 0, 0, 0] };
     const wvD = wv.createImageData(160, 110), paD = pa.createImageData(160, 110), veD = ve.createImageData(110, 110);
     const dot = (D, w, x, y, r, g, b) => { if (x < 0 || y < 0 || x >= w || y >= 110) return; const i = (y * w + x) * 4; D.data[i] = Math.min(255, D.data[i] + r); D.data[i + 1] = Math.min(255, D.data[i + 1] + g); D.data[i + 2] = Math.min(255, D.data[i + 2] + b); D.data[i + 3] = 255; };
